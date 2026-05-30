@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -14,44 +16,44 @@ class AuthService {
   // ─────────────────────────────────────────────────────
   //  REGISTER — create FirebaseAuth account + Firestore doc
   // ─────────────────────────────────────────────────────
-static Future<User?> register({
-  required String email,
-  required String password,
-  required String namaLengkap,
-  String nomorHp = '',
-}) async {
-  try {
-    print('REGISTER MULAI');
+  static Future<User?> register({
+    required String email,
+    required String password,
+    required String namaLengkap,
+    String nomorHp = '',
+  }) async {
+    try {
+      developer.log('REGISTER MULAI', name: 'AuthService');
 
-    final credential = await _auth.createUserWithEmailAndPassword(
-      email: email.trim(),
-      password: password,
-    );
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
 
-    print('AUTH BERHASIL');
+      developer.log('AUTH BERHASIL', name: 'AuthService');
 
-    final user = credential.user;
+      final user = credential.user;
 
-    if (user != null) {
-      await user.updateDisplayName(namaLengkap.trim());
+      if (user != null) {
+        await user.updateDisplayName(namaLengkap.trim());
 
-      await _db.collection('users').doc(user.uid).set({
-        'uid': user.uid,
-        'email': email.trim(),
-        'namaLengkap': namaLengkap.trim(),
-        'nomorHp': nomorHp.trim(),
-        'role': 'user',
-        'isSuspended': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+        await _db.collection('users').doc(user.uid).set({
+          'uid': user.uid,
+          'email': email.trim(),
+          'namaLengkap': namaLengkap.trim(),
+          'nomorHp': nomorHp.trim(),
+          'role': 'user',
+          'isSuspended': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      return user;
+    } catch (e) {
+      developer.log('REGISTER GAGAL: $e', name: 'AuthService');
+      rethrow;
     }
-
-    return user;
-  } catch (e) {
-  print(e);
-  rethrow;
-}
-}
+  }
 
   // ─────────────────────────────────────────────────────
   //  LOGIN — sign in + fetch role from Firestore
@@ -112,9 +114,7 @@ static Future<User?> register({
     required String uid,
     required String newRole,
   }) async {
-    await _db.collection('users').doc(uid).update({
-      'role': newRole,
-    });
+    await _db.collection('users').doc(uid).update({'role': newRole});
   }
 
   // ─────────────────────────────────────────────────────
@@ -124,9 +124,7 @@ static Future<User?> register({
     required String uid,
     required bool isSuspended,
   }) async {
-    await _db.collection('users').doc(uid).update({
-      'isSuspended': isSuspended,
-    });
+    await _db.collection('users').doc(uid).update({'isSuspended': isSuspended});
   }
 
   // ─────────────────────────────────────────────────────
@@ -175,10 +173,7 @@ static Future<User?> register({
 
     return snapshot.docs.map((doc) {
       final data = doc.data();
-      return {
-        'uid': doc.id,
-        ...data,
-      };
+      return {'uid': doc.id, ...data};
     }).toList();
   }
 
@@ -190,8 +185,10 @@ static Future<User?> register({
         .collection('users')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) {
-              return {'uid': doc.id, ...doc.data()};
-            }).toList());
+        .map(
+          (snap) => snap.docs.map((doc) {
+            return {'uid': doc.id, ...doc.data()};
+          }).toList(),
+        );
   }
 }

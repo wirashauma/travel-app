@@ -1,4 +1,5 @@
-import 'dart:math';
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -115,7 +116,7 @@ class _TicketScannerPageState extends State<TicketScannerPage>
 
       if (directDoc.exists) {
         bookingDoc = directDoc;
-        data = directDoc.data() as Map<String, dynamic>?;
+        data = directDoc.data();
       } else {
         // Attempt 2: Query by bookingCode field
         final querySnap = await FirebaseFirestore.instance
@@ -137,7 +138,8 @@ class _TicketScannerPageState extends State<TicketScannerPage>
         _showResultDialog(
           type: _ResultType.notFound,
           title: 'Tiket Tidak Valid',
-          subtitle: 'QR Code tidak ditemukan dalam sistem.\nKemungkinan tiket palsu.',
+          subtitle:
+              'QR Code tidak ditemukan dalam sistem.\nKemungkinan tiket palsu.',
           icon: Iconsax.close_circle,
           color: _C.error,
           bgColor: _C.errorBg,
@@ -150,7 +152,8 @@ class _TicketScannerPageState extends State<TicketScannerPage>
       final bookingCode = data['bookingCode'] as String? ?? '-';
       final origin = data['origin'] as String? ?? '-';
       final destination = data['destination'] as String? ?? '-';
-      final seatNumbers = (data['seatNumbers'] as List<dynamic>?)
+      final seatNumbers =
+          (data['seatNumbers'] as List<dynamic>?)
               ?.map((e) => (e as num).toInt())
               .toList() ??
           [];
@@ -237,7 +240,8 @@ class _TicketScannerPageState extends State<TicketScannerPage>
         _showResultDialog(
           type: _ResultType.alreadyUsed,
           title: 'Tiket Sudah Digunakan',
-          subtitle: 'Tiket ini sudah divalidasi sebelumnya.\nTidak dapat digunakan lagi (double entry).',
+          subtitle:
+              'Tiket ini sudah divalidasi sebelumnya.\nTidak dapat digunakan lagi (double entry).',
           icon: Iconsax.refresh_left_square,
           color: _C.textTertiary,
           bgColor: _C.border.withValues(alpha: 0.3),
@@ -257,17 +261,18 @@ class _TicketScannerPageState extends State<TicketScannerPage>
               .collection('bookings')
               .doc(bookingDoc.id)
               .update({
-            'status': 'expired',
-            'scannedAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+                'status': 'expired',
+                'scannedAt': FieldValue.serverTimestamp(),
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
 
           if (!mounted) return;
 
           _showResultDialog(
             type: _ResultType.expired,
             title: 'Tiket Telah Kadaluarsa!',
-            subtitle: 'Tanggal keberangkatan sudah lewat.\nTiket tidak berlaku lagi.',
+            subtitle:
+                'Tanggal keberangkatan sudah lewat.\nTiket tidak berlaku lagi.',
             icon: Iconsax.calendar_remove,
             color: _C.error,
             bgColor: _C.errorBg,
@@ -286,10 +291,10 @@ class _TicketScannerPageState extends State<TicketScannerPage>
                 .collection('bookings')
                 .doc(bookingDoc.id)
                 .update({
-              'status': 'validated',
-              'scannedAt': FieldValue.serverTimestamp(),
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
+                  'status': 'validated',
+                  'scannedAt': FieldValue.serverTimestamp(),
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
           }
 
           if (!mounted) return;
@@ -297,7 +302,8 @@ class _TicketScannerPageState extends State<TicketScannerPage>
           _showResultDialog(
             type: _ResultType.validated,
             title: 'Berhasil Divalidasi',
-            subtitle: 'Tiket valid. Belum tanggal keberangkatan.\nSilakan datang pada hari-H.',
+            subtitle:
+                'Tiket valid. Belum tanggal keberangkatan.\nSilakan datang pada hari-H.',
             icon: Iconsax.shield_tick,
             color: const Color(0xFF1D4ED8),
             bgColor: const Color(0xFFEFF6FF),
@@ -351,7 +357,8 @@ class _TicketScannerPageState extends State<TicketScannerPage>
       _showResultDialog(
         type: _ResultType.error,
         title: 'Terjadi Kesalahan',
-        subtitle: 'Gagal memvalidasi tiket.\n${e.toString().length > 80 ? '${e.toString().substring(0, 80)}...' : e}',
+        subtitle:
+            'Gagal memvalidasi tiket.\n${e.toString().length > 80 ? '${e.toString().substring(0, 80)}...' : e}',
         icon: Iconsax.warning_2,
         color: _C.error,
         bgColor: _C.errorBg,
@@ -384,187 +391,199 @@ class _TicketScannerPageState extends State<TicketScannerPage>
           Future.delayed(const Duration(seconds: 2), () {
             if (!ctx.mounted) return;
             Navigator.of(ctx, rootNavigator: true).pop(); // close dialog
-            // ignore: use_build_context_synchronously
-            if (!context.mounted) return;
+            if (!mounted) return;
             Navigator.of(context).pop(); // pop scanner page
           });
         }
         return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── Icon ──
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: bgColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 40, color: color),
-            )
-                .animate()
-                .scale(
-                    begin: const Offset(0.5, 0.5),
-                    duration: 400.ms,
-                    curve: Curves.easeOutBack),
-
-            const SizedBox(height: 20),
-
-            // ── Title ──
-            Text(
-              title,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: color,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-
-            // ── Subtitle ──
-            Text(
-              subtitle,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: _C.textSecondary,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            // ── Passenger details (if available) ──
-            if (passengerName != null || bookingCode != null) ...[
-              const SizedBox(height: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── Icon ──
               Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
-                  color: _C.bg,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: color.withValues(alpha: 0.15)),
+                  color: bgColor,
+                  shape: BoxShape.circle,
                 ),
-                child: Column(
-                  children: [
-                    if (passengerName != null)
-                      _DialogInfoRow(
-                        icon: Iconsax.user,
-                        label: 'Penumpang',
-                        value: passengerName,
-                      ),
-                    if (bookingCode != null) ...[
-                      if (passengerName != null)
-                        Divider(
-                            color: _C.border.withValues(alpha: 0.5),
-                            height: 16),
-                      _DialogInfoRow(
-                        icon: Iconsax.receipt,
-                        label: 'Kode Tiket',
-                        value: bookingCode,
-                        isMono: true,
-                      ),
-                    ],
-                    if (route != null) ...[
-                      Divider(
-                          color: _C.border.withValues(alpha: 0.5),
-                          height: 16),
-                      _DialogInfoRow(
-                        icon: Iconsax.route_square,
-                        label: 'Rute',
-                        value: route,
-                      ),
-                    ],
-                    if (seat != null) ...[
-                      Divider(
-                          color: _C.border.withValues(alpha: 0.5),
-                          height: 16),
-                      _DialogInfoRow(
-                        icon: Iconsax.driver,
-                        label: 'Kursi',
-                        value: seat,
-                      ),
-                    ],
-                  ],
-                ),
+                child: Icon(icon, size: 40, color: color),
+              ).animate().scale(
+                begin: const Offset(0.5, 0.5),
+                duration: 400.ms,
+                curve: Curves.easeOutBack,
               ),
-            ],
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-            // ── Button: Scan Lagi ──
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  if (ctx.mounted) Navigator.of(ctx, rootNavigator: true).pop();
-                  _resumeScanner();
-                },
-                icon: const Icon(Iconsax.scan_barcode, size: 18),
-                label: Text(
-                  'Scan Lagi',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _C.primary,
-                  foregroundColor: _C.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // ── Button: Kembali ──
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: TextButton(
-                onPressed: () {
-                  if (ctx.mounted) Navigator.of(ctx, rootNavigator: true).pop(); // close dialog
-                  if (context.mounted) Navigator.of(context).pop(); // pop scanner page
-                },
-                style: TextButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    side: BorderSide(color: _C.border),
-                  ),
-                ),
-                child: Text(
-                  'Kembali ke Dashboard',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _C.textSecondary,
-                  ),
-                ),
-              ),
-            ),
-
-            // Auto-close countdown hint
-            if (autoCloseOnSuccess) ...[
-              const SizedBox(height: 8),
+              // ── Title ──
               Text(
-                'Otomatis kembali dalam 2 detik…',
+                title,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+
+              // ── Subtitle ──
+              Text(
+                subtitle,
                 style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: _C.textTertiary,
-                  fontStyle: FontStyle.italic,
+                  fontSize: 13,
+                  color: _C.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              // ── Passenger details (if available) ──
+              if (passengerName != null || bookingCode != null) ...[
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: _C.bg,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: color.withValues(alpha: 0.15)),
+                  ),
+                  child: Column(
+                    children: [
+                      if (passengerName != null)
+                        _DialogInfoRow(
+                          icon: Iconsax.user,
+                          label: 'Penumpang',
+                          value: passengerName,
+                        ),
+                      if (bookingCode != null) ...[
+                        if (passengerName != null)
+                          Divider(
+                            color: _C.border.withValues(alpha: 0.5),
+                            height: 16,
+                          ),
+                        _DialogInfoRow(
+                          icon: Iconsax.receipt,
+                          label: 'Kode Tiket',
+                          value: bookingCode,
+                          isMono: true,
+                        ),
+                      ],
+                      if (route != null) ...[
+                        Divider(
+                          color: _C.border.withValues(alpha: 0.5),
+                          height: 16,
+                        ),
+                        _DialogInfoRow(
+                          icon: Iconsax.route_square,
+                          label: 'Rute',
+                          value: route,
+                        ),
+                      ],
+                      if (seat != null) ...[
+                        Divider(
+                          color: _C.border.withValues(alpha: 0.5),
+                          height: 16,
+                        ),
+                        _DialogInfoRow(
+                          icon: Iconsax.driver,
+                          label: 'Kursi',
+                          value: seat,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 24),
+
+              // ── Button: Scan Lagi ──
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    if (ctx.mounted) {
+                      Navigator.of(ctx, rootNavigator: true).pop();
+                    }
+                    _resumeScanner();
+                  },
+                  icon: const Icon(Iconsax.scan_barcode, size: 18),
+                  label: Text(
+                    'Scan Lagi',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _C.primary,
+                    foregroundColor: _C.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
               ),
+
+              const SizedBox(height: 10),
+
+              // ── Button: Kembali ──
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: TextButton(
+                  onPressed: () {
+                    if (ctx.mounted) {
+                      Navigator.of(
+                        ctx,
+                        rootNavigator: true,
+                      ).pop(); // close dialog
+                    }
+                    if (context.mounted) {
+                      Navigator.of(context).pop(); // pop scanner page
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(color: _C.border),
+                    ),
+                  ),
+                  child: Text(
+                    'Kembali ke Dashboard',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _C.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Auto-close countdown hint
+              if (autoCloseOnSuccess) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Otomatis kembali dalam 2 detik…',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: _C.textTertiary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
             ],
-          ],
-        ),
-      );
+          ),
+        );
       },
     );
   }
@@ -606,19 +625,26 @@ class _TicketScannerPageState extends State<TicketScannerPage>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Iconsax.camera_slash,
-                          size: 56, color: Colors.white54),
+                      const Icon(
+                        Iconsax.camera_slash,
+                        size: 56,
+                        color: Colors.white54,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'Tidak dapat mengakses kamera',
                         style: GoogleFonts.inter(
-                            fontSize: 15, color: Colors.white70),
+                          fontSize: 15,
+                          color: Colors.white70,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Pastikan izin kamera telah diberikan',
                         style: GoogleFonts.inter(
-                            fontSize: 12, color: Colors.white38),
+                          fontSize: 12,
+                          color: Colors.white38,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
@@ -674,10 +700,7 @@ class _TicketScannerPageState extends State<TicketScannerPage>
                 animation: _scanLineCtrl,
                 builder: (context, child) {
                   return Align(
-                    alignment: Alignment(
-                      0,
-                      -1.0 + 2.0 * _scanLineCtrl.value,
-                    ),
+                    alignment: Alignment(0, -1.0 + 2.0 * _scanLineCtrl.value),
                     child: Container(
                       width: scanAreaSize - 40,
                       height: 2.5,
@@ -713,32 +736,34 @@ class _TicketScannerPageState extends State<TicketScannerPage>
             top: topPad + 12,
             left: 16,
             right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _CircleButton(
-                  icon: Iconsax.arrow_left,
-                  onTap: () => Navigator.pop(context),
-                ),
-                Text(
-                  'Scan Tiket',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                _CircleButton(
-                  icon:
-                      _torchEnabled ? Iconsax.flash_15 : Iconsax.flash_slash,
-                  onTap: _toggleTorch,
-                  isActive: _torchEnabled,
-                ),
-              ],
-            ).animate().fadeIn(duration: 400.ms).slideY(
-                  begin: -0.1,
-                  duration: 400.ms,
-                ),
+            child:
+                Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _CircleButton(
+                          icon: Iconsax.arrow_left,
+                          onTap: () => Navigator.pop(context),
+                        ),
+                        Text(
+                          'Scan Tiket',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        _CircleButton(
+                          icon: _torchEnabled
+                              ? Iconsax.flash_15
+                              : Iconsax.flash_slash,
+                          onTap: _toggleTorch,
+                          isActive: _torchEnabled,
+                        ),
+                      ],
+                    )
+                    .animate()
+                    .fadeIn(duration: 400.ms)
+                    .slideY(begin: -0.1, duration: 400.ms),
           ),
 
           // ── Bottom instruction ──
@@ -746,76 +771,85 @@ class _TicketScannerPageState extends State<TicketScannerPage>
             bottom: bottomPad + 40,
             left: 32,
             right: 32,
-            child: Column(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Iconsax.scan_barcode,
-                          size: 20, color: _C.scanLine),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: Text(
-                          'Arahkan kamera ke QR Code tiket penumpang',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_isProcessing) ...[
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: _C.teal.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
+            child:
+                Column(
                       children: [
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Iconsax.scan_barcode,
+                                size: 20,
+                                color: _C.scanLine,
+                              ),
+                              const SizedBox(width: 10),
+                              Flexible(
+                                child: Text(
+                                  'Arahkan kamera ke QR Code tiket penumpang',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Memvalidasi tiket…',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
+                        if (_isProcessing) ...[
+                          const SizedBox(height: 14),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _C.teal.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Memvalidasi tiket…',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
-                    ),
-                  ),
-                ],
-              ],
-            )
-                .animate()
-                .fadeIn(delay: 300.ms, duration: 400.ms)
-                .slideY(begin: 0.1, delay: 300.ms, duration: 400.ms),
+                    )
+                    .animate()
+                    .fadeIn(delay: 300.ms, duration: 400.ms)
+                    .slideY(begin: 0.1, delay: 300.ms, duration: 400.ms),
           ),
         ],
       ),
@@ -826,7 +860,16 @@ class _TicketScannerPageState extends State<TicketScannerPage>
 // ─────────────────────────────────────────────────────────
 //  RESULT TYPE ENUM
 // ─────────────────────────────────────────────────────────
-enum _ResultType { success, notFound, unpaid, alreadyUsed, cancelled, expired, validated, error }
+enum _ResultType {
+  success,
+  notFound,
+  unpaid,
+  alreadyUsed,
+  cancelled,
+  expired,
+  validated,
+  error,
+}
 
 // ─────────────────────────────────────────────────────────
 //  DIALOG INFO ROW
@@ -861,9 +904,10 @@ class _DialogInfoRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: GoogleFonts.inter(
-                      fontSize: 10, color: _C.textTertiary)),
+              Text(
+                label,
+                style: GoogleFonts.inter(fontSize: 10, color: _C.textTertiary),
+              ),
               const SizedBox(height: 2),
               Text(
                 value,
@@ -936,10 +980,7 @@ class _ScanOverlayPainter extends CustomPainter {
   final double scanAreaSize;
   final double borderRadius;
 
-  _ScanOverlayPainter({
-    required this.scanAreaSize,
-    required this.borderRadius,
-  });
+  _ScanOverlayPainter({required this.scanAreaSize, required this.borderRadius});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -954,8 +995,7 @@ class _ScanOverlayPainter extends CustomPainter {
       ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final cutoutPath = Path()
-      ..addRRect(
-          RRect.fromRectAndRadius(rect, Radius.circular(borderRadius)));
+      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(borderRadius)));
 
     final combinedPath = Path.combine(
       PathOperation.difference,

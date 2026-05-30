@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -116,10 +118,12 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
     super.initState();
     _dateStr = DateFormat('dd MMM yyyy').format(widget.date);
 
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
 
     BookingService.cleanupExpiredBookings(
       fleetId: widget.fleetId,
@@ -139,7 +143,8 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
       final data = doc.data() as Map<String, dynamic>;
       final status = data['status'] as String? ?? '';
       final docUserId = data['userId'] as String? ?? '';
-      final seats = (data['selectedSeatLabels'] as List<dynamic>?)
+      final seats =
+          (data['selectedSeatLabels'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [];
@@ -189,14 +194,19 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
               SnackBar(
                 content: Row(
                   children: [
-                    const Icon(Iconsax.info_circle,
-                        color: Colors.white, size: 18),
+                    const Icon(
+                      Iconsax.info_circle,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Maksimal ${widget.passengers} kursi untuk pemesanan ini',
                         style: GoogleFonts.inter(
-                            fontSize: 13, color: Colors.white),
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],
@@ -204,7 +214,8 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                 backgroundColor: _C.warning,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 2),
               ),
@@ -219,9 +230,11 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
   // ─────────────────────────────────────────────────────
   void _goToCheckout(Map<String, SeatState> seatStates) {
     final conflicted = _selectedSeats
-        .where((s) =>
-            seatStates[s] == SeatState.sold ||
-            seatStates[s] == SeatState.pending)
+        .where(
+          (s) =>
+              seatStates[s] == SeatState.sold ||
+              seatStates[s] == SeatState.pending,
+        )
         .toSet();
 
     if (conflicted.isNotEmpty) {
@@ -236,7 +249,8 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
             backgroundColor: _C.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -291,9 +305,11 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
 
           // ── Auto-deselect seats snatched by others ──
           final snatched = _selectedSeats
-              .where((s) =>
-                  seatStates[s] == SeatState.sold ||
-                  seatStates[s] == SeatState.pending)
+              .where(
+                (s) =>
+                    seatStates[s] == SeatState.sold ||
+                    seatStates[s] == SeatState.pending,
+              )
               .toSet();
 
           if (snatched.isNotEmpty) {
@@ -307,12 +323,15 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                     content: Text(
                       'Kursi ${snatched.join(", ")} baru saja terisi. Silakan pilih ulang.',
                       style: GoogleFonts.inter(
-                          fontSize: 13, color: Colors.white),
+                        fontSize: 13,
+                        color: Colors.white,
+                      ),
                     ),
                     backgroundColor: _C.error,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     margin: const EdgeInsets.all(16),
                   ),
                 );
@@ -322,15 +341,12 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
           return Column(
             children: [
               _buildAppBar(topPadding),
-              _buildRouteInfo()
-                  .animate()
-                  .fadeIn(delay: 100.ms, duration: 400.ms),
-              _buildLegend()
-                  .animate()
-                  .fadeIn(delay: 200.ms, duration: 400.ms),
-              Expanded(
-                child: _buildCarSeatMap(seatStates),
+              _buildRouteInfo().animate().fadeIn(
+                delay: 100.ms,
+                duration: 400.ms,
               ),
+              _buildLegend().animate().fadeIn(delay: 200.ms, duration: 400.ms),
+              Expanded(child: _buildCarSeatMap(seatStates)),
               _buildBottomCTA(bottomPadding, seatStates),
             ],
           );
@@ -539,53 +555,54 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
       child: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 340),
-          decoration: BoxDecoration(
-            color: _C.carBody,
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: _C.carBorder, width: 2.5),
-            boxShadow: [
-              BoxShadow(
-                color: _C.primary.withValues(alpha: 0.06),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: _C.carBorder.withValues(alpha: 0.3),
-                blurRadius: 2,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // ═══ "Bagian Depan" Label + Windshield ═══
-              _buildFrontLabel(),
+        child:
+            Container(
+                  constraints: const BoxConstraints(maxWidth: 340),
+                  decoration: BoxDecoration(
+                    color: _C.carBody,
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(color: _C.carBorder, width: 2.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _C.primary.withValues(alpha: 0.06),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                      BoxShadow(
+                        color: _C.carBorder.withValues(alpha: 0.3),
+                        blurRadius: 2,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // ═══ "Bagian Depan" Label + Windshield ═══
+                      _buildFrontLabel(),
 
-              // ═══ BARIS 1: Kursi 1 + Supir ═══
-              _buildRow1Front(seatStates),
+                      // ═══ BARIS 1: Kursi 1 + Supir ═══
+                      _buildRow1Front(seatStates),
 
-              // ═══ Row divider ═══
-              _buildRowDivider(),
+                      // ═══ Row divider ═══
+                      _buildRowDivider(),
 
-              // ═══ BARIS 2: Kursi 2, 3, 4 ═══
-              _buildRow2Middle(seatStates),
+                      // ═══ BARIS 2: Kursi 2, 3, 4 ═══
+                      _buildRow2Middle(seatStates),
 
-              // ═══ Row divider ═══
-              _buildRowDivider(),
+                      // ═══ Row divider ═══
+                      _buildRowDivider(),
 
-              // ═══ BARIS 3: Kursi 5, 6, 7 ═══
-              _buildRow3Back(seatStates),
+                      // ═══ BARIS 3: Kursi 5, 6, 7 ═══
+                      _buildRow3Back(seatStates),
 
-              // ═══ "Bagian Belakang / Bagasi" Label ═══
-              _buildRearLabel(),
-            ],
-          ),
-        )
-            .animate()
-            .fadeIn(delay: 300.ms, duration: 500.ms)
-            .slideY(begin: 0.05, delay: 300.ms, duration: 500.ms),
+                      // ═══ "Bagian Belakang / Bagasi" Label ═══
+                      _buildRearLabel(),
+                    ],
+                  ),
+                )
+                .animate()
+                .fadeIn(delay: 300.ms, duration: 500.ms)
+                .slideY(begin: 0.05, delay: 300.ms, duration: 500.ms),
       ),
     );
   }
@@ -597,10 +614,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            _C.carDashboard.withValues(alpha: 0.6),
-            _C.carBody,
-          ],
+          colors: [_C.carDashboard.withValues(alpha: 0.6), _C.carBody],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -624,8 +638,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Iconsax.arrow_up_2,
-                  size: 14, color: _C.textTertiary),
+              Icon(Iconsax.arrow_up_2, size: 14, color: _C.textTertiary),
               const SizedBox(width: 6),
               Text(
                 'BAGIAN DEPAN',
@@ -637,8 +650,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                 ),
               ),
               const SizedBox(width: 6),
-              Icon(Iconsax.arrow_up_2,
-                  size: 14, color: _C.textTertiary),
+              Icon(Iconsax.arrow_up_2, size: 14, color: _C.textTertiary),
             ],
           ),
           const SizedBox(height: 4),
@@ -820,10 +832,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            _C.carBody,
-            _C.carDashboard.withValues(alpha: 0.4),
-          ],
+          colors: [_C.carBody, _C.carDashboard.withValues(alpha: 0.4)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -837,8 +846,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Iconsax.arrow_down_1,
-                  size: 14, color: _C.textTertiary),
+              Icon(Iconsax.arrow_down_1, size: 14, color: _C.textTertiary),
               const SizedBox(width: 6),
               Text(
                 'BAGIAN BELAKANG / BAGASI',
@@ -850,8 +858,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                 ),
               ),
               const SizedBox(width: 6),
-              Icon(Iconsax.arrow_down_1,
-                  size: 14, color: _C.textTertiary),
+              Icon(Iconsax.arrow_down_1, size: 14, color: _C.textTertiary),
             ],
           ),
           const SizedBox(height: 8),
@@ -972,127 +979,132 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
   //  BOTTOM CTA — Price summary + Continue button
   // ─────────────────────────────────────────────────
   Widget _buildBottomCTA(
-      double bottomPadding, Map<String, SeatState> seatStates) {
+    double bottomPadding,
+    Map<String, SeatState> seatStates,
+  ) {
     final totalPrice = widget.routePrice * _selectedSeats.length;
     final isReady = _selectedSeats.length == widget.passengers;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPadding + 16),
-      decoration: BoxDecoration(
-        color: _C.white,
-        border: const Border(
-          top: BorderSide(color: _C.borderLight, width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _C.primary.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_selectedSeats.isNotEmpty) ...[
-            Container(
-              width: double.infinity,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPadding + 16),
+          decoration: BoxDecoration(
+            color: _C.white,
+            border: const Border(
+              top: BorderSide(color: _C.borderLight, width: 1),
+            ),
+            boxShadow: [
+              BoxShadow(
                 color: _C.primary.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _C.primary.withValues(alpha: 0.1),
-                ),
+                blurRadius: 12,
+                offset: const Offset(0, -4),
               ),
-              child: Row(
-                children: [
-                  Icon(Iconsax.driver, size: 16, color: _C.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Kursi: ${(_selectedSeats.toList()..sort((a, b) => int.parse(a).compareTo(int.parse(b)))).join(", ")}',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: _C.primary,
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_selectedSeats.isNotEmpty) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _C.primary.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _C.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Iconsax.driver, size: 16, color: _C.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Kursi: ${(_selectedSeats.toList()..sort((a, b) => int.parse(a).compareTo(int.parse(b)))).join(", ")}',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: _C.primary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total Harga',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: _C.textTertiary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _fmtPrice(totalPrice),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: _C.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: isReady
+                          ? () => _goToCheckout(seatStates)
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _C.primary,
+                        disabledBackgroundColor: _C.soldBorder,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 28),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            isReady
+                                ? 'Lanjut'
+                                : 'Pilih ${widget.passengers - _selectedSeats.length} lagi',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (isReady) ...[
+                            const SizedBox(width: 8),
+                            const Icon(Iconsax.arrow_right_3, size: 18),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Total Harga',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: _C.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _fmtPrice(totalPrice),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: _C.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed:
-                      isReady ? () => _goToCheckout(seatStates) : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _C.primary,
-                    disabledBackgroundColor: _C.soldBorder,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        isReady
-                            ? 'Lanjut'
-                            : 'Pilih ${widget.passengers - _selectedSeats.length} lagi',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (isReady) ...[
-                        const SizedBox(width: 8),
-                        const Icon(Iconsax.arrow_right_3, size: 18),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
-        ],
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: 400.ms, duration: 400.ms)
         .slideY(begin: 0.1, delay: 400.ms, duration: 400.ms);

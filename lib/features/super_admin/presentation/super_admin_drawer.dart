@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+// ignore_for_file: unused_field, unnecessary_null_comparison
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -124,7 +126,8 @@ class SuperAdminDrawer extends StatelessWidget {
                   label: 'Penugasan Supir',
                   subtitle: 'Assign driver ke armada',
                   isSelected: currentMenu == SuperAdminMenu.driverAssignment,
-                  onTap: () => _handleTap(context, SuperAdminMenu.driverAssignment),
+                  onTap: () =>
+                      _handleTap(context, SuperAdminMenu.driverAssignment),
                   index: 2,
                 ),
                 _DrawerMenuItem(
@@ -242,12 +245,7 @@ class SuperAdminDrawer extends StatelessWidget {
       case SuperAdminMenu.report:
         page = const TransactionReportPage();
     }
-    if (page != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => page!),
-      );
-    }
+    Navigator.push(context, MaterialPageRoute(builder: (_) => page!));
   }
 
   // ─── Custom Drawer Header ───
@@ -278,12 +276,10 @@ class SuperAdminDrawer extends StatelessWidget {
                     .doc(uid)
                     .snapshots(),
                 builder: (ctx, snap) {
-                  final data =
-                      snap.data?.data() as Map<String, dynamic>? ?? {};
+                  final data = snap.data?.data() as Map<String, dynamic>? ?? {};
                   final name =
                       (data['namaLengkap'] as String?) ?? 'Super Admin';
-                  final email =
-                      (data['email'] as String?) ?? '-';
+                  final email = (data['email'] as String?) ?? '-';
                   final photoUrl = data['profileImageUrl'] as String?;
 
                   return _buildHeaderContent(
@@ -304,11 +300,11 @@ class SuperAdminDrawer extends StatelessWidget {
   }) {
     final initials = name.isNotEmpty
         ? name
-            .split(' ')
-            .where((w) => w.isNotEmpty)
-            .take(2)
-            .map((w) => w[0].toUpperCase())
-            .join()
+              .split(' ')
+              .where((w) => w.isNotEmpty)
+              .take(2)
+              .map((w) => w[0].toUpperCase())
+              .join()
         : 'SA';
 
     return Padding(
@@ -335,8 +331,7 @@ class SuperAdminDrawer extends StatelessWidget {
             child: CircleAvatar(
               radius: 32,
               backgroundColor: Colors.white.withValues(alpha: 0.15),
-              backgroundImage:
-                  photoUrl != null ? NetworkImage(photoUrl) : null,
+              backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
               child: photoUrl == null
                   ? Text(
                       initials,
@@ -385,15 +380,16 @@ class SuperAdminDrawer extends StatelessWidget {
             decoration: BoxDecoration(
               color: _C.teal.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: _C.teal.withValues(alpha: 0.4),
-              ),
+              border: Border.all(color: _C.teal.withValues(alpha: 0.4)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Iconsax.shield_tick5,
-                    size: 12, color: const Color(0xFF5EEAD4)),
+                Icon(
+                  Iconsax.shield_tick5,
+                  size: 12,
+                  color: const Color(0xFF5EEAD4),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Super Admin',
@@ -441,93 +437,97 @@ class _DrawerMenuItem extends StatelessWidget {
     final Color itemColor = isDestructive
         ? _C.error
         : isSelected
-            ? _C.primary
-            : _C.textSecondary;
+        ? _C.primary
+        : _C.textSecondary;
 
     final Color bgColor = isSelected
         ? _C.primary.withValues(alpha: 0.06)
         : Colors.transparent;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 2),
-      child: Material(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          splashColor: _C.primary.withValues(alpha: 0.08),
-          highlightColor: _C.primary.withValues(alpha: 0.04),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                // ── Icon ──
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? _C.primary.withValues(alpha: 0.10)
-                        : isDestructive
+          padding: const EdgeInsets.only(bottom: 2),
+          child: Material(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(12),
+              splashColor: _C.primary.withValues(alpha: 0.08),
+              highlightColor: _C.primary.withValues(alpha: 0.04),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    // ── Icon ──
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? _C.primary.withValues(alpha: 0.10)
+                            : isDestructive
                             ? _C.error.withValues(alpha: 0.06)
                             : _C.borderLight,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    isSelected ? activeIcon : icon,
-                    size: 18,
-                    color: itemColor,
-                  ),
-                ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        isSelected ? activeIcon : icon,
+                        size: 18,
+                        color: itemColor,
+                      ),
+                    ),
 
-                const SizedBox(width: 14),
+                    const SizedBox(width: 14),
 
-                // ── Label ──
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w600,
-                          color: itemColor,
+                    // ── Label ──
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
+                              color: itemColor,
+                            ),
+                          ),
+                          if (subtitle != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle!,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w400,
+                                color: _C.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    // ── Selected indicator ──
+                    if (isSelected)
+                      Container(
+                        width: 4,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: _C.primary,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle!,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            color: _C.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                  ],
                 ),
-
-                // ── Selected indicator ──
-                if (isSelected)
-                  Container(
-                    width: 4,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: _C.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(
           delay: Duration(milliseconds: 40 * index),

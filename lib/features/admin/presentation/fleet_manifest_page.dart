@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -61,8 +63,11 @@ class FleetManifestPage extends StatelessWidget {
   });
 
   String _fmtPrice(int price) {
-    return NumberFormat.currency(locale: 'id', symbol: 'Rp ', decimalDigits: 0)
-        .format(price);
+    return NumberFormat.currency(
+      locale: 'id',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(price);
   }
 
   @override
@@ -86,12 +91,15 @@ class FleetManifestPage extends StatelessWidget {
               .map((d) => BookingModel.fromFirestore(d))
               .toList();
 
-          final paidCount =
-              bookings.where((b) => b.status == BookingStatus.paid).length;
-          final validatedCount =
-              bookings.where((b) => b.status == BookingStatus.validated).length;
-          final completedCount =
-              bookings.where((b) => b.status == BookingStatus.used).length;
+          final paidCount = bookings
+              .where((b) => b.status == BookingStatus.paid)
+              .length;
+          final validatedCount = bookings
+              .where((b) => b.status == BookingStatus.validated)
+              .length;
+          final completedCount = bookings
+              .where((b) => b.status == BookingStatus.used)
+              .length;
 
           return Stack(
             children: [
@@ -99,14 +107,10 @@ class FleetManifestPage extends StatelessWidget {
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   // ── APP BAR ──
-                  SliverToBoxAdapter(
-                    child: _buildAppBar(context, topPad),
-                  ),
+                  SliverToBoxAdapter(child: _buildAppBar(context, topPad)),
 
                   // ── FLEET INFO CARD ──
-                  SliverToBoxAdapter(
-                    child: _buildFleetInfo(),
-                  ),
+                  SliverToBoxAdapter(child: _buildFleetInfo()),
 
                   // ── STATS ROW ──
                   SliverToBoxAdapter(
@@ -132,13 +136,9 @@ class FleetManifestPage extends StatelessWidget {
                         child: CircularProgressIndicator(color: _C.primary),
                       ),
                     )
-
                   // ── EMPTY ──
                   else if (bookings.isEmpty)
-                    SliverFillRemaining(
-                      child: _buildEmptyPassenger(),
-                    )
-
+                    SliverFillRemaining(child: _buildEmptyPassenger())
                   // ── ERROR ──
                   else if (snapshot.hasError)
                     SliverFillRemaining(
@@ -146,36 +146,32 @@ class FleetManifestPage extends StatelessWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Iconsax.warning_2,
-                                size: 48, color: _C.error),
+                            Icon(Iconsax.warning_2, size: 48, color: _C.error),
                             const SizedBox(height: 12),
                             Text(
                               'Gagal memuat data',
                               style: GoogleFonts.inter(
-                                  fontSize: 14, color: _C.textTertiary),
+                                fontSize: 14,
+                                color: _C.textTertiary,
+                              ),
                             ),
                           ],
                         ),
                       ),
                     )
-
                   // ── PASSENGER LIST ──
                   else
                     SliverPadding(
-                      padding:
-                          EdgeInsets.fromLTRB(20, 4, 20, bottomPad + 90),
+                      padding: EdgeInsets.fromLTRB(20, 4, 20, bottomPad + 90),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final booking = bookings[index];
-                            return _PassengerCard(
-                              booking: booking,
-                              index: index,
-                              fmtPrice: _fmtPrice,
-                            );
-                          },
-                          childCount: bookings.length,
-                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final booking = bookings[index];
+                          return _PassengerCard(
+                            booking: booking,
+                            index: index,
+                            fmtPrice: _fmtPrice,
+                          );
+                        }, childCount: bookings.length),
                       ),
                     ),
                 ],
@@ -254,84 +250,87 @@ class FleetManifestPage extends StatelessWidget {
         : '';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: _C.successBg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _C.success.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: _C.success.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Iconsax.bus5,
-                  size: 22, color: _C.success),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _C.successBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _C.success.withValues(alpha: 0.25)),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    fleetName,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: _C.success,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _C.success.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Iconsax.bus5, size: 22, color: _C.success),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        fleetName,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: _C.success,
+                        ),
+                      ),
+                      if (vehicleType.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          vehicleType,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: _C.textTertiary,
+                          ),
+                        ),
+                      ],
+                      if (route.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          route,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _C.primary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _C.success,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Aktif',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
                     ),
                   ),
-                  if (vehicleType.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      vehicleType,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: _C.textTertiary,
-                      ),
-                    ),
-                  ],
-                  if (route.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      route,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _C.primary,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: _C.success,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Aktif',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 150.ms, duration: 400.ms).slideY(
-        begin: 0.08, delay: 150.ms, duration: 400.ms);
+          ),
+        )
+        .animate()
+        .fadeIn(delay: 150.ms, duration: 400.ms)
+        .slideY(begin: 0.08, delay: 150.ms, duration: 400.ms);
   }
 
   // ─────────────────────────────────────────────────────
@@ -382,67 +381,69 @@ class FleetManifestPage extends StatelessWidget {
           final i = entry.key;
           final stat = entry.value;
           return Expanded(
-            child: Container(
-              margin: EdgeInsets.only(
-                left: i == 0 ? 0 : 6,
-                right: i == stats.length - 1 ? 0 : 6,
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmall ? 10 : 14,
-                vertical: isSmall ? 12 : 14,
-              ),
-              decoration: BoxDecoration(
-                color: _C.card,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                    color: _C.border.withValues(alpha: 0.6)),
-                boxShadow: [
-                  BoxShadow(
-                    color: _C.primary.withValues(alpha: 0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: stat.bgColor,
-                      borderRadius: BorderRadius.circular(10),
+            child:
+                Container(
+                      margin: EdgeInsets.only(
+                        left: i == 0 ? 0 : 6,
+                        right: i == stats.length - 1 ? 0 : 6,
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isSmall ? 10 : 14,
+                        vertical: isSmall ? 12 : 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _C.card,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _C.border.withValues(alpha: 0.6),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _C.primary.withValues(alpha: 0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: stat.bgColor,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(stat.icon, size: 18, color: stat.color),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            stat.value,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: isSmall ? 18 : 22,
+                              fontWeight: FontWeight.w700,
+                              color: _C.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            stat.label,
+                            style: GoogleFonts.inter(
+                              fontSize: isSmall ? 10 : 11,
+                              fontWeight: FontWeight.w500,
+                              color: _C.textTertiary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(delay: (200 + i * 100).ms, duration: 400.ms)
+                    .slideY(
+                      begin: 0.15,
+                      delay: (200 + i * 100).ms,
+                      duration: 400.ms,
                     ),
-                    child:
-                        Icon(stat.icon, size: 18, color: stat.color),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    stat.value,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: isSmall ? 18 : 22,
-                      fontWeight: FontWeight.w700,
-                      color: _C.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    stat.label,
-                    style: GoogleFonts.inter(
-                      fontSize: isSmall ? 10 : 11,
-                      fontWeight: FontWeight.w500,
-                      color: _C.textTertiary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            )
-                .animate()
-                .fadeIn(delay: (200 + i * 100).ms, duration: 400.ms)
-                .slideY(
-                    begin: 0.15,
-                    delay: (200 + i * 100).ms,
-                    duration: 400.ms),
           );
         }).toList(),
       ),
@@ -467,8 +468,7 @@ class FleetManifestPage extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: _C.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(6),
@@ -508,8 +508,7 @@ class FleetManifestPage extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Tiket yang sudah dibayar akan muncul di sini',
-            style:
-                GoogleFonts.inter(fontSize: 13, color: _C.textHint),
+            style: GoogleFonts.inter(fontSize: 13, color: _C.textHint),
           ),
         ],
       ),
@@ -521,35 +520,33 @@ class FleetManifestPage extends StatelessWidget {
   // ─────────────────────────────────────────────────────
   Widget _buildScanButton(BuildContext context) {
     return SizedBox(
-      height: 54,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const TicketScannerPage(),
+          height: 54,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const TicketScannerPage()),
+              );
+            },
+            icon: const Icon(Iconsax.scan_barcode, size: 20),
+            label: Text(
+              'Scan QR Tiket',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          );
-        },
-        icon: const Icon(Iconsax.scan_barcode, size: 20),
-        label: Text(
-          'Scan QR Tiket',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _C.teal,
+              foregroundColor: Colors.white,
+              elevation: 6,
+              shadowColor: _C.teal.withValues(alpha: 0.4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
           ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _C.teal,
-          foregroundColor: Colors.white,
-          elevation: 6,
-          shadowColor: _C.teal.withValues(alpha: 0.4),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: 500.ms, duration: 400.ms)
         .slideY(begin: 0.3, delay: 500.ms, duration: 400.ms);
@@ -623,53 +620,61 @@ class _PassengerCard extends StatelessWidget {
         : '${booking.seatsBooked} kursi';
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeInOut,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: borderColor, width: (isUsed || isValidated) ? 1.5 : 1.0),
-        boxShadow: [
-          BoxShadow(
-            color: isUsed
-                ? _C.success.withValues(alpha: 0.08)
-                : isValidated
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: borderColor,
+              width: (isUsed || isValidated) ? 1.5 : 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isUsed
+                    ? _C.success.withValues(alpha: 0.08)
+                    : isValidated
                     ? _C.info.withValues(alpha: 0.08)
                     : _C.primary.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Top: Name + Status badge ──
-            Row(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 350),
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: isUsed
-                        ? _C.success.withValues(alpha: 0.12)
-                        : isValidated
+                // ── Top: Name + Status badge ──
+                Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 350),
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: isUsed
+                            ? _C.success.withValues(alpha: 0.12)
+                            : isValidated
                             ? _C.info.withValues(alpha: 0.12)
                             : _C.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: isUsed
-                        ? const Icon(Iconsax.tick_circle,
-                            size: 20, color: _C.success)
-                        : isValidated
-                            ? Icon(Iconsax.shield_tick,
-                                size: 20, color: _C.info)
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: isUsed
+                            ? const Icon(
+                                Iconsax.tick_circle,
+                                size: 20,
+                                color: _C.success,
+                              )
+                            : isValidated
+                            ? Icon(
+                                Iconsax.shield_tick,
+                                size: 20,
+                                color: _C.info,
+                              )
                             : Text(
                                 booking.userName.isNotEmpty
                                     ? booking.userName[0].toUpperCase()
@@ -680,184 +685,196 @@ class _PassengerCard extends StatelessWidget {
                                   color: _C.primary,
                                 ),
                               ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        booking.userName,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: nameColor,
-                          decoration: nameDecoration,
-                          decorationColor:
-                              _C.success.withValues(alpha: 0.5),
-                        ),
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Kode: ${booking.bookingCode}',
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: _C.textTertiary,
-                        ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            booking.userName,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: nameColor,
+                              decoration: nameDecoration,
+                              decorationColor: _C.success.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Kode: ${booking.bookingCode}',
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: _C.textTertiary,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 350),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: statusBg,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(statusIcon, size: 12, color: statusColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        statusLabel,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: statusColor,
-                        ),
+                    ),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 350),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
                       ),
-                    ],
-                  ),
+                      decoration: BoxDecoration(
+                        color: statusBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(statusIcon, size: 12, color: statusColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            statusLabel,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: statusColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 14),
+                const SizedBox(height: 14),
 
-            // ── Route row ──
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isUsed
-                    ? _C.success.withValues(alpha: 0.04)
-                    : isValidated
+                // ── Route row ──
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isUsed
+                        ? _C.success.withValues(alpha: 0.04)
+                        : isValidated
                         ? _C.info.withValues(alpha: 0.04)
                         : _C.bg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Asal',
-                            style: GoogleFonts.inter(
-                                fontSize: 10,
-                                color: _C.textTertiary)),
-                        const SizedBox(height: 3),
-                        Text(
-                          booking.origin,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: isUsed
-                                ? _C.textSecondary
-                                : _C.textPrimary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Icon(Iconsax.arrow_right_3,
-                        size: 16,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Asal',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                color: _C.textTertiary,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              booking.origin,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: isUsed
+                                    ? _C.textSecondary
+                                    : _C.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Icon(
+                          Iconsax.arrow_right_3,
+                          size: 16,
+                          color: isUsed
+                              ? _C.success
+                              : isValidated
+                              ? _C.info
+                              : _C.teal,
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'Tujuan',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                color: _C.textTertiary,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              booking.destination,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: isUsed
+                                    ? _C.textSecondary
+                                    : _C.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.end,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // ── Bottom: Seat + Date + Price ──
+                Row(
+                  children: [
+                    _InfoChip(
+                      icon: Iconsax.driver,
+                      label: seatLabel,
+                      color: isUsed
+                          ? _C.success
+                          : isValidated
+                          ? _C.info
+                          : _C.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    _InfoChip(
+                      icon: Iconsax.calendar_1,
+                      label: booking.departureDate,
+                      color: _C.textSecondary,
+                    ),
+                    const Spacer(),
+                    Text(
+                      fmtPrice(booking.totalPrice),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                         color: isUsed
                             ? _C.success
                             : isValidated
-                                ? _C.info
-                                : _C.teal),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('Tujuan',
-                            style: GoogleFonts.inter(
-                                fontSize: 10,
-                                color: _C.textTertiary)),
-                        const SizedBox(height: 3),
-                        Text(
-                          booking.destination,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: isUsed
-                                ? _C.textSecondary
-                                : _C.textPrimary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // ── Bottom: Seat + Date + Price ──
-            Row(
-              children: [
-                _InfoChip(
-                  icon: Iconsax.driver,
-                  label: seatLabel,
-                  color: isUsed
-                      ? _C.success
-                      : isValidated
-                          ? _C.info
-                          : _C.primary,
-                ),
-                const SizedBox(width: 8),
-                _InfoChip(
-                  icon: Iconsax.calendar_1,
-                  label: booking.departureDate,
-                  color: _C.textSecondary,
-                ),
-                const Spacer(),
-                Text(
-                  fmtPrice(booking.totalPrice),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: isUsed
-                        ? _C.success
-                        : isValidated
                             ? _C.info
                             : _C.primary,
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    )
+          ),
+        )
         .animate()
         .fadeIn(delay: (80 + index * 60).ms, duration: 400.ms)
         .slideY(
-            begin: 0.05,
-            delay: (80 + index * 60).ms,
-            duration: 400.ms,
-            curve: Curves.easeOutCubic);
+          begin: 0.05,
+          delay: (80 + index * 60).ms,
+          duration: 400.ms,
+          curve: Curves.easeOutCubic,
+        );
   }
 }
 

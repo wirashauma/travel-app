@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -46,13 +48,55 @@ class PopularRoutesPage extends StatelessWidget {
 
   /// 7 Rute populer Sumatera Barat (statis).
   static const List<_RouteData> _routes = [
-    _RouteData(from: 'Padang', to: 'Bukittinggi', price: 45000, duration: '1j 55m', distance: 90),
-    _RouteData(from: 'Padang', to: 'Payakumbuh', price: 55000, duration: '2j 40m', distance: 127),
-    _RouteData(from: 'Bukittinggi', to: 'Padang', price: 45000, duration: '1j 55m', distance: 90),
-    _RouteData(from: 'Padang', to: 'Solok', price: 40000, duration: '1j 20m', distance: 64),
-    _RouteData(from: 'Padang', to: 'Pariaman', price: 25000, duration: '1j 10m', distance: 55),
-    _RouteData(from: 'Payakumbuh', to: 'Batusangkar', price: 30000, duration: '40m', distance: 30),
-    _RouteData(from: 'Padang', to: 'Pesisir Selatan', price: 60000, duration: '1j 40m', distance: 77),
+    _RouteData(
+      from: 'Padang',
+      to: 'Bukittinggi',
+      price: 45000,
+      duration: '1j 55m',
+      distance: 90,
+    ),
+    _RouteData(
+      from: 'Padang',
+      to: 'Payakumbuh',
+      price: 55000,
+      duration: '2j 40m',
+      distance: 127,
+    ),
+    _RouteData(
+      from: 'Bukittinggi',
+      to: 'Padang',
+      price: 45000,
+      duration: '1j 55m',
+      distance: 90,
+    ),
+    _RouteData(
+      from: 'Padang',
+      to: 'Solok',
+      price: 40000,
+      duration: '1j 20m',
+      distance: 64,
+    ),
+    _RouteData(
+      from: 'Padang',
+      to: 'Pariaman',
+      price: 25000,
+      duration: '1j 10m',
+      distance: 55,
+    ),
+    _RouteData(
+      from: 'Payakumbuh',
+      to: 'Batusangkar',
+      price: 30000,
+      duration: '40m',
+      distance: 30,
+    ),
+    _RouteData(
+      from: 'Padang',
+      to: 'Pesisir Selatan',
+      price: 60000,
+      duration: '1j 40m',
+      distance: 77,
+    ),
   ];
 
   String _fmtPrice(int price) {
@@ -62,10 +106,12 @@ class PopularRoutesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -131,8 +177,7 @@ class PopularRoutesPage extends StatelessWidget {
           ),
           // Static count badge
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: _C.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
@@ -175,191 +220,195 @@ class _RouteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F4C81).withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Top row: cities
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      from,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _C.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Keberangkatan',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                        color: _C.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _C.borderLight,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Iconsax.arrow_right_3,
-                      size: 14,
-                      color: _C.textTertiary,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      to,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _C.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Tujuan',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                        color: _C.textTertiary,
-                      ),
-                      textAlign: TextAlign.right,
-                    ),
-                  ],
-                ),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _C.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _C.borderLight),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F4C81).withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-
-          // Divider
-          Container(
-            height: 1,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            color: _C.borderLight,
-          ),
-
-          // Bottom row: duration, distance, price
-          Row(
+          child: Column(
             children: [
-              // Duration chip
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: _C.primary.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Iconsax.clock, size: 13, color: _C.primary),
-                    const SizedBox(width: 5),
-                    Text(
-                      duration,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _C.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              // Distance chip
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: _C.orange.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Iconsax.routing_2, size: 13, color: _C.orange),
-                    const SizedBox(width: 5),
-                    Text(
-                      '${distance.toStringAsFixed(0)} km',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _C.orange,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const Spacer(),
-
-              // Price
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              // Top row: cities
+              Row(
                 children: [
-                  Text(
-                    'Mulai dari',
-                    style: GoogleFonts.inter(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w400,
-                      color: _C.textTertiary,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          from,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: _C.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Keberangkatan',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: _C.textTertiary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    price,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: _C.primary,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: _C.borderLight,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Iconsax.arrow_right_3,
+                          size: 14,
+                          color: _C.textTertiary,
+                        ),
+                      ),
                     ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          to,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: _C.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Tujuan',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: _C.textTertiary,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              // Divider
+              Container(
+                height: 1,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                color: _C.borderLight,
+              ),
+
+              // Bottom row: duration, distance, price
+              Row(
+                children: [
+                  // Duration chip
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _C.primary.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Iconsax.clock, size: 13, color: _C.primary),
+                        const SizedBox(width: 5),
+                        Text(
+                          duration,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _C.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Distance chip
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _C.orange.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Iconsax.routing_2, size: 13, color: _C.orange),
+                        const SizedBox(width: 5),
+                        Text(
+                          '${distance.toStringAsFixed(0)} km',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _C.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Price
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Mulai dari',
+                        style: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w400,
+                          color: _C.textTertiary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        price,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: _C.primary,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
-        ],
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: (80 + index * 80).ms, duration: 420.ms)
         .slideY(

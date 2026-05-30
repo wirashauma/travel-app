@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, deprecated_member_use, use_build_context_synchronously, dead_code
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -41,43 +43,193 @@ class _C {
 // ─────────────────────────────────────────────────────────
 const List<Map<String, dynamic>> _kSumbarRoutes = [
   // ── Padang hub ──
-  {'from': 'Padang', 'to': 'Padang Panjang', 'distance': 70, 'price': 35000, 'duration': '1.5 Jam'},
-  {'from': 'Padang', 'to': 'Pariaman', 'distance': 55, 'price': 25000, 'duration': '1 Jam'},
-  {'from': 'Padang', 'to': 'Solok', 'distance': 64, 'price': 40000, 'duration': '1.5 Jam'},
-  {'from': 'Padang', 'to': 'Pesisir Selatan', 'distance': 77, 'price': 45000, 'duration': '2 Jam'},
+  {
+    'from': 'Padang',
+    'to': 'Padang Panjang',
+    'distance': 70,
+    'price': 35000,
+    'duration': '1.5 Jam',
+  },
+  {
+    'from': 'Padang',
+    'to': 'Pariaman',
+    'distance': 55,
+    'price': 25000,
+    'duration': '1 Jam',
+  },
+  {
+    'from': 'Padang',
+    'to': 'Solok',
+    'distance': 64,
+    'price': 40000,
+    'duration': '1.5 Jam',
+  },
+  {
+    'from': 'Padang',
+    'to': 'Pesisir Selatan',
+    'distance': 77,
+    'price': 45000,
+    'duration': '2 Jam',
+  },
   // ── Padang Panjang hub ──
-  {'from': 'Padang Panjang', 'to': 'Bukittinggi', 'distance': 20, 'price': 15000, 'duration': '30 Menit'},
-  {'from': 'Padang Panjang', 'to': 'Batusangkar', 'distance': 40, 'price': 25000, 'duration': '1 Jam'},
-  {'from': 'Padang Panjang', 'to': 'Solok', 'distance': 35, 'price': 20000, 'duration': '45 Menit'},
+  {
+    'from': 'Padang Panjang',
+    'to': 'Bukittinggi',
+    'distance': 20,
+    'price': 15000,
+    'duration': '30 Menit',
+  },
+  {
+    'from': 'Padang Panjang',
+    'to': 'Batusangkar',
+    'distance': 40,
+    'price': 25000,
+    'duration': '1 Jam',
+  },
+  {
+    'from': 'Padang Panjang',
+    'to': 'Solok',
+    'distance': 35,
+    'price': 20000,
+    'duration': '45 Menit',
+  },
   // ── Bukittinggi hub ──
-  {'from': 'Bukittinggi', 'to': 'Payakumbuh', 'distance': 37, 'price': 20000, 'duration': '45 Menit'},
-  {'from': 'Bukittinggi', 'to': 'Pasaman', 'distance': 100, 'price': 55000, 'duration': '2 Jam'},
-  {'from': 'Bukittinggi', 'to': 'Pariaman', 'distance': 65, 'price': 35000, 'duration': '1.5 Jam'},
-  {'from': 'Bukittinggi', 'to': 'Lubuk Basung', 'distance': 25, 'price': 15000, 'duration': '35 Menit'},
-  {'from': 'Bukittinggi', 'to': 'Batusangkar', 'distance': 45, 'price': 25000, 'duration': '1 Jam'},
+  {
+    'from': 'Bukittinggi',
+    'to': 'Payakumbuh',
+    'distance': 37,
+    'price': 20000,
+    'duration': '45 Menit',
+  },
+  {
+    'from': 'Bukittinggi',
+    'to': 'Pasaman',
+    'distance': 100,
+    'price': 55000,
+    'duration': '2 Jam',
+  },
+  {
+    'from': 'Bukittinggi',
+    'to': 'Pariaman',
+    'distance': 65,
+    'price': 35000,
+    'duration': '1.5 Jam',
+  },
+  {
+    'from': 'Bukittinggi',
+    'to': 'Lubuk Basung',
+    'distance': 25,
+    'price': 15000,
+    'duration': '35 Menit',
+  },
+  {
+    'from': 'Bukittinggi',
+    'to': 'Batusangkar',
+    'distance': 45,
+    'price': 25000,
+    'duration': '1 Jam',
+  },
   // ── Payakumbuh hub ──
-  {'from': 'Payakumbuh', 'to': 'Batusangkar', 'distance': 30, 'price': 20000, 'duration': '40 Menit'},
-  {'from': 'Payakumbuh', 'to': 'Sijunjung', 'distance': 100, 'price': 55000, 'duration': '2 Jam'},
+  {
+    'from': 'Payakumbuh',
+    'to': 'Batusangkar',
+    'distance': 30,
+    'price': 20000,
+    'duration': '40 Menit',
+  },
+  {
+    'from': 'Payakumbuh',
+    'to': 'Sijunjung',
+    'distance': 100,
+    'price': 55000,
+    'duration': '2 Jam',
+  },
   // ── Solok hub ──
-  {'from': 'Solok', 'to': 'Sawahlunto', 'distance': 38, 'price': 25000, 'duration': '50 Menit'},
-  {'from': 'Solok', 'to': 'Solok Selatan', 'distance': 90, 'price': 50000, 'duration': '2 Jam'},
+  {
+    'from': 'Solok',
+    'to': 'Sawahlunto',
+    'distance': 38,
+    'price': 25000,
+    'duration': '50 Menit',
+  },
+  {
+    'from': 'Solok',
+    'to': 'Solok Selatan',
+    'distance': 90,
+    'price': 50000,
+    'duration': '2 Jam',
+  },
   // ── Sawahlunto hub ──
-  {'from': 'Sawahlunto', 'to': 'Sijunjung', 'distance': 30, 'price': 20000, 'duration': '40 Menit'},
-  {'from': 'Sawahlunto', 'to': 'Batusangkar', 'distance': 55, 'price': 30000, 'duration': '1 Jam'},
+  {
+    'from': 'Sawahlunto',
+    'to': 'Sijunjung',
+    'distance': 30,
+    'price': 20000,
+    'duration': '40 Menit',
+  },
+  {
+    'from': 'Sawahlunto',
+    'to': 'Batusangkar',
+    'distance': 55,
+    'price': 30000,
+    'duration': '1 Jam',
+  },
   // ── Pesisir Selatan ──
-  {'from': 'Pesisir Selatan', 'to': 'Solok Selatan', 'distance': 110, 'price': 60000, 'duration': '2.5 Jam'},
+  {
+    'from': 'Pesisir Selatan',
+    'to': 'Solok Selatan',
+    'distance': 110,
+    'price': 60000,
+    'duration': '2.5 Jam',
+  },
   // ── Pasaman hub ──
-  {'from': 'Pasaman', 'to': 'Pasaman Barat', 'distance': 50, 'price': 30000, 'duration': '1 Jam'},
+  {
+    'from': 'Pasaman',
+    'to': 'Pasaman Barat',
+    'distance': 50,
+    'price': 30000,
+    'duration': '1 Jam',
+  },
   // ── Pariaman ──
-  {'from': 'Pariaman', 'to': 'Pasaman Barat', 'distance': 115, 'price': 65000, 'duration': '2.5 Jam'},
+  {
+    'from': 'Pariaman',
+    'to': 'Pasaman Barat',
+    'distance': 115,
+    'price': 65000,
+    'duration': '2.5 Jam',
+  },
   // ── Sijunjung – Dharmasraya corridor ──
-  {'from': 'Sijunjung', 'to': 'Dharmasraya', 'distance': 80, 'price': 45000, 'duration': '1.5 Jam'},
+  {
+    'from': 'Sijunjung',
+    'to': 'Dharmasraya',
+    'distance': 80,
+    'price': 45000,
+    'duration': '1.5 Jam',
+  },
   // ── Solok Selatan – Dharmasraya ──
-  {'from': 'Solok Selatan', 'to': 'Dharmasraya', 'distance': 95, 'price': 55000, 'duration': '2 Jam'},
+  {
+    'from': 'Solok Selatan',
+    'to': 'Dharmasraya',
+    'distance': 95,
+    'price': 55000,
+    'duration': '2 Jam',
+  },
   // ── Lubuk Basung – Pariaman ──
-  {'from': 'Lubuk Basung', 'to': 'Pariaman', 'distance': 50, 'price': 30000, 'duration': '1 Jam'},
+  {
+    'from': 'Lubuk Basung',
+    'to': 'Pariaman',
+    'distance': 50,
+    'price': 30000,
+    'duration': '1 Jam',
+  },
   // ── Lubuk Basung – Pasaman Barat ──
-  {'from': 'Lubuk Basung', 'to': 'Pasaman Barat', 'distance': 90, 'price': 50000, 'duration': '2 Jam'},
+  {
+    'from': 'Lubuk Basung',
+    'to': 'Pasaman Barat',
+    'distance': 90,
+    'price': 50000,
+    'duration': '2 Jam',
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -86,8 +238,9 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
 class ManageRoutesPage extends StatelessWidget {
   const ManageRoutesPage({super.key});
 
-  static final _routesRef =
-      FirebaseFirestore.instance.collection('routes').orderBy('from');
+  static final _routesRef = FirebaseFirestore.instance
+      .collection('routes')
+      .orderBy('from');
 
   static final _currencyFmt = NumberFormat.currency(
     locale: 'id',
@@ -224,25 +377,35 @@ class ManageRoutesPage extends StatelessWidget {
           '• Field fromLat/fromLng/toLat/toLng di setiap dokumen routes\n\n'
           'Data koordinat mencakup semua kota rute Sumatera.',
           style: GoogleFonts.inter(
-              fontSize: 12, color: _C.textSecondary, height: 1.4),
+            fontSize: 12,
+            color: _C.textSecondary,
+            height: 1.4,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal',
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600, color: _C.textTertiary)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: _C.textTertiary,
+              ),
+            ),
           ),
           ElevatedButton.icon(
             onPressed: () => Navigator.pop(ctx, true),
             icon: const Icon(Iconsax.gps, size: 18),
-            label: Text('Seed GPS',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            label: Text(
+              'Seed GPS',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: _C.teal,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
               elevation: 0,
             ),
           ),
@@ -258,33 +421,39 @@ class ManageRoutesPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text(
-              '\u{1F4CD} ${result.cities} kota + ${result.routes} rute berhasil di-update dengan koordinat GPS!',
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                '\u{1F4CD} ${result.cities} kota + ${result.routes} rute berhasil di-update dengan koordinat GPS!',
+                style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+              ),
+              backgroundColor: _C.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
             ),
-            backgroundColor: _C.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-          ));
+          );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text(
-              'Gagal seed koordinat: $e',
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                'Gagal seed koordinat: $e',
+                style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+              ),
+              backgroundColor: _C.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
             ),
-            backgroundColor: _C.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-          ));
+          );
       }
     }
   }
@@ -327,26 +496,36 @@ class ManageRoutesPage extends StatelessWidget {
             'Lubuk Basung\n\n'
             'Semua edge sinkron dengan DijkstraService.',
             style: GoogleFonts.inter(
-                fontSize: 12, color: _C.textSecondary, height: 1.4),
+              fontSize: 12,
+              color: _C.textSecondary,
+              height: 1.4,
+            ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal',
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600, color: _C.textTertiary)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: _C.textTertiary,
+              ),
+            ),
           ),
           ElevatedButton.icon(
             onPressed: () => Navigator.pop(ctx, true),
             icon: const Icon(Icons.auto_awesome, size: 18),
-            label: Text('Seed Sumbar',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            label: Text(
+              'Seed Sumbar',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: _C.teal,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
               elevation: 0,
             ),
           ),
@@ -377,7 +556,9 @@ class ManageRoutesPage extends StatelessWidget {
                 Text(
                   'Menyuntikkan data Sumbar\u2026',
                   style: GoogleFonts.inter(
-                      fontSize: 13, color: _C.textSecondary),
+                    fontSize: 13,
+                    color: _C.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -423,17 +604,20 @@ class ManageRoutesPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text(
-              'Data Sumatera Barat Berhasil Disuntikkan! (${_kSumbarRoutes.length} rute)',
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                'Data Sumatera Barat Berhasil Disuntikkan! (${_kSumbarRoutes.length} rute)',
+                style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+              ),
+              backgroundColor: _C.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
             ),
-            backgroundColor: _C.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-          ));
+          );
       }
     } catch (e) {
       if (context.mounted) Navigator.pop(context); // dismiss loading
@@ -441,14 +625,17 @@ class ManageRoutesPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text('Gagal seed: $e'),
-            backgroundColor: _C.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-          ));
+          ..showSnackBar(
+            SnackBar(
+              content: Text('Gagal seed: $e'),
+              backgroundColor: _C.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
       }
     }
   }
@@ -458,10 +645,21 @@ class ManageRoutesPage extends StatelessWidget {
   // ─────────────────────────────────────────────────────
   static Future<void> _deleteNonSumbarRoutes(BuildContext context) async {
     const kotaSumbar = [
-      'Batusangkar', 'Bukittinggi', 'Dharmasraya', 'Lubuk Basung',
-      'Padang', 'Padang Panjang', 'Pariaman', 'Pasaman',
-      'Pasaman Barat', 'Payakumbuh', 'Pesisir Selatan',
-      'Sawahlunto', 'Sijunjung', 'Solok', 'Solok Selatan',
+      'Batusangkar',
+      'Bukittinggi',
+      'Dharmasraya',
+      'Lubuk Basung',
+      'Padang',
+      'Padang Panjang',
+      'Pariaman',
+      'Pasaman',
+      'Pasaman Barat',
+      'Payakumbuh',
+      'Pesisir Selatan',
+      'Sawahlunto',
+      'Sijunjung',
+      'Solok',
+      'Solok Selatan',
     ];
 
     final confirm = await showDialog<bool>(
@@ -489,25 +687,35 @@ class ManageRoutesPage extends StatelessWidget {
           'Kota Sumbar: ${kotaSumbar.join(", ")}\n\n'
           'Aksi ini tidak dapat dibatalkan.',
           style: GoogleFonts.inter(
-              fontSize: 12, color: _C.textSecondary, height: 1.4),
+            fontSize: 12,
+            color: _C.textSecondary,
+            height: 1.4,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal',
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600, color: _C.textTertiary)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: _C.textTertiary,
+              ),
+            ),
           ),
           ElevatedButton.icon(
             onPressed: () => Navigator.pop(ctx, true),
             icon: const Icon(Iconsax.trash, size: 18),
-            label: Text('Hapus',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            label: Text(
+              'Hapus',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: _C.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
               elevation: 0,
             ),
           ),
@@ -540,30 +748,36 @@ class ManageRoutesPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text(
-              '$deletedCount rute non-Sumbar berhasil dihapus!',
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                '$deletedCount rute non-Sumbar berhasil dihapus!',
+                style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+              ),
+              backgroundColor: _C.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
             ),
-            backgroundColor: _C.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-          ));
+          );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text('Gagal membersihkan: $e'),
-            backgroundColor: _C.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-          ));
+          ..showSnackBar(
+            SnackBar(
+              content: Text('Gagal membersihkan: $e'),
+              backgroundColor: _C.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
       }
     }
   }
@@ -627,7 +841,11 @@ class ManageRoutesPage extends StatelessWidget {
             ),
             child: Padding(
               padding: EdgeInsets.fromLTRB(
-                  24, 16, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+                24,
+                16,
+                24,
+                MediaQuery.of(ctx).viewInsets.bottom + 24,
+              ),
               child: Form(
                 key: formKey,
                 child: SingleChildScrollView(
@@ -662,7 +880,9 @@ class ManageRoutesPage extends StatelessWidget {
                             ? 'Perbarui jalur antar kota.'
                             : 'Definisikan jalur/edge baru pada graph rute.',
                         style: GoogleFonts.inter(
-                            fontSize: 13, color: _C.textTertiary),
+                          fontSize: 13,
+                          color: _C.textTertiary,
+                        ),
                       ),
                       const SizedBox(height: 24),
 
@@ -680,7 +900,8 @@ class ManageRoutesPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            value: selectedFrom != null &&
+                            initialValue:
+                                selectedFrom != null &&
                                     _kSumbarCities.contains(selectedFrom)
                                 ? selectedFrom
                                 : null,
@@ -688,32 +909,49 @@ class ManageRoutesPage extends StatelessWidget {
                             decoration: InputDecoration(
                               hintText: 'Pilih kota asal',
                               hintStyle: GoogleFonts.inter(
-                                  fontSize: 14, color: _C.textTertiary),
-                              prefixIcon: const Icon(Iconsax.location,
-                                  size: 20, color: _C.textTertiary),
+                                fontSize: 14,
+                                color: _C.textTertiary,
+                              ),
+                              prefixIcon: const Icon(
+                                Iconsax.location,
+                                size: 20,
+                                color: _C.textTertiary,
+                              ),
                               filled: true,
                               fillColor: _C.bg,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide:
-                                    BorderSide(color: _C.border, width: 1.5),
+                                borderSide: BorderSide(
+                                  color: _C.border,
+                                  width: 1.5,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide:
-                                    BorderSide(color: _C.border, width: 1.5),
+                                borderSide: BorderSide(
+                                  color: _C.border,
+                                  width: 1.5,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(
-                                    color: _C.primary, width: 1.8),
+                                  color: _C.primary,
+                                  width: 1.8,
+                                ),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 14),
+                                horizontal: 14,
+                                vertical: 14,
+                              ),
                             ),
                             items: _kSumbarCities
-                                .map((city) => DropdownMenuItem(
-                                    value: city, child: Text(city)))
+                                .map(
+                                  (city) => DropdownMenuItem(
+                                    value: city,
+                                    child: Text(city),
+                                  ),
+                                )
                                 .toList(),
                             onChanged: (v) =>
                                 setSheetState(() => selectedFrom = v),
@@ -738,7 +976,8 @@ class ManageRoutesPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            value: selectedTo != null &&
+                            initialValue:
+                                selectedTo != null &&
                                     _kSumbarCities.contains(selectedTo)
                                 ? selectedTo
                                 : null,
@@ -746,32 +985,49 @@ class ManageRoutesPage extends StatelessWidget {
                             decoration: InputDecoration(
                               hintText: 'Pilih kota tujuan',
                               hintStyle: GoogleFonts.inter(
-                                  fontSize: 14, color: _C.textTertiary),
-                              prefixIcon: const Icon(Iconsax.location_tick,
-                                  size: 20, color: _C.textTertiary),
+                                fontSize: 14,
+                                color: _C.textTertiary,
+                              ),
+                              prefixIcon: const Icon(
+                                Iconsax.location_tick,
+                                size: 20,
+                                color: _C.textTertiary,
+                              ),
                               filled: true,
                               fillColor: _C.bg,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide:
-                                    BorderSide(color: _C.border, width: 1.5),
+                                borderSide: BorderSide(
+                                  color: _C.border,
+                                  width: 1.5,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide:
-                                    BorderSide(color: _C.border, width: 1.5),
+                                borderSide: BorderSide(
+                                  color: _C.border,
+                                  width: 1.5,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(
-                                    color: _C.primary, width: 1.8),
+                                  color: _C.primary,
+                                  width: 1.8,
+                                ),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 14),
+                                horizontal: 14,
+                                vertical: 14,
+                              ),
                             ),
                             items: _kSumbarCities
-                                .map((city) => DropdownMenuItem(
-                                    value: city, child: Text(city)))
+                                .map(
+                                  (city) => DropdownMenuItem(
+                                    value: city,
+                                    child: Text(city),
+                                  ),
+                                )
                                 .toList(),
                             onChanged: (v) =>
                                 setSheetState(() => selectedTo = v),
@@ -798,7 +1054,7 @@ class ManageRoutesPage extends StatelessWidget {
                               icon: Iconsax.ruler,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
+                                FilteringTextInputFormatter.digitsOnly,
                               ],
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
@@ -818,7 +1074,7 @@ class ManageRoutesPage extends StatelessWidget {
                               icon: Iconsax.money_recive,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
+                                FilteringTextInputFormatter.digitsOnly,
                               ],
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
@@ -855,10 +1111,12 @@ class ManageRoutesPage extends StatelessWidget {
                                   try {
                                     final from = selectedFrom!;
                                     final to = selectedTo!;
-                                    final distance =
-                                        int.parse(distanceCtrl.text.trim());
-                                    final price =
-                                        int.parse(priceCtrl.text.trim());
+                                    final distance = int.parse(
+                                      distanceCtrl.text.trim(),
+                                    );
+                                    final price = int.parse(
+                                      priceCtrl.text.trim(),
+                                    );
                                     final duration = durationCtrl.text.trim();
 
                                     final ref = FirebaseFirestore.instance
@@ -885,37 +1143,44 @@ class ManageRoutesPage extends StatelessWidget {
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context)
                                         ..clearSnackBars()
-                                        ..showSnackBar(SnackBar(
-                                          content: Text(
-                                            isEdit
-                                                ? 'Rute berhasil diperbarui'
-                                                : 'Rute berhasil ditambahkan',
-                                            style: GoogleFonts.inter(
+                                        ..showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              isEdit
+                                                  ? 'Rute berhasil diperbarui'
+                                                  : 'Rute berhasil ditambahkan',
+                                              style: GoogleFonts.inter(
                                                 fontSize: 13,
-                                                color: Colors.white),
-                                          ),
-                                          backgroundColor: _C.success,
-                                          behavior: SnackBarBehavior.floating,
-                                          shape: RoundedRectangleBorder(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            backgroundColor: _C.success,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(10)),
-                                          margin: const EdgeInsets.all(16),
-                                        ));
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            margin: const EdgeInsets.all(16),
+                                          ),
+                                        );
                                     }
                                   } catch (e) {
                                     setSheetState(() => isSaving = false);
                                     if (ctx.mounted) {
                                       ScaffoldMessenger.of(ctx)
                                         ..clearSnackBars()
-                                        ..showSnackBar(SnackBar(
-                                          content: Text('Error: $e'),
-                                          backgroundColor: _C.error,
-                                          behavior: SnackBarBehavior.floating,
-                                          shape: RoundedRectangleBorder(
+                                        ..showSnackBar(
+                                          SnackBar(
+                                            content: Text('Error: $e'),
+                                            backgroundColor: _C.error,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(10)),
-                                          margin: const EdgeInsets.all(16),
-                                        ));
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            margin: const EdgeInsets.all(16),
+                                          ),
+                                        );
                                     }
                                   }
                                 },
@@ -923,7 +1188,8 @@ class ManageRoutesPage extends StatelessWidget {
                             backgroundColor: _C.primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                             elevation: 0,
                           ),
                           child: isSaving
@@ -931,13 +1197,16 @@ class ManageRoutesPage extends StatelessWidget {
                                   width: 22,
                                   height: 22,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2.5, color: Colors.white),
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
                                 )
                               : Text(
                                   isEdit ? 'Simpan Perubahan' : 'Tambah Rute',
                                   style: GoogleFonts.inter(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                         ),
                       ),
@@ -967,7 +1236,9 @@ class ManageRoutesPage extends StatelessWidget {
         title: Text(
           'Hapus Rute?',
           style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700, color: _C.textPrimary),
+            fontWeight: FontWeight.w700,
+            color: _C.textPrimary,
+          ),
         ),
         content: Text(
           'Rute "$label" akan dihapus secara permanen.',
@@ -976,9 +1247,13 @@ class ManageRoutesPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal',
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600, color: _C.textTertiary)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: _C.textTertiary,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -986,11 +1261,14 @@ class ManageRoutesPage extends StatelessWidget {
               backgroundColor: _C.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
               elevation: 0,
             ),
-            child: Text('Hapus',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            child: Text(
+              'Hapus',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -999,35 +1277,40 @@ class ManageRoutesPage extends StatelessWidget {
     if (confirm != true) return;
 
     try {
-      await FirebaseFirestore.instance
-          .collection('routes')
-          .doc(docId)
-          .delete();
+      await FirebaseFirestore.instance.collection('routes').doc(docId).delete();
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text('Rute berhasil dihapus',
-                style: GoogleFonts.inter(fontSize: 13, color: Colors.white)),
-            backgroundColor: _C.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-          ));
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                'Rute berhasil dihapus',
+                style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+              ),
+              backgroundColor: _C.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text('Gagal menghapus: $e'),
-            backgroundColor: _C.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-          ));
+          ..showSnackBar(
+            SnackBar(
+              content: Text('Gagal menghapus: $e'),
+              backgroundColor: _C.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
       }
     }
   }
@@ -1059,158 +1342,167 @@ class _RouteCard extends StatelessWidget {
     final label = '$from \u2192 $to';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.border.withValues(alpha: 0.6)),
-        boxShadow: [
-          BoxShadow(
-            color: _C.primary.withValues(alpha: 0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── From \u2192 To ──
-              Row(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: _C.teal,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: _C.teal.withValues(alpha: 0.3), width: 3),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      from,
-                      style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: _C.textPrimary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Dotted line
-              Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: Column(
-                  children: List.generate(
-                    3,
-                    (_) => Container(
-                      width: 2,
-                      height: 4,
-                      margin: const EdgeInsets.symmetric(vertical: 1),
-                      color: _C.textTertiary.withValues(alpha: 0.4),
-                    ),
-                  ),
-                ),
-              ),
-
-              Row(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: _C.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: _C.primary.withValues(alpha: 0.3), width: 3),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      to,
-                      style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: _C.textPrimary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 14),
-
-              // ── Info chips ──
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _InfoChip(
-                      icon: Iconsax.ruler,
-                      label: '$distance km',
-                      color: _C.teal),
-                  _InfoChip(
-                      icon: Iconsax.money_recive,
-                      label: currencyFmt.format(price),
-                      color: _C.primary),
-                  if (duration.isNotEmpty)
-                    _InfoChip(
-                        icon: Iconsax.clock,
-                        label: duration,
-                        color: _C.warning),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // ── Action buttons ──
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  _ActionBtn(
-                    icon: Iconsax.edit_2,
-                    label: 'Edit',
-                    color: _C.primary,
-                    onTap: () => ManageRoutesPage._showRouteForm(
-                      context,
-                      docId: docId,
-                      existing: data,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  _ActionBtn(
-                    icon: Iconsax.trash,
-                    label: 'Hapus',
-                    color: _C.error,
-                    onTap: () =>
-                        ManageRoutesPage._deleteRoute(context, docId, label),
-                  ),
-                ],
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            color: _C.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _C.border.withValues(alpha: 0.6)),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-        ),
-      ),
-    )
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── From \u2192 To ──
+                  Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: _C.teal,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _C.teal.withValues(alpha: 0.3),
+                            width: 3,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          from,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: _C.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Dotted line
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Column(
+                      children: List.generate(
+                        3,
+                        (_) => Container(
+                          width: 2,
+                          height: 4,
+                          margin: const EdgeInsets.symmetric(vertical: 1),
+                          color: _C.textTertiary.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: _C.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _C.primary.withValues(alpha: 0.3),
+                            width: 3,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          to,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: _C.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // ── Info chips ──
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _InfoChip(
+                        icon: Iconsax.ruler,
+                        label: '$distance km',
+                        color: _C.teal,
+                      ),
+                      _InfoChip(
+                        icon: Iconsax.money_recive,
+                        label: currencyFmt.format(price),
+                        color: _C.primary,
+                      ),
+                      if (duration.isNotEmpty)
+                        _InfoChip(
+                          icon: Iconsax.clock,
+                          label: duration,
+                          color: _C.warning,
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // ── Action buttons ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _ActionBtn(
+                        icon: Iconsax.edit_2,
+                        label: 'Edit',
+                        color: _C.primary,
+                        onTap: () => ManageRoutesPage._showRouteForm(
+                          context,
+                          docId: docId,
+                          existing: data,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      _ActionBtn(
+                        icon: Iconsax.trash,
+                        label: 'Hapus',
+                        color: _C.error,
+                        onTap: () => ManageRoutesPage._deleteRoute(
+                          context,
+                          docId,
+                          label,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        )
         .animate()
         .fadeIn(delay: (100 + index * 60).ms, duration: 400.ms)
-        .slideY(
-            begin: 0.05,
-            delay: (100 + index * 60).ms,
-            duration: 400.ms);
+        .slideY(begin: 0.05, delay: (100 + index * 60).ms, duration: 400.ms);
   }
 }
 
@@ -1241,9 +1533,14 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 5),
-          Text(label,
-              style: GoogleFonts.inter(
-                  fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
@@ -1275,18 +1572,20 @@ class _ActionBtn extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 16, color: color),
               const SizedBox(width: 6),
-              Text(label,
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: color)),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
             ],
           ),
         ),
@@ -1322,11 +1621,14 @@ class _FormField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: _C.textPrimary)),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: _C.textPrimary,
+          ),
+        ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -1336,30 +1638,34 @@ class _FormField extends StatelessWidget {
           style: GoogleFonts.inter(fontSize: 14, color: _C.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle:
-                GoogleFonts.inter(fontSize: 13, color: _C.textTertiary),
+            hintStyle: GoogleFonts.inter(fontSize: 13, color: _C.textTertiary),
             prefixIcon: Icon(icon, size: 20, color: _C.textTertiary),
             filled: true,
             fillColor: _C.bg,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: _C.border)),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: _C.border),
+            ),
             enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: _C.border)),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: _C.border),
+            ),
             focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: _C.primary, width: 1.5)),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _C.primary, width: 1.5),
+            ),
             errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: _C.error)),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _C.error),
+            ),
             focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: _C.error, width: 1.5)),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _C.error, width: 1.5),
+            ),
           ),
         ),
       ],
@@ -1393,17 +1699,21 @@ class _EmptyState extends StatelessWidget {
           children: [
             Icon(icon, size: 64, color: color.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
-            Text(title,
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: _C.textPrimary),
-                textAlign: TextAlign.center),
+            Text(
+              title,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: _C.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
-            Text(subtitle,
-                style: GoogleFonts.inter(
-                    fontSize: 13, color: _C.textSecondary),
-                textAlign: TextAlign.center),
+            Text(
+              subtitle,
+              style: GoogleFonts.inter(fontSize: 13, color: _C.textSecondary),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

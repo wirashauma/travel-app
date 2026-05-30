@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:iconsax/iconsax.dart';
@@ -32,10 +30,8 @@ import 'package:iconsax/iconsax.dart';
 // ─────────────────────────────────────────────────────────
 class _C {
   static const Color primary = Color(0xFF0F4C81);
-  static const Color teal = Color(0xFF0D9488);
   static const Color bg = Color(0xFFFAFBFD);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color card = Color(0xFFFFFFFF);
   static const Color borderLight = Color(0xFFF1F5F9);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textTertiary = Color(0xFF94A3B8);
@@ -273,9 +269,7 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
 
     final controller = await _controller.future;
     final bounds = _calculateBounds(widget.routePoints);
-    await controller.animateCamera(
-      CameraUpdate.newLatLngBounds(bounds, 50.0),
-    );
+    await controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50.0));
   }
 
   /// Calculate LatLngBounds from a list of points.
@@ -330,6 +324,7 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
             // ── Google Map ──
             GoogleMap(
               initialCameraPosition: _initialCamera,
+              style: _kMapStyleJson,
               markers: _markers,
               polylines: _polylines,
               mapType: MapType.normal,
@@ -343,8 +338,6 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
               liteModeEnabled: false,
               onMapCreated: (GoogleMapController controller) async {
                 _controller.complete(controller);
-                // Apply custom map style
-                await controller.setMapStyle(_kMapStyleJson);
                 // Fit bounds after map is created
                 if (widget.routePoints.length >= 2) {
                   final bounds = _calculateBounds(widget.routePoints);
@@ -393,8 +386,10 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
                 top: 10,
                 left: 10,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: _C.white.withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(8),
@@ -430,8 +425,10 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
                 bottom: 10,
                 left: 10,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: _C.white.withValues(alpha: 0.92),
                     borderRadius: BorderRadius.circular(6),
@@ -470,10 +467,7 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
         Text(
@@ -508,10 +502,7 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
             const SizedBox(height: 8),
             Text(
               'Tidak ada data rute',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: _C.textTertiary,
-              ),
+              style: GoogleFonts.inter(fontSize: 12, color: _C.textTertiary),
             ),
           ],
         ),

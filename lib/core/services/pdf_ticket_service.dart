@@ -22,7 +22,6 @@ import '../models/booking_model.dart';
 // ═══════════════════════════════════════════════════════════
 class PdfTicketService {
   static const _navy = PdfColor.fromInt(0xFF0F4C81);
-  static const _teal = PdfColor.fromInt(0xFF0D9488);
   static const _textPrimary = PdfColor.fromInt(0xFF0F172A);
   static const _textSecondary = PdfColor.fromInt(0xFF475569);
   static const _textTertiary = PdfColor.fromInt(0xFF94A3B8);
@@ -128,7 +127,9 @@ class PdfTicketService {
                     ),
                     pw.Container(
                       padding: const pw.EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
                       decoration: pw.BoxDecoration(
                         color: statusColor,
                         borderRadius: pw.BorderRadius.circular(8),
@@ -150,17 +151,14 @@ class PdfTicketService {
               // ═══ ROUTE SECTION ═══
               pw.Container(
                 padding: const pw.EdgeInsets.all(24),
-                decoration: const pw.BoxDecoration(
-                  color: PdfColors.white,
-                ),
+                decoration: const pw.BoxDecoration(color: PdfColors.white),
                 child: pw.Column(
                   children: [
                     pw.Row(
                       children: [
                         pw.Expanded(
                           child: pw.Column(
-                            crossAxisAlignment:
-                                pw.CrossAxisAlignment.start,
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
                             children: [
                               pw.Text(
                                 'DARI',
@@ -187,8 +185,7 @@ class PdfTicketService {
                           padding: const pw.EdgeInsets.all(8),
                           decoration: pw.BoxDecoration(
                             color: _navy.shade(0.95),
-                            borderRadius:
-                                pw.BorderRadius.circular(10),
+                            borderRadius: pw.BorderRadius.circular(10),
                           ),
                           child: pw.Text(
                             '→',
@@ -201,8 +198,7 @@ class PdfTicketService {
                         ),
                         pw.Expanded(
                           child: pw.Column(
-                            crossAxisAlignment:
-                                pw.CrossAxisAlignment.end,
+                            crossAxisAlignment: pw.CrossAxisAlignment.end,
                             children: [
                               pw.Text(
                                 'TUJUAN',
@@ -234,16 +230,16 @@ class PdfTicketService {
                     // Date strip
                     pw.Container(
                       padding: const pw.EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: pw.BoxDecoration(
                         color: _bg,
                         borderRadius: pw.BorderRadius.circular(10),
-                        border: pw.Border.all(
-                            color: _borderLight, width: 0.5),
+                        border: pw.Border.all(color: _borderLight, width: 0.5),
                       ),
                       child: pw.Row(
-                        mainAxisAlignment:
-                            pw.MainAxisAlignment.center,
+                        mainAxisAlignment: pw.MainAxisAlignment.center,
                         children: [
                           pw.Text(
                             booking.departureDate.isNotEmpty
@@ -279,36 +275,46 @@ class PdfTicketService {
               // ═══ DETAILS SECTION ═══
               pw.Container(
                 padding: const pw.EdgeInsets.all(24),
-                decoration: const pw.BoxDecoration(
-                  color: PdfColors.white,
-                ),
+                decoration: const pw.BoxDecoration(color: PdfColors.white),
                 child: pw.Column(
                   children: [
-                    _pdfDetailRow('Nama Penumpang', booking.userName,
-                        fontMedium, fontBold),
+                    _pdfDetailRow(
+                      'Nama Penumpang',
+                      booking.userName,
+                      fontMedium,
+                      fontBold,
+                    ),
                     pw.SizedBox(height: 14),
-                    _pdfDetailRow('Nomor Kursi', seatLabel,
-                        fontMedium, fontBold),
+                    _pdfDetailRow(
+                      'Nomor Kursi',
+                      seatLabel,
+                      fontMedium,
+                      fontBold,
+                    ),
                     pw.SizedBox(height: 14),
-                    _pdfDetailRow('Armada', booking.fleetName,
-                        fontMedium, fontBold),
+                    _pdfDetailRow(
+                      'Armada',
+                      booking.fleetName,
+                      fontMedium,
+                      fontBold,
+                    ),
                     pw.SizedBox(height: 14),
-                    _pdfDetailRow('Kode Booking', booking.bookingCode,
-                        fontMedium, fontMono,
-                        valueColor: _navy),
+                    _pdfDetailRow(
+                      'Kode Booking',
+                      booking.bookingCode,
+                      fontMedium,
+                      fontMono,
+                      valueColor: _navy,
+                    ),
                     pw.SizedBox(height: 14),
 
                     // Divider
-                    pw.Container(
-                      height: 1,
-                      color: _borderLight,
-                    ),
+                    pw.Container(height: 1, color: _borderLight),
                     pw.SizedBox(height: 14),
 
                     // Price
                     pw.Row(
-                      mainAxisAlignment:
-                          pw.MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(
                           'Total Dibayar',
@@ -362,8 +368,7 @@ class PdfTicketService {
                     pw.Center(
                       child: pw.BarcodeWidget(
                         barcode: pw.Barcode.qrCode(
-                          errorCorrectLevel:
-                              pw.BarcodeQRCorrectionLevel.medium,
+                          errorCorrectLevel: pw.BarcodeQRCorrectionLevel.medium,
                         ),
                         data: booking.bookingCode,
                         width: 140,
@@ -391,7 +396,9 @@ class PdfTicketService {
                     // Instruction
                     pw.Container(
                       padding: const pw.EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: pw.BoxDecoration(
                         color: _bg,
                         borderRadius: pw.BorderRadius.circular(8),
@@ -454,11 +461,7 @@ class PdfTicketService {
         ),
         pw.Text(
           value,
-          style: pw.TextStyle(
-            font: valueFont,
-            fontSize: 13,
-            color: valueColor,
-          ),
+          style: pw.TextStyle(font: valueFont, fontSize: 13, color: valueColor),
         ),
       ],
     );
@@ -484,7 +487,8 @@ class PdfTicketService {
     final file = await savePdf(booking);
     await Share.shareXFiles(
       [XFile(file.path)],
-      text: 'E-Ticket ${booking.bookingCode} — '
+      text:
+          'E-Ticket ${booking.bookingCode} — '
           '${booking.origin} → ${booking.destination}',
       subject: 'E-Ticket Perjalanan ${booking.bookingCode}',
     );

@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -79,8 +81,10 @@ class LiveTripManifestPage extends StatelessWidget {
         .where('destination', isEqualTo: destination)
         .where('status', whereIn: ['paid', 'used', 'completed'])
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => BookingModel.fromFirestore(d)).toList());
+        .map(
+          (snap) =>
+              snap.docs.map((d) => BookingModel.fromFirestore(d)).toList(),
+        );
   }
 
   @override
@@ -101,19 +105,20 @@ class LiveTripManifestPage extends StatelessWidget {
           final passengers = <_Passenger>[];
           for (final b in bookings) {
             for (final seat in b.seatNumbers) {
-              passengers.add(_Passenger(
-                name: b.userName,
-                seatNumber: seat,
-                isValidated: b.status.isValidated,
-                bookingCode: b.bookingCode,
-                bookingId: b.id ?? '',
-              ));
+              passengers.add(
+                _Passenger(
+                  name: b.userName,
+                  seatNumber: seat,
+                  isValidated: b.status.isValidated,
+                  bookingCode: b.bookingCode,
+                  bookingId: b.id ?? '',
+                ),
+              );
             }
           }
           passengers.sort((a, b) => a.seatNumber.compareTo(b.seatNumber));
 
-          final validatedCount =
-              passengers.where((p) => p.isValidated).length;
+          final validatedCount = passengers.where((p) => p.isValidated).length;
 
           return Stack(
             children: [
@@ -122,8 +127,12 @@ class LiveTripManifestPage extends StatelessWidget {
                 slivers: [
                   // ── APP BAR ──
                   SliverToBoxAdapter(
-                    child: _buildAppBar(context, topPad, validatedCount,
-                        passengers.length),
+                    child: _buildAppBar(
+                      context,
+                      topPad,
+                      validatedCount,
+                      passengers.length,
+                    ),
                   ),
 
                   // ── ROUTE HEADER CARD ──
@@ -138,8 +147,7 @@ class LiveTripManifestPage extends StatelessWidget {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                      child:
-                          _buildSeatLayout(context, isSmall, passengers),
+                      child: _buildSeatLayout(context, isSmall, passengers),
                     ),
                   ),
 
@@ -149,8 +157,11 @@ class LiveTripManifestPage extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
                       child: Row(
                         children: [
-                          const Icon(Iconsax.people,
-                              size: 18, color: _C.primary),
+                          const Icon(
+                            Iconsax.people,
+                            size: 18,
+                            color: _C.primary,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Daftar Penumpang',
@@ -163,7 +174,9 @@ class LiveTripManifestPage extends StatelessWidget {
                           const Spacer(),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: _C.primary.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(6),
@@ -178,9 +191,7 @@ class LiveTripManifestPage extends StatelessWidget {
                             ),
                           ),
                         ],
-                      )
-                          .animate()
-                          .fadeIn(delay: 500.ms, duration: 400.ms),
+                      ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
                     ),
                   ),
 
@@ -189,8 +200,7 @@ class LiveTripManifestPage extends StatelessWidget {
                       bookings.isEmpty)
                     const SliverFillRemaining(
                       child: Center(
-                        child:
-                            CircularProgressIndicator(color: _C.primary),
+                        child: CircularProgressIndicator(color: _C.primary),
                       ),
                     )
                   else if (passengers.isEmpty)
@@ -199,8 +209,7 @@ class LiveTripManifestPage extends StatelessWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Iconsax.people,
-                                size: 48, color: _C.textHint),
+                            Icon(Iconsax.people, size: 48, color: _C.textHint),
                             const SizedBox(height: 12),
                             Text(
                               'Belum ada penumpang',
@@ -215,12 +224,14 @@ class LiveTripManifestPage extends StatelessWidget {
                     )
                   else
                     SliverPadding(
-                      padding:
-                          EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 90),
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 90),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (ctx, index) => _buildPassengerTile(
-                              context, passengers[index], index),
+                            context,
+                            passengers[index],
+                            index,
+                          ),
                           childCount: passengers.length,
                         ),
                       ),
@@ -245,7 +256,11 @@ class LiveTripManifestPage extends StatelessWidget {
   //  APP BAR
   // ─────────────────────────────────────────────────────
   Widget _buildAppBar(
-      BuildContext context, double topPad, int validated, int total) {
+    BuildContext context,
+    double topPad,
+    int validated,
+    int total,
+  ) {
     return Container(
       padding: EdgeInsets.fromLTRB(8, topPad + 8, 20, 12),
       decoration: BoxDecoration(
@@ -293,8 +308,7 @@ class LiveTripManifestPage extends StatelessWidget {
           ),
           // Validated badge
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: validated == total && total > 0
                   ? _C.successBg
@@ -339,99 +353,117 @@ class LiveTripManifestPage extends StatelessWidget {
   // ─────────────────────────────────────────────────────
   Widget _buildRouteCard(bool isSmall, int bookedSeats) {
     return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F4C81), Color(0xFF1A6BB5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: _C.primary.withValues(alpha: 0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0F4C81), Color(0xFF1A6BB5)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.25),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // ── Route row ──
-          Row(
+          child: Column(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Dari',
-                        style: GoogleFonts.inter(
+              // ── Route row ──
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dari',
+                          style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: Colors.white.withValues(alpha: 0.6))),
-                    const SizedBox(height: 4),
-                    Text(origin,
-                        style: GoogleFonts.plusJakartaSans(
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          origin,
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: isSmall ? 15 : 17,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white)),
-                  ],
-                ),
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Iconsax.arrow_right_3,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Tujuan',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          destination,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: isSmall ? 15 : 17,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.end,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 16),
+              // ── Info row ──
               Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
                 ),
-                child: const Icon(Iconsax.arrow_right_3,
-                    size: 18, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Tujuan',
-                        style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white.withValues(alpha: 0.6))),
-                    const SizedBox(height: 4),
-                    Text(destination,
-                        style: GoogleFonts.plusJakartaSans(
-                            fontSize: isSmall ? 15 : 17,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white),
-                        textAlign: TextAlign.end),
+                    _infoChip(Iconsax.calendar_1, departureDate),
+                    _infoChip(Iconsax.bus, fleetName),
+                    _infoChip(Iconsax.people, '$bookedSeats/$totalSeats'),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // ── Info row ──
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-              border:
-                  Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _infoChip(Iconsax.calendar_1, departureDate),
-                _infoChip(Iconsax.bus, fleetName),
-                _infoChip(Iconsax.people, '$bookedSeats/$totalSeats'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: 200.ms, duration: 500.ms)
         .slideY(begin: 0.06, delay: 200.ms, duration: 500.ms);
@@ -442,16 +474,18 @@ class LiveTripManifestPage extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon,
-              size: 13, color: Colors.white.withValues(alpha: 0.7)),
+          Icon(icon, size: 13, color: Colors.white.withValues(alpha: 0.7)),
           const SizedBox(width: 5),
           Flexible(
-            child: Text(text,
-                style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white.withValues(alpha: 0.9)),
-                overflow: TextOverflow.ellipsis),
+            child: Text(
+              text,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -462,7 +496,10 @@ class LiveTripManifestPage extends StatelessWidget {
   //  SEAT LAYOUT — 8 seats + driver
   // ─────────────────────────────────────────────────────
   Widget _buildSeatLayout(
-      BuildContext context, bool isSmall, List<_Passenger> passengers) {
+    BuildContext context,
+    bool isSmall,
+    List<_Passenger> passengers,
+  ) {
     bool isSeatOccupied(int n) => passengers.any((p) => p.seatNumber == n);
     _Passenger? passengerAt(int n) {
       final m = passengers.where((p) => p.seatNumber == n);
@@ -479,15 +516,20 @@ class LiveTripManifestPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Iconsax.arrow_down,
-                    size: 12,
-                    color: _C.textHint.withValues(alpha: 0.5)),
+                Icon(
+                  Iconsax.arrow_down,
+                  size: 12,
+                  color: _C.textHint.withValues(alpha: 0.5),
+                ),
                 const SizedBox(height: 1),
-                Text('Lorong',
-                    style: GoogleFonts.inter(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w500,
-                        color: _C.textHint.withValues(alpha: 0.5))),
+                Text(
+                  'Lorong',
+                  style: GoogleFonts.inter(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w500,
+                    color: _C.textHint.withValues(alpha: 0.5),
+                  ),
+                ),
               ],
             ),
           ),
@@ -505,14 +547,16 @@ class LiveTripManifestPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Iconsax.driving,
-                  size: size * 0.28, color: _C.textTertiary),
+              Icon(Iconsax.driving, size: size * 0.28, color: _C.textTertiary),
               const SizedBox(height: 2),
-              Text('Driver',
-                  style: GoogleFonts.inter(
-                      fontSize: size * 0.13,
-                      fontWeight: FontWeight.w600,
-                      color: _C.textTertiary)),
+              Text(
+                'Driver',
+                style: GoogleFonts.inter(
+                  fontSize: size * 0.13,
+                  fontWeight: FontWeight.w600,
+                  color: _C.textTertiary,
+                ),
+              ),
             ],
           ),
         );
@@ -525,9 +569,7 @@ class LiveTripManifestPage extends StatelessWidget {
       final validated = pax?.isValidated ?? false;
 
       return GestureDetector(
-        onTap: pax != null
-            ? () => _showPassengerDetail(context, pax)
-            : null,
+        onTap: pax != null ? () => _showPassengerDetail(context, pax) : null,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           width: size,
@@ -535,15 +577,15 @@ class LiveTripManifestPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: occ
                 ? validated
-                    ? _C.success.withValues(alpha: 0.12)
-                    : _C.occupied.withValues(alpha: 0.12)
+                      ? _C.success.withValues(alpha: 0.12)
+                      : _C.occupied.withValues(alpha: 0.12)
                 : _C.bg,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: occ
                   ? validated
-                      ? _C.success
-                      : _C.occupied
+                        ? _C.success
+                        : _C.occupied
                   : _C.empty,
               width: occ ? 1.8 : 1.2,
             ),
@@ -554,26 +596,29 @@ class LiveTripManifestPage extends StatelessWidget {
               Icon(
                 occ
                     ? validated
-                        ? Iconsax.tick_circle
-                        : Iconsax.profile_tick
+                          ? Iconsax.tick_circle
+                          : Iconsax.profile_tick
                     : Iconsax.user,
                 size: size * 0.26,
                 color: occ
                     ? validated
-                        ? _C.success
-                        : _C.occupied
+                          ? _C.success
+                          : _C.occupied
                     : _C.textHint,
               ),
               const SizedBox(height: 2),
-              Text('$seatNum',
-                  style: GoogleFonts.inter(
-                      fontSize: size * 0.16,
-                      fontWeight: FontWeight.w700,
-                      color: occ
-                          ? validated
-                              ? _C.success
-                              : _C.occupied
-                          : _C.textHint)),
+              Text(
+                '$seatNum',
+                style: GoogleFonts.inter(
+                  fontSize: size * 0.16,
+                  fontWeight: FontWeight.w700,
+                  color: occ
+                      ? validated
+                            ? _C.success
+                            : _C.occupied
+                      : _C.textHint,
+                ),
+              ),
             ],
           ),
         ),
@@ -593,116 +638,124 @@ class LiveTripManifestPage extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _C.border.withValues(alpha: 0.6)),
-        boxShadow: [
-          BoxShadow(
-            color: _C.primary.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: _C.card,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _C.border.withValues(alpha: 0.6)),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
             children: [
-              const Icon(Iconsax.bus, size: 15, color: _C.textTertiary),
-              const SizedBox(width: 6),
-              Text('Denah Kursi',
-                  style: GoogleFonts.plusJakartaSans(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Iconsax.bus, size: 15, color: _C.textTertiary),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Denah Kursi',
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: _C.textSecondary)),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text('Depan',
-              style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color: _C.textHint,
-                  letterSpacing: 1)),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
-            decoration: BoxDecoration(
-              color: _C.bg,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-                bottomLeft: Radius.circular(12),
-                bottomRight: Radius.circular(12),
-              ),
-              border:
-                  Border.all(color: _C.border.withValues(alpha: 0.5)),
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final usableWidth = constraints.maxWidth - 2;
-                final seatSize =
-                    (usableWidth / 4.45).clamp(40.0, 64.0);
-                final gap = seatSize * 0.15;
-                return Column(
-                  children: [
-                    seatRow(seatSize, gap, [
-                      _SeatType.driver,
-                      _SeatType.empty,
-                      _SeatType.empty,
-                      _SeatType.seat(1),
-                    ]),
-                    SizedBox(height: gap),
-                    Container(
-                      height: 1,
-                      margin: EdgeInsets.symmetric(
-                          horizontal: seatSize * 0.3,
-                          vertical: gap * 0.4),
-                      color: _C.border.withValues(alpha: 0.4),
+                      color: _C.textSecondary,
                     ),
-                    SizedBox(height: gap * 0.4),
-                    seatRow(seatSize, gap, [
-                      _SeatType.seat(2),
-                      _SeatType.aisle,
-                      _SeatType.seat(3),
-                      _SeatType.seat(4),
-                    ]),
-                    SizedBox(height: gap),
-                    seatRow(seatSize, gap, [
-                      _SeatType.seat(5),
-                      _SeatType.seat(6),
-                      _SeatType.seat(7),
-                      _SeatType.seat(8),
-                    ]),
-                  ],
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text('Belakang',
-              style: GoogleFonts.inter(
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Depan',
+                style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
                   color: _C.textHint,
-                  letterSpacing: 1)),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _legendItem(_C.success, 'Validasi'),
-              const SizedBox(width: 16),
-              _legendItem(_C.occupied, 'Terisi'),
-              const SizedBox(width: 16),
-              _legendItem(_C.empty, 'Kosong'),
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
+                decoration: BoxDecoration(
+                  color: _C.bg,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                  border: Border.all(color: _C.border.withValues(alpha: 0.5)),
+                ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final usableWidth = constraints.maxWidth - 2;
+                    final seatSize = (usableWidth / 4.45).clamp(40.0, 64.0);
+                    final gap = seatSize * 0.15;
+                    return Column(
+                      children: [
+                        seatRow(seatSize, gap, [
+                          _SeatType.driver,
+                          _SeatType.empty,
+                          _SeatType.empty,
+                          _SeatType.seat(1),
+                        ]),
+                        SizedBox(height: gap),
+                        Container(
+                          height: 1,
+                          margin: EdgeInsets.symmetric(
+                            horizontal: seatSize * 0.3,
+                            vertical: gap * 0.4,
+                          ),
+                          color: _C.border.withValues(alpha: 0.4),
+                        ),
+                        SizedBox(height: gap * 0.4),
+                        seatRow(seatSize, gap, [
+                          _SeatType.seat(2),
+                          _SeatType.aisle,
+                          _SeatType.seat(3),
+                          _SeatType.seat(4),
+                        ]),
+                        SizedBox(height: gap),
+                        seatRow(seatSize, gap, [
+                          _SeatType.seat(5),
+                          _SeatType.seat(6),
+                          _SeatType.seat(7),
+                          _SeatType.seat(8),
+                        ]),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Belakang',
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: _C.textHint,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _legendItem(_C.success, 'Validasi'),
+                  const SizedBox(width: 16),
+                  _legendItem(_C.occupied, 'Terisi'),
+                  const SizedBox(width: 16),
+                  _legendItem(_C.empty, 'Kosong'),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: 400.ms, duration: 500.ms)
         .slideY(begin: 0.06, delay: 400.ms, duration: 500.ms);
@@ -721,11 +774,14 @@ class LiveTripManifestPage extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 5),
-        Text(label,
-            style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: _C.textSecondary)),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: _C.textSecondary,
+          ),
+        ),
       ],
     );
   }
@@ -757,8 +813,9 @@ class LiveTripManifestPage extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: _C.border,
-                  borderRadius: BorderRadius.circular(2)),
+                color: _C.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             const SizedBox(height: 20),
             Container(
@@ -769,29 +826,37 @@ class LiveTripManifestPage extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Text(initials,
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: _C.primary)),
+                child: Text(
+                  initials,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: _C.primary,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 14),
-            Text(p.name,
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: _C.textPrimary)),
+            Text(
+              p.name,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: _C.textPrimary,
+              ),
+            ),
             const SizedBox(height: 6),
-            Text('Kursi ${p.seatNumber} • ${p.bookingCode}',
-                style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: _C.textTertiary)),
+            Text(
+              'Kursi ${p.seatNumber} • ${p.bookingCode}',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: _C.textTertiary,
+              ),
+            ),
             const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: p.isValidated ? _C.successBg : _C.warningBg,
                 borderRadius: BorderRadius.circular(10),
@@ -800,9 +865,7 @@ class LiveTripManifestPage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    p.isValidated
-                        ? Iconsax.tick_circle
-                        : Iconsax.clock,
+                    p.isValidated ? Iconsax.tick_circle : Iconsax.clock,
                     size: 16,
                     color: p.isValidated ? _C.success : _C.warning,
                   ),
@@ -810,10 +873,10 @@ class LiveTripManifestPage extends StatelessWidget {
                   Text(
                     p.isValidated ? 'Sudah Validasi' : 'Belum Hadir',
                     style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            p.isValidated ? _C.success : _C.warning),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: p.isValidated ? _C.success : _C.warning,
+                    ),
                   ),
                 ],
               ),
@@ -828,8 +891,7 @@ class LiveTripManifestPage extends StatelessWidget {
   // ─────────────────────────────────────────────────────
   //  PASSENGER TILE
   // ─────────────────────────────────────────────────────
-  Widget _buildPassengerTile(
-      BuildContext context, _Passenger p, int index) {
+  Widget _buildPassengerTile(BuildContext context, _Passenger p, int index) {
     final initials = p.name
         .split(' ')
         .map((w) => w.isNotEmpty ? w[0] : '')
@@ -838,96 +900,106 @@ class LiveTripManifestPage extends StatelessWidget {
         .toUpperCase();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: p.isValidated
-              ? _C.success.withValues(alpha: 0.3)
-              : _C.border.withValues(alpha: 0.6),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _C.primary.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: _C.card,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
               color: p.isValidated
-                  ? _C.success.withValues(alpha: 0.1)
-                  : _C.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
+                  ? _C.success.withValues(alpha: 0.3)
+                  : _C.border.withValues(alpha: 0.6),
             ),
-            child: Center(
-              child: Text(initials,
-                  style: GoogleFonts.plusJakartaSans(
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: p.isValidated
+                      ? _C.success.withValues(alpha: 0.1)
+                      : _C.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: p.isValidated ? _C.success : _C.primary)),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(p.name,
-                    style: GoogleFonts.plusJakartaSans(
+                      color: p.isValidated ? _C.success : _C.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      p.name,
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: _C.textPrimary)),
-                const SizedBox(height: 3),
-                Text('Kursi ${p.seatNumber} • ${p.bookingCode}',
-                    style: GoogleFonts.inter(
+                        color: _C.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Kursi ${p.seatNumber} • ${p.bookingCode}',
+                      style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
-                        color: _C.textTertiary)),
-              ],
-            ),
-          ),
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: p.isValidated ? _C.successBg : _C.warningBg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  p.isValidated ? Iconsax.tick_circle : Iconsax.clock,
-                  size: 13,
-                  color: p.isValidated ? _C.success : _C.warning,
+                        color: _C.textTertiary,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  p.isValidated ? 'Validasi' : 'Belum',
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: p.isValidated ? _C.success : _C.warning),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
                 ),
-              ],
-            ),
+                decoration: BoxDecoration(
+                  color: p.isValidated ? _C.successBg : _C.warningBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      p.isValidated ? Iconsax.tick_circle : Iconsax.clock,
+                      size: 13,
+                      color: p.isValidated ? _C.success : _C.warning,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      p.isValidated ? 'Validasi' : 'Belum',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: p.isValidated ? _C.success : _C.warning,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    )
+        )
         .animate()
-        .fadeIn(
-            delay: (550 + index * 60).ms, duration: 350.ms)
-        .slideX(
-            begin: 0.05, delay: (550 + index * 60).ms, duration: 350.ms);
+        .fadeIn(delay: (550 + index * 60).ms, duration: 350.ms)
+        .slideX(begin: 0.05, delay: (550 + index * 60).ms, duration: 350.ms);
   }
 
   // ─────────────────────────────────────────────────────
@@ -935,54 +1007,63 @@ class LiveTripManifestPage extends StatelessWidget {
   // ─────────────────────────────────────────────────────
   Widget _buildScanFAB(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: _C.primary.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Material(
-        color: _C.primary,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const QrScannerPage()),
-            );
-          },
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Iconsax.scan_barcode,
-                    size: 20, color: Colors.white),
-                const SizedBox(width: 10),
-                Text('Scan Tiket',
-                    style: GoogleFonts.plusJakartaSans(
+          child: Material(
+            color: _C.primary,
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const QrScannerPage()),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 16,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Iconsax.scan_barcode,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Scan Tiket',
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white)),
-              ],
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: 600.ms, duration: 400.ms)
         .slideY(
-            begin: 0.3,
-            delay: 600.ms,
-            duration: 400.ms,
-            curve: Curves.easeOutBack);
+          begin: 0.3,
+          delay: 600.ms,
+          duration: 400.ms,
+          curve: Curves.easeOutBack,
+        );
   }
 }
 

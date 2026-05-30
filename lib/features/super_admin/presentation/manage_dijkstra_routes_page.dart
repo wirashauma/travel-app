@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -141,10 +143,7 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
       ),
       body: TabBarView(
         controller: _tabCtrl,
-        children: [
-          _buildCityTab(),
-          _buildRouteTab(),
-        ],
+        children: [_buildCityTab(), _buildRouteTab()],
       ),
     );
   }
@@ -218,7 +217,9 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 12),
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
                     ),
                     icon: const Icon(Iconsax.add, size: 18),
                     label: Text(
@@ -251,8 +252,10 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
           child: Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _C.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
@@ -280,8 +283,10 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
               final c = filtered[i];
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: _C.card,
                   borderRadius: BorderRadius.circular(12),
@@ -304,9 +309,7 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
                             ? Iconsax.building_3
                             : Iconsax.tree,
                         size: 16,
-                        color: c.type == RegionType.kota
-                            ? _C.primary
-                            : _C.teal,
+                        color: c.type == RegionType.kota ? _C.primary : _C.teal,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -460,7 +463,9 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 12),
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
                     ),
                     icon: const Icon(Iconsax.add, size: 18),
                     label: Text(
@@ -493,8 +498,10 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
           child: Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _C.teal.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
@@ -522,8 +529,10 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
               final r = filtered[i];
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: _C.card,
                   borderRadius: BorderRadius.circular(12),
@@ -550,11 +559,13 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: Icon(Iconsax.arrow_right_3,
-                              size: 14, color: _C.textTertiary),
+                          child: Icon(
+                            Iconsax.arrow_right_3,
+                            size: 14,
+                            color: _C.textTertiary,
+                          ),
                         ),
-                        Icon(Iconsax.location_tick,
-                            size: 14, color: _C.teal),
+                        Icon(Iconsax.location_tick, size: 14, color: _C.teal),
                         const SizedBox(width: 6),
                         Flexible(
                           child: Text(
@@ -577,8 +588,11 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
                               color: _C.errorBg,
                               borderRadius: BorderRadius.circular(7),
                             ),
-                            child: Icon(Iconsax.trash,
-                                size: 13, color: _C.error),
+                            child: Icon(
+                              Iconsax.trash,
+                              size: 13,
+                              color: _C.error,
+                            ),
                           ),
                         ),
                       ],
@@ -635,8 +649,10 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
         prefixIcon: Icon(icon, size: 18, color: _C.textTertiary),
         filled: true,
         fillColor: _C.borderLight,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -670,12 +686,17 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: GoogleFonts.inter(fontSize: 13, color: _C.textHint),
-          prefixIcon: Icon(Iconsax.search_normal_1,
-              size: 18, color: _C.textTertiary),
+          prefixIcon: Icon(
+            Iconsax.search_normal_1,
+            size: 18,
+            color: _C.textTertiary,
+          ),
           filled: true,
           fillColor: Colors.transparent,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 12,
+          ),
           border: InputBorder.none,
         ),
       ),
@@ -714,15 +735,17 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: GoogleFonts.inter(fontSize: 12, color: _C.textTertiary),
         filled: true,
         fillColor: _C.borderLight,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: _C.border.withValues(alpha: 0.5)),
@@ -739,15 +762,16 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
       menuMaxHeight: 350,
       style: GoogleFonts.inter(fontSize: 12.5, color: _C.textPrimary),
       items: _cities
-          .map((c) => DropdownMenuItem(
-                value: c.id,
-                child: Text(
-                  c.fullName,
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: _C.textPrimary),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ))
+          .map(
+            (c) => DropdownMenuItem(
+              value: c.id,
+              child: Text(
+                c.fullName,
+                style: GoogleFonts.inter(fontSize: 12, color: _C.textPrimary),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )
           .toList(),
       onChanged: onChanged,
     );
@@ -810,7 +834,8 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
     setState(() {
       _cities.remove(city);
       _routes.removeWhere(
-          (r) => r.fromCityId == city.id || r.toCityId == city.id);
+        (r) => r.fromCityId == city.id || r.toCityId == city.id,
+      );
     });
     _snack('${city.fullName} dihapus');
   }
@@ -883,10 +908,7 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         icon: Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: _C.errorBg,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: _C.errorBg, shape: BoxShape.circle),
           child: Icon(Iconsax.trash, color: _C.error, size: 26),
         ),
         title: Text(
@@ -918,8 +940,10 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -931,8 +955,10 @@ class _ManageDijkstraRoutesPageState extends State<ManageDijkstraRoutesPage>
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Ya, Hapus',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+            child: Text(
+              'Ya, Hapus',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),

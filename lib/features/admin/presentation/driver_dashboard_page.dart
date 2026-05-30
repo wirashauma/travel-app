@@ -1,7 +1,8 @@
+// ignore_for_file: unused_field
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -72,8 +73,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
           .get();
       if (doc.exists && mounted) {
         setState(() {
-          _driverName =
-              doc.data()?['namaLengkap'] as String? ?? 'Sopir';
+          _driverName = doc.data()?['namaLengkap'] as String? ?? 'Sopir';
           _profileLoaded = true;
         });
       }
@@ -111,42 +111,30 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
             physics: const BouncingScrollPhysics(),
             slivers: [
               // ── HEADER ──
-              SliverToBoxAdapter(
-                child: _buildHeader(topPad, isSmall),
-              ),
+              SliverToBoxAdapter(child: _buildHeader(topPad, isSmall)),
 
               // ── SECTION TITLE ──
-              SliverToBoxAdapter(
-                child: _buildSectionTitle(fleetDocs.length),
-              ),
+              SliverToBoxAdapter(child: _buildSectionTitle(fleetDocs.length)),
 
               // ── EMPTY STATE ──
               if (fleetDocs.isEmpty)
-                SliverFillRemaining(
-                  child: _buildEmptyState(),
-                )
-
+                SliverFillRemaining(child: _buildEmptyState())
               // ── FLEET LIST ──
               else
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(20, 4, 20, bottomPad + 24),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final doc = fleetDocs[index];
-                        final data = doc.data() as Map<String, dynamic>;
-                        return _FleetCard(
-                          fleetId: doc.id,
-                          data: data,
-                          index: index,
-                          onTap: () => _navigateToManifest(
-                            fleetId: doc.id,
-                            data: data,
-                          ),
-                        );
-                      },
-                      childCount: fleetDocs.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final doc = fleetDocs[index];
+                      final data = doc.data() as Map<String, dynamic>;
+                      return _FleetCard(
+                        fleetId: doc.id,
+                        data: data,
+                        index: index,
+                        onTap: () =>
+                            _navigateToManifest(fleetId: doc.id, data: data),
+                      );
+                    }, childCount: fleetDocs.length),
                   ),
                 ),
             ],
@@ -185,134 +173,151 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
     final greeting = now.hour < 12
         ? 'Selamat Pagi'
         : now.hour < 17
-            ? 'Selamat Siang'
-            : 'Selamat Malam';
+        ? 'Selamat Siang'
+        : 'Selamat Malam';
     final dateStr = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(now);
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, topPad + 20, 12, 24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F4C81), Color(0xFF1A6BB5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(28),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _C.primary.withValues(alpha: 0.25),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+          padding: EdgeInsets.fromLTRB(20, topPad + 20, 12, 24),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0F4C81), Color(0xFF1A6BB5)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(28),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.25),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$greeting 👋',
-                      style: GoogleFonts.inter(
-                        fontSize: isSmall ? 13 : 14,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$greeting 👋',
+                          style: GoogleFonts.inter(
+                            fontSize: isSmall ? 13 : 14,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _driverName,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: isSmall ? 22 : 26,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          dateStr,
+                          style: GoogleFonts.inter(
+                            fontSize: isSmall ? 11 : 12,
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _driverName,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: isSmall ? 22 : 26,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      dateStr,
-                      style: GoogleFonts.inter(
-                        fontSize: isSmall ? 11 : 12,
-                        color: Colors.white.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // ── Settings menu ──
-              PopupMenuButton<String>(
-                icon: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Iconsax.setting_2,
-                      color: Colors.white, size: 22),
-                ),
-                offset: const Offset(0, 50),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-                color: _C.card,
-                onSelected: (value) {
-                  if (value == 'logout') {
-                    AuthUtils.showLogoutConfirmation(context);
-                  }
-                  if (value == 'profile') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const EditProfilePage()),
-                    );
-                  }
-                },
-                itemBuilder: (_) => [
-                  PopupMenuItem<String>(
-                    value: 'profile',
-                    child: Row(
-                      children: [
-                        const Icon(Iconsax.user_edit,
-                            color: _C.primary, size: 20),
-                        const SizedBox(width: 10),
-                        Text('Edit Profil',
-                            style: GoogleFonts.inter(
+                  // ── Settings menu ──
+                  PopupMenuButton<String>(
+                    icon: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Iconsax.setting_2,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                    offset: const Offset(0, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    color: _C.card,
+                    onSelected: (value) {
+                      if (value == 'logout') {
+                        AuthUtils.showLogoutConfirmation(context);
+                      }
+                      if (value == 'profile') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EditProfilePage(),
+                          ),
+                        );
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem<String>(
+                        value: 'profile',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Iconsax.user_edit,
+                              color: _C.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Edit Profil',
+                              style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: _C.textPrimary)),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem<String>(
-                    value: 'logout',
-                    child: Row(
-                      children: [
-                        const Icon(Iconsax.logout,
-                            color: _C.error, size: 20),
-                        const SizedBox(width: 10),
-                        Text('Logout',
-                            style: GoogleFonts.inter(
+                                color: _C.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuDivider(),
+                      PopupMenuItem<String>(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Iconsax.logout,
+                              color: _C.error,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Logout',
+                              style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: _C.error)),
-                      ],
-                    ),
+                                color: _C.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
-        ],
-      ),
-    )
+        )
         .animate()
         .fadeIn(duration: 500.ms)
         .slideY(begin: -0.06, duration: 500.ms, curve: Curves.easeOut);
@@ -336,8 +341,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
           ),
           const SizedBox(width: 10),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: _C.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
@@ -361,46 +365,50 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
   // ─────────────────────────────────────────────────────
   Widget _buildEmptyState() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: _C.warningBg,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Iconsax.bus, size: 56, color: _C.warning),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: _C.warningBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Iconsax.bus, size: 56, color: _C.warning),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Belum Ada Penugasan',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: _C.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Belum ada penugasan armada untuk Anda hari ini.\nHubungi Super Admin untuk informasi lebih lanjut.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13.5,
+                    color: _C.textTertiary,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Belum Ada Penugasan',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: _C.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Belum ada penugasan armada untuk Anda hari ini.\nHubungi Super Admin untuk informasi lebih lanjut.',
-              style: GoogleFonts.inter(
-                fontSize: 13.5,
-                color: _C.textTertiary,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    )
+          ),
+        )
         .animate()
         .fadeIn(delay: 300.ms, duration: 500.ms)
-        .scale(begin: const Offset(0.95, 0.95), delay: 300.ms, duration: 500.ms);
+        .scale(
+          begin: const Offset(0.95, 0.95),
+          delay: 300.ms,
+          duration: 500.ms,
+        );
   }
 }
 
@@ -438,195 +446,218 @@ class _FleetCard extends StatelessWidget {
         : '';
 
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        decoration: BoxDecoration(
-          color: _C.card,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _C.border.withValues(alpha: 0.7)),
-          boxShadow: [
-            BoxShadow(
-              color: _C.primary.withValues(alpha: 0.04),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
+          onTap: onTap,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            decoration: BoxDecoration(
+              color: _C.card,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _C.border.withValues(alpha: 0.7)),
+              boxShadow: [
+                BoxShadow(
+                  color: _C.primary.withValues(alpha: 0.04),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Top: Icon + Name + Arrow ──
-              Row(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: _C.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Iconsax.bus5,
-                        size: 22, color: _C.success),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          fleetName,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: _C.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (vehicleType.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            vehicleType,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: _C.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: _C.success,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Aktif',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 14),
-
-              // ── Route ──
-              if (route.isNotEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: _C.primary.withValues(alpha: 0.04),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: _C.primary.withValues(alpha: 0.08)),
-                  ),
-                  child: Row(
+                  // ── Top: Icon + Name + Arrow ──
+                  Row(
                     children: [
-                      Icon(Iconsax.route_square,
-                          size: 16, color: _C.primary),
-                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _C.success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Iconsax.bus5,
+                          size: 22,
+                          color: _C.success,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
                       Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              fleetName,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: _C.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (vehicleType.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                vehicleType,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: _C.textTertiary,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _C.success,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: Text(
-                          route,
+                          'Aktif',
                           style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // ── Route ──
+                  if (route.isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _C.primary.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _C.primary.withValues(alpha: 0.08),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Iconsax.route_square,
+                            size: 16,
                             color: _C.primary,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              const SizedBox(height: 12),
-
-              // ── Bottom: Seat count + View button ──
-              Row(
-                children: [
-                  // Seat count with real-time sub-stream
-                  StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('bookings')
-                        .where('fleetId', isEqualTo: fleetId)
-                        .where('status',
-                            whereIn: ['paid', 'validated', 'used'])
-                        .snapshots(),
-                    builder: (context, snap) {
-                      final ticketCount = snap.data?.docs.length ?? 0;
-                      return Row(
-                        children: [
-                          Icon(Iconsax.people,
-                              size: 14, color: _C.textTertiary),
-                          const SizedBox(width: 5),
-                          Text(
-                            '$ticketCount penumpang',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: _C.textTertiary,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Icon(Iconsax.driver,
-                              size: 14, color: _C.textTertiary),
-                          const SizedBox(width: 5),
-                          Text(
-                            '$bookedSeats/$totalSeats kursi',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: _C.textTertiary,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              route,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: _C.primary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
-                      );
-                    },
-                  ),
-                  const Spacer(),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Lihat Manifest',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _C.primary,
-                        ),
                       ),
-                      const SizedBox(width: 4),
-                      Icon(Iconsax.arrow_right_3,
-                          size: 16, color: _C.primary),
+                    ),
+
+                  const SizedBox(height: 12),
+
+                  // ── Bottom: Seat count + View button ──
+                  Row(
+                    children: [
+                      // Seat count with real-time sub-stream
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('bookings')
+                            .where('fleetId', isEqualTo: fleetId)
+                            .where(
+                              'status',
+                              whereIn: ['paid', 'validated', 'used'],
+                            )
+                            .snapshots(),
+                        builder: (context, snap) {
+                          final ticketCount = snap.data?.docs.length ?? 0;
+                          return Row(
+                            children: [
+                              Icon(
+                                Iconsax.people,
+                                size: 14,
+                                color: _C.textTertiary,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                '$ticketCount penumpang',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: _C.textTertiary,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Icon(
+                                Iconsax.driver,
+                                size: 14,
+                                color: _C.textTertiary,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                '$bookedSeats/$totalSeats kursi',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: _C.textTertiary,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const Spacer(),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Lihat Manifest',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: _C.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Iconsax.arrow_right_3,
+                            size: 16,
+                            color: _C.primary,
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: (100 + index * 80).ms, duration: 400.ms)
         .slideY(
-            begin: 0.06,
-            delay: (100 + index * 80).ms,
-            duration: 400.ms,
-            curve: Curves.easeOutCubic);
+          begin: 0.06,
+          delay: (100 + index * 80).ms,
+          duration: 400.ms,
+          curve: Curves.easeOutCubic,
+        );
   }
 }

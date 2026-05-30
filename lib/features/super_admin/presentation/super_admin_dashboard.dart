@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -48,7 +50,8 @@ class SuperAdminDashboard extends StatelessWidget {
   // ── Firestore streams ──
   Stream<QuerySnapshot> get _bookingsStream => FirebaseFirestore.instance
       .collection('bookings')
-      .where('status', whereIn: ['paid', 'used', 'completed']).snapshots();
+      .where('status', whereIn: ['paid', 'used', 'completed'])
+      .snapshots();
 
   Stream<QuerySnapshot> get _fleetsStream =>
       FirebaseFirestore.instance.collection('fleets').snapshots();
@@ -80,9 +83,9 @@ class SuperAdminDashboard extends StatelessWidget {
 
           // ── REAL-TIME STATS ROW ────────────────
           SliverToBoxAdapter(
-            child: _buildRealtimeStatsRow(isSmall)
-                .animate()
-                .fadeIn(delay: 200.ms, duration: 500.ms),
+            child: _buildRealtimeStatsRow(
+              isSmall,
+            ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
           ),
 
           // ── SECTION LABEL ──────────────────────
@@ -118,128 +121,130 @@ class SuperAdminDashboard extends StatelessWidget {
     final dateStr = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(now);
 
     return Container(
-      padding: EdgeInsets.fromLTRB(22, topPad + 20, 10, 24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F4C81), Color(0xFF1A6BB5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(28),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _C.primary.withValues(alpha: 0.25),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // ── Hamburger menu to open drawer ──
-              GestureDetector(
-                onTap: () => Scaffold.of(context).openDrawer(),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(
-                    Iconsax.menu_1,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
+          padding: EdgeInsets.fromLTRB(22, topPad + 20, 10, 24),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0F4C81), Color(0xFF1A6BB5)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(28),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.25),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dashboard Owner',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: isSmall ? 22 : 26,
-                        fontWeight: FontWeight.w800,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  // ── Hamburger menu to open drawer ──
+                  GestureDetector(
+                    onTap: () => Scaffold.of(context).openDrawer(),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Iconsax.menu_1,
                         color: Colors.white,
+                        size: 22,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      dateStr,
-                      style: GoogleFonts.inter(
-                        fontSize: isSmall ? 11 : 12,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white.withValues(alpha: 0.65),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dashboard Owner',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: isSmall ? 22 : 26,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          dateStr,
+                          style: GoogleFonts.inter(
+                            fontSize: isSmall ? 11 : 12,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.65),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ── Notification bell (optional placeholder) ──
+                  const SizedBox(width: 8),
+                ],
+              ),
+              const SizedBox(height: 18),
+              // Quick summary
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Iconsax.chart_2, size: 18, color: _C.teal),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Semua layanan beroperasi normal',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _C.teal,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Online',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // ── Notification bell (optional placeholder) ──
-              const SizedBox(width: 8),
             ],
           ),
-          const SizedBox(height: 18),
-          // Quick summary
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.15),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(Iconsax.chart_2, size: 18, color: _C.teal),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Semua layanan beroperasi normal',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _C.teal,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Online',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 500.ms).slideY(
-          begin: -0.06,
-          duration: 500.ms,
-          curve: Curves.easeOut,
-        );
+        )
+        .animate()
+        .fadeIn(duration: 500.ms)
+        .slideY(begin: -0.06, duration: 500.ms, curve: Curves.easeOut);
   }
 
   // ─────────────────────────────────────────────────────
@@ -362,9 +367,13 @@ class SuperAdminDashboard extends StatelessWidget {
                     itemCount: stats.length,
                     itemBuilder: (_, i) => Padding(
                       padding: EdgeInsets.only(
-                          right: i < stats.length - 1 ? 12 : 0),
-                      child:
-                          StatCard(data: stats[i], index: i, isSmall: isSmall),
+                        right: i < stats.length - 1 ? 12 : 0,
+                      ),
+                      child: StatCard(
+                        data: stats[i],
+                        index: i,
+                        isSmall: isSmall,
+                      ),
                     ),
                   );
                 },

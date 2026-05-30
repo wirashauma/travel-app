@@ -73,7 +73,7 @@ class BookingService {
       // ── STEP 1: Read seat_locks document (atomic lock) ──
       final lockSnap = await transaction.get(lockRef);
       final seatEntries = Map<String, dynamic>.from(
-        (lockSnap.data() as Map<String, dynamic>?)?['seats'] ?? {},
+        (lockSnap.data())?['seats'] ?? {},
       );
 
       // ── STEP 2: Read fleet document ──

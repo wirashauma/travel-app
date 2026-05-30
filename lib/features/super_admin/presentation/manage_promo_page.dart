@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, deprecated_member_use, unnecessary_non_null_assertion
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -61,8 +63,11 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
 
   // ── Helpers ──
   String _fmtCurrency(num value) {
-    return NumberFormat.currency(locale: 'id', symbol: 'Rp ', decimalDigits: 0)
-        .format(value);
+    return NumberFormat.currency(
+      locale: 'id',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(value);
   }
 
   String _fmtDate(Timestamp ts) {
@@ -85,16 +90,18 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(msg,
-                    style:
-                        GoogleFonts.inter(fontSize: 13, color: Colors.white)),
+                child: Text(
+                  msg,
+                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+                ),
               ),
             ],
           ),
           backgroundColor: isError ? _C.error : _C.success,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -116,9 +123,13 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Hapus Kupon',
-            style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w700, fontSize: 17)),
+        title: Text(
+          'Hapus Kupon',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+          ),
+        ),
         content: Text(
           'Yakin ingin menghapus kupon "$code"?\nTindakan ini tidak dapat dibatalkan.',
           style: GoogleFonts.inter(fontSize: 14, color: _C.textSecondary),
@@ -126,9 +137,13 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal',
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600, color: _C.textTertiary)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: _C.textTertiary,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -136,10 +151,13 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
               backgroundColor: _C.error,
               foregroundColor: _C.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: Text('Hapus',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            child: Text(
+              'Hapus',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -162,7 +180,8 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
 
     final codeCtrl = TextEditingController(text: data?['code'] ?? '');
     final valueCtrl = TextEditingController(
-        text: data?['discountValue']?.toString() ?? '');
+      text: data?['discountValue']?.toString() ?? '',
+    );
     String discountType = data?['discountType'] ?? 'percentage';
     DateTime expiryDate = data != null && data['expiryDate'] != null
         ? (data['expiryDate'] as Timestamp).toDate()
@@ -241,7 +260,7 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
               };
 
               if (isEdit) {
-                await _promoRef.doc(doc!.id).update(payload);
+                await _promoRef.doc(doc.id).update(payload);
               } else {
                 payload['createdAt'] = FieldValue.serverTimestamp();
                 await _promoRef.add(payload);
@@ -249,9 +268,11 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
 
               if (ctx.mounted) Navigator.pop(ctx);
               if (mounted) {
-                _showSnack(isEdit
-                    ? 'Kupon "$code" berhasil diperbarui'
-                    : 'Kupon "$code" berhasil ditambahkan');
+                _showSnack(
+                  isEdit
+                      ? 'Kupon "$code" berhasil diperbarui'
+                      : 'Kupon "$code" berhasil ditambahkan',
+                );
               }
             } catch (e) {
               if (mounted) _showSnack('Gagal menyimpan: $e', isError: true);
@@ -270,7 +291,11 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
             ),
             child: Padding(
               padding: EdgeInsets.fromLTRB(
-                  20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+                20,
+                16,
+                20,
+                MediaQuery.of(ctx).viewInsets.bottom + 20,
+              ),
               child: Form(
                 key: formKey,
                 child: SingleChildScrollView(
@@ -301,9 +326,7 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
-                              isEdit
-                                  ? Iconsax.edit_2
-                                  : Iconsax.ticket_discount,
+                              isEdit ? Iconsax.edit_2 : Iconsax.ticket_discount,
                               color: _C.teal,
                               size: 22,
                             ),
@@ -329,7 +352,8 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                         textCapitalization: TextCapitalization.characters,
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(
-                              RegExp(r'[A-Za-z0-9]')),
+                            RegExp(r'[A-Za-z0-9]'),
+                          ),
                           UpperCaseTextFormatter(),
                         ],
                         style: GoogleFonts.jetBrainsMono(
@@ -360,7 +384,8 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                             icon: Iconsax.percentage_square,
                             isSelected: discountType == 'percentage',
                             onTap: () => setSheetState(
-                                () => discountType = 'percentage'),
+                              () => discountType = 'percentage',
+                            ),
                           ),
                           const SizedBox(width: 10),
                           _TypeChip(
@@ -375,9 +400,11 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                       const SizedBox(height: 16),
 
                       // ── Value ──
-                      _SheetLabel(discountType == 'percentage'
-                          ? 'Nilai Diskon (%)'
-                          : 'Nilai Diskon (Rp)'),
+                      _SheetLabel(
+                        discountType == 'percentage'
+                            ? 'Nilai Diskon (%)'
+                            : 'Nilai Diskon (Rp)',
+                      ),
                       const SizedBox(height: 6),
                       TextFormField(
                         controller: valueCtrl,
@@ -416,7 +443,9 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 14),
+                            horizontal: 14,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: _C.bg,
                             borderRadius: BorderRadius.circular(12),
@@ -424,12 +453,17 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Iconsax.calendar_1,
-                                  size: 18, color: _C.textTertiary),
+                              Icon(
+                                Iconsax.calendar_1,
+                                size: 18,
+                                color: _C.textTertiary,
+                              ),
                               const SizedBox(width: 10),
                               Text(
-                                DateFormat('dd MMMM yyyy', 'id_ID')
-                                    .format(expiryDate),
+                                DateFormat(
+                                  'dd MMMM yyyy',
+                                  'id_ID',
+                                ).format(expiryDate),
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
@@ -445,7 +479,9 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                       // ── Active Toggle ──
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 8),
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: isActive ? _C.successBg : _C.errorBg,
                           borderRadius: BorderRadius.circular(12),
@@ -471,8 +507,7 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color:
-                                      isActive ? _C.success : _C.error,
+                                  color: isActive ? _C.success : _C.error,
                                 ),
                               ),
                             ),
@@ -500,8 +535,9 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            disabledBackgroundColor:
-                                _C.primary.withValues(alpha: 0.5),
+                            disabledBackgroundColor: _C.primary.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
                           child: isSaving
                               ? const SizedBox(
@@ -533,29 +569,28 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
   }
 
   InputDecoration _inputDeco(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.inter(fontSize: 13, color: _C.textHint),
-        filled: true,
-        fillColor: _C.bg,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _C.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _C.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: _C.primary, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _C.error),
-        ),
-      );
+    hintText: hint,
+    hintStyle: GoogleFonts.inter(fontSize: 13, color: _C.textHint),
+    filled: true,
+    fillColor: _C.bg,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _C.border),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _C.border),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: _C.primary, width: 1.5),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _C.error),
+    ),
+  );
 
   // ─────────────────────────────────────────────────────
   //  BUILD
@@ -619,14 +654,18 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
               style: GoogleFonts.inter(fontSize: 13.5, color: _C.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Cari kode kupon…',
-                hintStyle:
-                    GoogleFonts.inter(fontSize: 13, color: _C.textHint),
-                prefixIcon: Icon(Iconsax.search_normal_1,
-                    size: 18, color: _C.textTertiary),
+                hintStyle: GoogleFonts.inter(fontSize: 13, color: _C.textHint),
+                prefixIcon: Icon(
+                  Iconsax.search_normal_1,
+                  size: 18,
+                  color: _C.textTertiary,
+                ),
                 filled: true,
                 fillColor: Colors.transparent,
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 14),
+                  horizontal: 14,
+                  vertical: 14,
+                ),
                 border: InputBorder.none,
               ),
             ),
@@ -657,7 +696,9 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                         Text(
                           'Gagal memuat data kupon',
                           style: GoogleFonts.inter(
-                              fontSize: 14, color: _C.textTertiary),
+                            fontSize: 14,
+                            color: _C.textTertiary,
+                          ),
                         ),
                       ],
                     ),
@@ -670,8 +711,9 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                 final filtered = _search.isEmpty
                     ? docs
                     : docs.where((d) {
-                        final code =
-                            (d.data()['code'] ?? '').toString().toLowerCase();
+                        final code = (d.data()['code'] ?? '')
+                            .toString()
+                            .toLowerCase();
                         return code.contains(_search.toLowerCase());
                       }).toList();
 
@@ -681,24 +723,30 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Iconsax.ticket_expired,
-                            size: 56, color: _C.textHint),
+                        Icon(
+                          Iconsax.ticket_expired,
+                          size: 56,
+                          color: _C.textHint,
+                        ),
                         const SizedBox(height: 14),
                         Text(
                           _search.isEmpty
                               ? 'Belum ada kupon'
                               : 'Kupon tidak ditemukan',
                           style: GoogleFonts.inter(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: _C.textTertiary),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: _C.textTertiary,
+                          ),
                         ),
                         if (_search.isEmpty) ...[
                           const SizedBox(height: 6),
                           Text(
                             'Tap tombol "Kupon Baru" untuk menambah',
                             style: GoogleFonts.inter(
-                                fontSize: 12.5, color: _C.textHint),
+                              fontSize: 12.5,
+                              color: _C.textHint,
+                            ),
                           ),
                         ],
                       ],
@@ -707,8 +755,9 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                 }
 
                 // Stats summary
-                final activeCount =
-                    docs.where((d) => d.data()['isActive'] == true).length;
+                final activeCount = docs
+                    .where((d) => d.data()['isActive'] == true)
+                    .length;
                 final expiredCount = docs.where((d) {
                   final exp = d.data()['expiryDate'] as Timestamp?;
                   return exp != null && _isExpired(exp);
@@ -746,8 +795,7 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                     Expanded(
                       child: ListView.builder(
                         physics: const BouncingScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                            16, 4, 16, bottomPad + 80),
+                        padding: EdgeInsets.fromLTRB(16, 4, 16, bottomPad + 80),
                         itemCount: filtered.length,
                         itemBuilder: (ctx, i) {
                           final doc = filtered[i];
@@ -759,8 +807,10 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                             fmtCurrency: _fmtCurrency,
                             fmtDate: _fmtDate,
                             isExpired: _isExpired,
-                            onToggle: () =>
-                                _toggleActive(doc.id, data['isActive'] ?? false),
+                            onToggle: () => _toggleActive(
+                              doc.id,
+                              data['isActive'] ?? false,
+                            ),
                             onEdit: () => _showPromoSheet(doc: doc),
                             onDelete: () =>
                                 _confirmDelete(doc.id, data['code'] ?? ''),
@@ -839,150 +889,155 @@ class _PromoCard extends StatelessWidget {
         : fmtCurrency(value as num);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: _C.primary.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Top: Code + Status ──
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: _C.teal.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Iconsax.ticket_discount,
-                    size: 22, color: _C.teal),
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _C.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _C.borderLight),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      code,
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: _C.textPrimary,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Top: Code + Status ──
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _C.teal.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Iconsax.ticket_discount,
+                      size: 22,
+                      color: _C.teal,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          code,
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: _C.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          type == 'percentage'
+                              ? 'Diskon Persentase'
+                              : 'Diskon Nominal',
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: _C.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      statusLabel,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: statusColor,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      type == 'percentage'
-                          ? 'Diskon Persentase'
-                          : 'Diskon Nominal',
-                      style: GoogleFonts.inter(
-                          fontSize: 11.5, color: _C.textTertiary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // ── Details row ──
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _C.bg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _DetailCol(
+                        label: 'Potongan',
+                        value: discountText,
+                        color: _C.primary,
+                      ),
+                    ),
+                    Container(width: 1, height: 30, color: _C.border),
+                    Expanded(
+                      child: _DetailCol(
+                        label: 'Berlaku s/d',
+                        value: expiry != null ? fmtDate(expiry) : '-',
+                        color: expired ? _C.warning : _C.textPrimary,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: statusColor,
+              const SizedBox(height: 12),
+
+              // ── Actions ──
+              Row(
+                children: [
+                  // Toggle
+                  Expanded(
+                    child: _ActionBtn(
+                      icon: active ? Iconsax.eye_slash : Iconsax.eye,
+                      label: active ? 'Nonaktifkan' : 'Aktifkan',
+                      color: active ? _C.warning : _C.success,
+                      onTap: onToggle,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  // Edit
+                  Expanded(
+                    child: _ActionBtn(
+                      icon: Iconsax.edit_2,
+                      label: 'Edit',
+                      color: _C.info,
+                      onTap: onEdit,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Delete
+                  Expanded(
+                    child: _ActionBtn(
+                      icon: Iconsax.trash,
+                      label: 'Hapus',
+                      color: _C.error,
+                      onTap: onDelete,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 14),
-
-          // ── Details row ──
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: _C.bg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _DetailCol(
-                    label: 'Potongan',
-                    value: discountText,
-                    color: _C.primary,
-                  ),
-                ),
-                Container(width: 1, height: 30, color: _C.border),
-                Expanded(
-                  child: _DetailCol(
-                    label: 'Berlaku s/d',
-                    value:
-                        expiry != null ? fmtDate(expiry) : '-',
-                    color: expired ? _C.warning : _C.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // ── Actions ──
-          Row(
-            children: [
-              // Toggle
-              Expanded(
-                child: _ActionBtn(
-                  icon: active ? Iconsax.eye_slash : Iconsax.eye,
-                  label: active ? 'Nonaktifkan' : 'Aktifkan',
-                  color: active ? _C.warning : _C.success,
-                  onTap: onToggle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Edit
-              Expanded(
-                child: _ActionBtn(
-                  icon: Iconsax.edit_2,
-                  label: 'Edit',
-                  color: _C.info,
-                  onTap: onEdit,
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Delete
-              Expanded(
-                child: _ActionBtn(
-                  icon: Iconsax.trash,
-                  label: 'Hapus',
-                  color: _C.error,
-                  onTap: onDelete,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: (100 + index * 60).ms, duration: 400.ms)
-        .slideY(
-            begin: 0.05, duration: 400.ms, curve: Curves.easeOutCubic);
+        .slideY(begin: 0.05, duration: 400.ms, curve: Curves.easeOutCubic);
   }
 }
 
@@ -992,8 +1047,11 @@ class _DetailCol extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _DetailCol(
-      {required this.label, required this.value, required this.color});
+  const _DetailCol({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1068,8 +1126,11 @@ class _SummaryChip extends StatelessWidget {
   final Color color;
   final Color bg;
 
-  const _SummaryChip(
-      {required this.label, required this.color, required this.bg});
+  const _SummaryChip({
+    required this.label,
+    required this.color,
+    required this.bg,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1132,9 +1193,7 @@ class _TypeChip extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected
-                ? _C.primary.withValues(alpha: 0.08)
-                : _C.bg,
+            color: isSelected ? _C.primary.withValues(alpha: 0.08) : _C.bg,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected ? _C.primary : _C.border,
@@ -1144,9 +1203,11 @@ class _TypeChip extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon,
-                  size: 16,
-                  color: isSelected ? _C.primary : _C.textTertiary),
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected ? _C.primary : _C.textTertiary,
+              ),
               const SizedBox(width: 6),
               Text(
                 label,
@@ -1168,7 +1229,9 @@ class _TypeChip extends StatelessWidget {
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     return TextEditingValue(
       text: newValue.text.toUpperCase(),
       selection: newValue.selection,

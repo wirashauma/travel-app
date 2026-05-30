@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -30,12 +31,14 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     // Light status bar for white background
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
   }
 
   @override
@@ -71,7 +74,8 @@ class _LoginPageState extends State<LoginPage> {
             backgroundColor: AuthColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
+              borderRadius: BorderRadius.circular(10),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -87,12 +91,14 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _isLoading = false);
 
       // Restore dark status bar for main app
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Color(0xFF0F0F1A),
-        systemNavigationBarIconBrightness: Brightness.light,
-      ));
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          systemNavigationBarColor: Color(0xFF0F0F1A),
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
+      );
 
       Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(
@@ -135,7 +141,8 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: AuthColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10)),
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -152,8 +159,14 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isGoogleLoading = true);
 
     try {
+      final googleSignIn = GoogleSignIn(
+        clientId: kIsWeb
+            ? '430270320192-6v55curts1667vuk9uoi7okg4omnmm52.apps.googleusercontent.com'
+            : null,
+      );
+
       // 1. Trigger the Google Sign-In flow
-      final googleUser = await GoogleSignIn().signIn();
+      final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         // User cancelled
         if (mounted) setState(() => _isGoogleLoading = false);
@@ -168,8 +181,9 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       // 3. Sign in to Firebase with Google credential
-      final userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
       final user = userCredential.user;
 
       if (user == null) {
@@ -206,13 +220,14 @@ class _LoginPageState extends State<LoginPage> {
                 backgroundColor: AuthColors.error,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 margin: const EdgeInsets.all(16),
               ),
             );
           }
           await AuthService.logout();
-          await GoogleSignIn().signOut();
+          await googleSignIn.signOut();
           return;
         }
       }
@@ -221,12 +236,14 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _isGoogleLoading = false);
 
       // 5. Navigate to main app
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Color(0xFF0F0F1A),
-        systemNavigationBarIconBrightness: Brightness.light,
-      ));
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          systemNavigationBarColor: Color(0xFF0F0F1A),
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
+      );
 
       Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(
@@ -263,7 +280,8 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: AuthColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10)),
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -278,13 +296,16 @@ class _LoginPageState extends State<LoginPage> {
           return FadeTransition(
             opacity: CurveTween(curve: Curves.easeOut).animate(animation),
             child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.04, 0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              )),
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0.04, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
               child: child,
             ),
           );
@@ -302,13 +323,16 @@ class _LoginPageState extends State<LoginPage> {
           return FadeTransition(
             opacity: CurveTween(curve: Curves.easeOut).animate(animation),
             child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.04),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              )),
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, 0.04),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
               child: child,
             ),
           );
@@ -329,7 +353,8 @@ class _LoginPageState extends State<LoginPage> {
           physics: const BouncingScrollPhysics(),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: screenHeight -
+              minHeight:
+                  screenHeight -
                   MediaQuery.of(context).padding.top -
                   bottomPadding,
             ),
@@ -353,23 +378,24 @@ class _LoginPageState extends State<LoginPage> {
 
                     // ── Email Field ───────────────────────
                     AuthTextField(
-                      controller: _emailController,
-                      hintText: 'contoh@email.com',
-                      labelText: 'Alamat Email',
-                      prefixIcon: Iconsax.sms,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Email tidak boleh kosong';
-                        }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                            .hasMatch(value.trim())) {
-                          return 'Format email tidak valid';
-                        }
-                        return null;
-                      },
-                    )
+                          controller: _emailController,
+                          hintText: 'contoh@email.com',
+                          labelText: 'Alamat Email',
+                          prefixIcon: Iconsax.sms,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Email tidak boleh kosong';
+                            }
+                            if (!RegExp(
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                            ).hasMatch(value.trim())) {
+                              return 'Format email tidak valid';
+                            }
+                            return null;
+                          },
+                        )
                         .animate()
                         .fadeIn(delay: 400.ms, duration: 450.ms)
                         .slideY(
@@ -383,37 +409,38 @@ class _LoginPageState extends State<LoginPage> {
 
                     // ── Password Field ────────────────────
                     AuthTextField(
-                      controller: _passwordController,
-                      hintText: 'Masukkan password',
-                      labelText: 'Password',
-                      prefixIcon: Iconsax.lock,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _handleLogin(),
-                      suffixIcon: GestureDetector(
-                        onTap: () => setState(
-                            () => _obscurePassword = !_obscurePassword),
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 14),
-                          child: Icon(
-                            _obscurePassword
-                                ? Iconsax.eye_slash
-                                : Iconsax.eye,
-                            color: AuthColors.textTertiary,
-                            size: 20,
+                          controller: _passwordController,
+                          hintText: 'Masukkan password',
+                          labelText: 'Password',
+                          prefixIcon: Iconsax.lock,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _handleLogin(),
+                          suffixIcon: GestureDetector(
+                            onTap: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 14),
+                              child: Icon(
+                                _obscurePassword
+                                    ? Iconsax.eye_slash
+                                    : Iconsax.eye,
+                                color: AuthColors.textTertiary,
+                                size: 20,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password tidak boleh kosong';
-                        }
-                        if (value.length < 6) {
-                          return 'Password minimal 6 karakter';
-                        }
-                        return null;
-                      },
-                    )
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Password tidak boleh kosong';
+                            }
+                            if (value.length < 6) {
+                              return 'Password minimal 6 karakter';
+                            }
+                            return null;
+                          },
+                        )
                         .animate()
                         .fadeIn(delay: 550.ms, duration: 450.ms)
                         .slideY(
@@ -439,18 +466,16 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 700.ms, duration: 450.ms),
+                    ).animate().fadeIn(delay: 700.ms, duration: 450.ms),
 
                     const SizedBox(height: 32),
 
                     // ── Login Button ──────────────────────
                     AuthPrimaryButton(
-                      text: 'Login',
-                      isLoading: _isLoading,
-                      onTap: _handleLogin,
-                    )
+                          text: 'Login',
+                          isLoading: _isLoading,
+                          onTap: _handleLogin,
+                        )
                         .animate()
                         .fadeIn(delay: 800.ms, duration: 450.ms)
                         .slideY(
@@ -463,9 +488,9 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 28),
 
                     // ── Divider ───────────────────────────
-                    const AuthDivider(text: 'atau masuk dengan')
-                        .animate()
-                        .fadeIn(delay: 950.ms, duration: 450.ms),
+                    const AuthDivider(
+                      text: 'atau masuk dengan',
+                    ).animate().fadeIn(delay: 950.ms, duration: 450.ms),
 
                     const SizedBox(height: 20),
 
@@ -489,9 +514,7 @@ class _LoginPageState extends State<LoginPage> {
                         actionText: 'Daftar',
                         onTap: _navigateToRegister,
                       ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 1200.ms, duration: 450.ms),
+                    ).animate().fadeIn(delay: 1200.ms, duration: 450.ms),
 
                     const SizedBox(height: 24),
                   ],

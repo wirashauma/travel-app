@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore_for_file: unused_field, unused_element, unused_local_variable
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -98,22 +100,34 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Color(0xFFFAFBFD),
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Color(0xFFFAFBFD),
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
     _cities = DijkstraService.instance.getAllCities();
 
     // ── Pre-fill dari Beranda & auto-search ──
-    if (widget.initialOrigin != null) _originCity = widget.initialOrigin;
-    if (widget.initialDestination != null) _destinationCity = widget.initialDestination;
-    if (widget.initialDate != null) _selectedDate = widget.initialDate!;
-    if (widget.initialPassengers != null) _passengers = widget.initialPassengers!;
+    if (widget.initialOrigin != null) {
+      _originCity = widget.initialOrigin;
+    }
+    if (widget.initialDestination != null) {
+      _destinationCity = widget.initialDestination;
+    }
+    if (widget.initialDate != null) {
+      _selectedDate = widget.initialDate!;
+    }
+    if (widget.initialPassengers != null) {
+      _passengers = widget.initialPassengers!;
+    }
 
     // Otomatis jalankan Dijkstra jika kedua kota sudah terisi
-    if (_originCity != null && _destinationCity != null && _originCity != _destinationCity) {
+    if (_originCity != null &&
+        _destinationCity != null &&
+        _originCity != _destinationCity) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _handleSearch());
     }
   }
@@ -192,12 +206,15 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
-          content: Text(msg,
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white)),
+          content: Text(
+            msg,
+            style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+          ),
           backgroundColor: _C.primary,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -237,8 +254,8 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
           Expanded(
             child: _hasSearched
                 ? (_routeResult != null
-                    ? _buildResultContent()
-                    : _buildNoRoute())
+                      ? _buildResultContent()
+                      : _buildNoRoute())
                 : _buildInitialState(),
           ),
         ],
@@ -260,7 +277,10 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
         ),
         boxShadow: [
           BoxShadow(
-              color: Color(0x08000000), blurRadius: 16, offset: Offset(0, 4)),
+            color: Color(0x08000000),
+            blurRadius: 16,
+            offset: Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -278,8 +298,11 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                     color: _C.inputFill,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Iconsax.arrow_left,
-                      size: 20, color: _C.textPrimary),
+                  child: const Icon(
+                    Iconsax.arrow_left,
+                    size: 20,
+                    color: _C.textPrimary,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -320,8 +343,11 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                     color: _C.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Iconsax.arrow_swap_horizontal,
-                      size: 18, color: _C.primary),
+                  child: const Icon(
+                    Iconsax.arrow_swap_horizontal,
+                    size: 18,
+                    color: _C.primary,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -348,7 +374,9 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                   onTap: _pickDate,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: _C.inputFill,
                       borderRadius: BorderRadius.circular(12),
@@ -356,15 +384,19 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Iconsax.calendar_1,
-                            size: 18, color: _C.textTertiary),
+                        const Icon(
+                          Iconsax.calendar_1,
+                          size: 18,
+                          color: _C.textTertiary,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           _fmtDate(_selectedDate),
                           style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: _C.textPrimary),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: _C.textPrimary,
+                          ),
                         ),
                       ],
                     ),
@@ -375,8 +407,7 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
 
               // Passengers
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
                   color: _C.inputFill,
                   borderRadius: BorderRadius.circular(12),
@@ -398,8 +429,11 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                           color: _C.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.remove,
-                            size: 16, color: _C.primary),
+                        child: const Icon(
+                          Icons.remove,
+                          size: 16,
+                          color: _C.primary,
+                        ),
                       ),
                     ),
                     Padding(
@@ -407,9 +441,10 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                       child: Text(
                         '$_passengers',
                         style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: _C.textPrimary),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _C.textPrimary,
+                        ),
                       ),
                     ),
                     GestureDetector(
@@ -425,8 +460,11 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                           color: _C.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.add,
-                            size: 16, color: _C.primary),
+                        child: const Icon(
+                          Icons.add,
+                          size: 16,
+                          color: _C.primary,
+                        ),
                       ),
                     ),
                   ],
@@ -444,8 +482,11 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                     color: _C.primary,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Iconsax.search_normal_1,
-                      size: 20, color: Colors.white),
+                  child: const Icon(
+                    Iconsax.search_normal_1,
+                    size: 20,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
@@ -487,8 +528,7 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(Iconsax.arrow_down_1,
-                size: 14, color: _C.textTertiary),
+            const Icon(Iconsax.arrow_down_1, size: 14, color: _C.textTertiary),
           ],
         ),
       ),
@@ -531,15 +571,19 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Iconsax.map_1,
-                size: 64, color: _C.primary.withValues(alpha: 0.2)),
+            Icon(
+              Iconsax.map_1,
+              size: 64,
+              color: _C.primary.withValues(alpha: 0.2),
+            ),
             const SizedBox(height: 16),
             Text(
               'Cari Tiket Perjalanan',
               style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: _C.textPrimary),
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: _C.textPrimary,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -564,15 +608,19 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Iconsax.map,
-                size: 64, color: _C.warning.withValues(alpha: 0.4)),
+            Icon(
+              Iconsax.map,
+              size: 64,
+              color: _C.warning.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16),
             Text(
               'Rute Tidak Ditemukan',
               style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: _C.textPrimary),
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: _C.textPrimary,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -602,10 +650,10 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Route Visual Card ──
-          _buildRouteCard(result, estimatedPrice)
-              .animate()
-              .fadeIn(duration: 400.ms)
-              .slideY(begin: 0.05),
+          _buildRouteCard(
+            result,
+            estimatedPrice,
+          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05),
 
           const SizedBox(height: 16),
 
@@ -625,16 +673,12 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
               fontWeight: FontWeight.w700,
               color: _C.textPrimary,
             ),
-          )
-              .animate()
-              .fadeIn(delay: 150.ms, duration: 400.ms),
+          ).animate().fadeIn(delay: 150.ms, duration: 400.ms),
           const SizedBox(height: 4),
           Text(
             'Armada yang melayani rute ini (real-time)',
             style: GoogleFonts.inter(fontSize: 12, color: _C.textTertiary),
-          )
-              .animate()
-              .fadeIn(delay: 200.ms, duration: 400.ms),
+          ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
           const SizedBox(height: 14),
 
           // ── Fleet List — StreamBuilder ──
@@ -673,7 +717,10 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
         border: Border.all(color: _C.borderLight, width: 1),
         boxShadow: const [
           BoxShadow(
-              color: Color(0x06000000), blurRadius: 12, offset: Offset(0, 4)),
+            color: Color(0x06000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -696,8 +743,11 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                     color: _C.teal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Iconsax.routing_2,
-                      size: 18, color: _C.teal),
+                  child: const Icon(
+                    Iconsax.routing_2,
+                    size: 18,
+                    color: _C.teal,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -707,15 +757,18 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                       Text(
                         'Rute Optimal (Dijkstra)',
                         style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: _C.textPrimary),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _C.textPrimary,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         '${result.path.length - 1} segmen · ${result.totalDistanceKm} km',
                         style: GoogleFonts.inter(
-                            fontSize: 11, color: _C.textTertiary),
+                          fontSize: 11,
+                          color: _C.textTertiary,
+                        ),
                       ),
                     ],
                   ),
@@ -740,18 +793,19 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                           color: i == 0
                               ? _C.success
                               : i == result.path.length - 1
-                                  ? _C.error
-                                  : _C.orange,
+                              ? _C.error
+                              : _C.orange,
                           shape: BoxShape.circle,
                           border: Border.all(color: _C.white, width: 2),
                           boxShadow: [
                             BoxShadow(
-                              color: (i == 0
-                                      ? _C.success
-                                      : i == result.path.length - 1
+                              color:
+                                  (i == 0
+                                          ? _C.success
+                                          : i == result.path.length - 1
                                           ? _C.error
                                           : _C.orange)
-                                  .withValues(alpha: 0.3),
+                                      .withValues(alpha: 0.3),
                               blurRadius: 4,
                             ),
                           ],
@@ -763,16 +817,14 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                           result.path[i],
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            fontWeight: (i == 0 ||
-                                    i == result.path.length - 1)
+                            fontWeight: (i == 0 || i == result.path.length - 1)
                                 ? FontWeight.w600
                                 : FontWeight.w500,
                             color: _C.textPrimary,
                           ),
                         ),
                       ),
-                      if (i == 0)
-                        _buildChip('Asal', _C.success),
+                      if (i == 0) _buildChip('Asal', _C.success),
                       if (i == result.path.length - 1)
                         _buildChip('Tujuan', _C.error),
                       if (i > 0 && i < result.path.length - 1)
@@ -818,13 +870,22 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
             child: Row(
               children: [
                 _buildStatItem(
-                    Iconsax.routing, '${result.totalDistanceKm} km', 'Jarak'),
+                  Iconsax.routing,
+                  '${result.totalDistanceKm} km',
+                  'Jarak',
+                ),
                 _buildStatDivider(),
                 _buildStatItem(
-                    Iconsax.clock, result.formattedDuration, 'Durasi'),
+                  Iconsax.clock,
+                  result.formattedDuration,
+                  'Durasi',
+                ),
                 _buildStatDivider(),
-                _buildStatItem(Iconsax.money_4,
-                    _fmtPrice(estimatedPrice), 'Est. Harga'),
+                _buildStatItem(
+                  Iconsax.money_4,
+                  _fmtPrice(estimatedPrice),
+                  'Est. Harga',
+                ),
               ],
             ),
           ),
@@ -843,7 +904,10 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
       child: Text(
         label,
         style: GoogleFonts.inter(
-            fontSize: 10, fontWeight: FontWeight.w600, color: color),
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
@@ -857,9 +921,10 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
           Text(
             value,
             style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: _C.textPrimary),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: _C.textPrimary,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 2),
@@ -899,11 +964,17 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
               child: Column(
                 children: [
                   const CircularProgressIndicator(
-                      color: _C.primary, strokeWidth: 2.5),
+                    color: _C.primary,
+                    strokeWidth: 2.5,
+                  ),
                   const SizedBox(height: 12),
-                  Text('Memuat armada...',
-                      style: GoogleFonts.inter(
-                          fontSize: 13, color: _C.textTertiary)),
+                  Text(
+                    'Memuat armada...',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: _C.textTertiary,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -958,9 +1029,9 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                 estimatedPrice: estimatedPrice,
               ),
             ).animate().fadeIn(
-                  delay: Duration(milliseconds: 100 + (i * 60)),
-                  duration: 400.ms,
-                );
+              delay: Duration(milliseconds: 100 + (i * 60)),
+              duration: 400.ms,
+            );
           },
         );
       },
@@ -1009,16 +1080,20 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
           children: [
             Icon(icon, size: 48, color: color.withValues(alpha: 0.3)),
             const SizedBox(height: 12),
-            Text(title,
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: _C.textPrimary)),
+            Text(
+              title,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: _C.textPrimary,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(subtitle,
-                style:
-                    GoogleFonts.inter(fontSize: 12, color: _C.textTertiary),
-                textAlign: TextAlign.center),
+            Text(
+              subtitle,
+              style: GoogleFonts.inter(fontSize: 12, color: _C.textTertiary),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
@@ -1086,175 +1161,189 @@ class _FleetCard extends StatelessWidget {
             bookedSeatCount += (d['seatsBooked'] as num?)?.toInt() ?? 0;
           }
         }
-        final availableSeats =
-            (totalSeats - bookedSeatCount).clamp(0, totalSeats);
+        final availableSeats = (totalSeats - bookedSeatCount).clamp(
+          0,
+          totalSeats,
+        );
         final isBookable = availableSeats >= passengers;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.borderLight, width: 1),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x05000000), blurRadius: 10, offset: Offset(0, 3)),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Fleet Image / Initials ──
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: _C.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
+        return Container(
+          decoration: BoxDecoration(
+            color: _C.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _C.borderLight, width: 1),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x05000000),
+                blurRadius: 10,
+                offset: Offset(0, 3),
               ),
-              clipBehavior: Clip.antiAlias,
-              child: imageUrl != null && imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Center(
-                        child: Text(
-                          _getInitials(name),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: _C.primary,
-                          ),
-                        ),
-                      ),
-                    )
-                  : Center(
-                      child: Text(
-                        _getInitials(name),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: _C.primary,
-                        ),
-                      ),
-                    ),
-            ),
-            const SizedBox(width: 12),
-
-            // ── Info ──
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Name
-                  Text(
-                    name,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: _C.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Fleet Image / Initials ──
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: _C.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  const SizedBox(height: 3),
-
-                  // Seats badge
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: availableSeats > 5
-                              ? _C.success.withValues(alpha: 0.08)
-                              : _C.warning.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          '$availableSeats/$totalSeats kursi',
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: availableSeats > 5
-                                ? _C.success
-                                : _C.warning,
-                          ),
-                        ),
-                      ),
-                      if (description.isNotEmpty) ...[
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            description,
-                            style: GoogleFonts.inter(
-                                fontSize: 10, color: _C.textTertiary),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Price + Book button row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _fmtPrice(totalPrice),
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
+                  clipBehavior: Clip.antiAlias,
+                  child: imageUrl != null && imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Center(
+                            child: Text(
+                              _getInitials(name),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 color: _C.primary,
                               ),
                             ),
-                            Text(
-                              '$passengers penumpang',
+                          ),
+                        )
+                      : Center(
+                          child: Text(
+                            _getInitials(name),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: _C.primary,
+                            ),
+                          ),
+                        ),
+                ),
+                const SizedBox(width: 12),
+
+                // ── Info ──
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name
+                      Text(
+                        name,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _C.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+
+                      // Seats badge
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: availableSeats > 5
+                                  ? _C.success.withValues(alpha: 0.08)
+                                  : _C.warning.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '$availableSeats/$totalSeats kursi',
                               style: GoogleFonts.inter(
-                                  fontSize: 10, color: _C.textTertiary),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: availableSeats > 5
+                                    ? _C.success
+                                    : _C.warning,
+                              ),
+                            ),
+                          ),
+                          if (description.isNotEmpty) ...[
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                description,
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  color: _C.textTertiary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
-                        ),
+                        ],
                       ),
-                      SizedBox(
-                        height: 34,
-                        child: ElevatedButton(
-                          onPressed: isBookable ? onBook : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _C.primary,
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor:
-                                _C.textTertiary.withValues(alpha: 0.15),
-                            disabledForegroundColor: _C.textTertiary,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16),
+                      const SizedBox(height: 10),
+
+                      // Price + Book button row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _fmtPrice(totalPrice),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                    color: _C.primary,
+                                  ),
+                                ),
+                                Text(
+                                  '$passengers penumpang',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: _C.textTertiary,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Text(
-                            isBookable ? 'Pesan' : 'Penuh',
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700),
+                          SizedBox(
+                            height: 34,
+                            child: ElevatedButton(
+                              onPressed: isBookable ? onBook : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _C.primary,
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: _C.textTertiary
+                                    .withValues(alpha: 0.15),
+                                disabledForegroundColor: _C.textTertiary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                              ),
+                              child: Text(
+                                isBookable ? 'Pesan' : 'Penuh',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
       }, // StreamBuilder builder
     ); // StreamBuilder
   }
@@ -1331,7 +1420,9 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: _C.border, borderRadius: BorderRadius.circular(2)),
+                color: _C.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -1340,16 +1431,22 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
-                Text(widget.title,
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: _C.textPrimary)),
+                Text(
+                  widget.title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: _C.textPrimary,
+                  ),
+                ),
                 const Spacer(),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.close,
-                      size: 22, color: _C.textTertiary),
+                  child: const Icon(
+                    Icons.close,
+                    size: 22,
+                    color: _C.textTertiary,
+                  ),
                 ),
               ],
             ),
@@ -1363,17 +1460,25 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
               style: GoogleFonts.inter(fontSize: 14, color: _C.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Cari kota...',
-                hintStyle:
-                    GoogleFonts.inter(fontSize: 13, color: _C.textTertiary),
-                prefixIcon: const Icon(Iconsax.search_normal,
-                    size: 18, color: _C.textTertiary),
+                hintStyle: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: _C.textTertiary,
+                ),
+                prefixIcon: const Icon(
+                  Iconsax.search_normal,
+                  size: 18,
+                  color: _C.textTertiary,
+                ),
                 filled: true,
                 fillColor: _C.inputFill,
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
@@ -1382,14 +1487,20 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
           Expanded(
             child: _filteredCities.isEmpty
                 ? Center(
-                    child: Text('Tidak ditemukan',
-                        style: GoogleFonts.inter(
-                            fontSize: 13, color: _C.textTertiary)),
+                    child: Text(
+                      'Tidak ditemukan',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: _C.textTertiary,
+                      ),
+                    ),
                   )
                 : ListView.builder(
                     physics: const BouncingScrollPhysics(),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     itemCount: _filteredCities.length,
                     itemBuilder: (_, i) {
                       final city = _filteredCities[i];
@@ -1402,8 +1513,8 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
                           color: isDisabled
                               ? _C.textTertiary.withValues(alpha: 0.3)
                               : isSelected
-                                  ? _C.primary
-                                  : _C.textTertiary,
+                              ? _C.primary
+                              : _C.textTertiary,
                         ),
                         title: Text(
                           city,
@@ -1418,8 +1529,11 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
                           ),
                         ),
                         trailing: isSelected
-                            ? const Icon(Iconsax.tick_circle5,
-                                size: 20, color: _C.primary)
+                            ? const Icon(
+                                Iconsax.tick_circle5,
+                                size: 20,
+                                color: _C.primary,
+                              )
                             : null,
                         onTap: isDisabled
                             ? null
@@ -1428,7 +1542,8 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
                                 Navigator.pop(context);
                               },
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       );
                     },
                   ),

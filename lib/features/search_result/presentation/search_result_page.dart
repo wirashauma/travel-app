@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -59,10 +61,12 @@ class _SearchResultPageState extends State<SearchResultPage> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
     _loadRoute();
   }
 
@@ -88,7 +92,9 @@ class _SearchResultPageState extends State<SearchResultPage> {
           // 1) Check Firestore coordinates
           final firestoreCoords = coordsMap?[cityName];
           if (firestoreCoords != null) {
-            latLngs.add(LatLng(firestoreCoords['lat']!, firestoreCoords['lng']!));
+            latLngs.add(
+              LatLng(firestoreCoords['lat']!, firestoreCoords['lng']!),
+            );
             continue;
           }
           // 2) Fallback to static local map
@@ -151,10 +157,10 @@ class _SearchResultPageState extends State<SearchResultPage> {
             child: _isLoading
                 ? _buildShimmerLoading()
                 : _hasError
-                    ? _buildErrorState()
-                    : (_result == null || _result!.path.isEmpty)
-                        ? _buildEmptyState()
-                        : _buildRouteFound(),
+                ? _buildErrorState()
+                : (_result == null || _result!.path.isEmpty)
+                ? _buildEmptyState()
+                : _buildRouteFound(),
           ),
         ],
       ),
@@ -169,9 +175,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
       padding: EdgeInsets.fromLTRB(8, topPadding + 8, 20, 16),
       decoration: const BoxDecoration(
         color: _C.white,
-        border: Border(
-          bottom: BorderSide(color: _C.borderLight, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: _C.borderLight, width: 1)),
       ),
       child: Row(
         children: [
@@ -262,17 +266,16 @@ class _SearchResultPageState extends State<SearchResultPage> {
           // ── Google Maps — Dijkstra Route Visualization ──
           if (_routeLatLngs.length >= 2)
             CustomRouteMap(
-              routePoints: _routeLatLngs,
-              originName: widget.origin,
-              destinationName: widget.destination,
-              height: 250,
-            )
+                  routePoints: _routeLatLngs,
+                  originName: widget.origin,
+                  destinationName: widget.destination,
+                  height: 250,
+                )
                 .animate()
                 .fadeIn(delay: 120.ms, duration: 450.ms)
                 .slideY(begin: 0.05, delay: 120.ms, duration: 450.ms),
 
-          if (_routeLatLngs.length >= 2)
-            const SizedBox(height: 16),
+          if (_routeLatLngs.length >= 2) const SizedBox(height: 16),
 
           // ── Route Path Visualization ──
           _buildRoutePathCard(result)
@@ -302,7 +305,10 @@ class _SearchResultPageState extends State<SearchResultPage> {
 
   // ── Route Summary Card ───────────────────────────
   Widget _buildRouteSummary(
-      DijkstraResult result, bool isDirect, int transitCount) {
+    DijkstraResult result,
+    bool isDirect,
+    int transitCount,
+  ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -352,11 +358,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
                 _C.primary,
               ),
               const SizedBox(width: 10),
-              _infoChip(
-                Iconsax.clock,
-                result.formattedDuration,
-                _C.teal,
-              ),
+              _infoChip(Iconsax.clock, result.formattedDuration, _C.teal),
               const SizedBox(width: 10),
               _infoChip(
                 Iconsax.arrow_swap_horizontal,
@@ -443,15 +445,16 @@ class _SearchResultPageState extends State<SearchResultPage> {
                         color: isFirst
                             ? _C.teal
                             : isLast
-                                ? _C.primary
-                                : _C.warning,
+                            ? _C.primary
+                            : _C.warning,
                         border: Border.all(
-                          color: (isFirst
-                                  ? _C.teal
-                                  : isLast
+                          color:
+                              (isFirst
+                                      ? _C.teal
+                                      : isLast
                                       ? _C.primary
                                       : _C.warning)
-                              .withValues(alpha: 0.3),
+                                  .withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
@@ -462,8 +465,9 @@ class _SearchResultPageState extends State<SearchResultPage> {
                         city,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
-                          fontWeight:
-                              (isFirst || isLast) ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: (isFirst || isLast)
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                           color: _C.textPrimary,
                         ),
                       ),
@@ -471,7 +475,9 @@ class _SearchResultPageState extends State<SearchResultPage> {
                     if (isFirst)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: _C.teal.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
@@ -488,7 +494,9 @@ class _SearchResultPageState extends State<SearchResultPage> {
                     if (isLast)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: _C.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
@@ -505,7 +513,9 @@ class _SearchResultPageState extends State<SearchResultPage> {
                     if (!isFirst && !isLast)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: _C.warning.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
@@ -527,11 +537,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
                     padding: const EdgeInsets.only(left: 5),
                     child: Row(
                       children: [
-                        Container(
-                          width: 2,
-                          height: 28,
-                          color: _C.borderLight,
-                        ),
+                        Container(width: 2, height: 28, color: _C.borderLight),
                       ],
                     ),
                   ),
@@ -583,8 +589,10 @@ class _SearchResultPageState extends State<SearchResultPage> {
           const SizedBox(height: 8),
           _priceRow('Jumlah penumpang', '${widget.passengers} orang'),
           const SizedBox(height: 8),
-          _priceRow('Jarak tempuh',
-              '${result.totalDistance.toStringAsFixed(0)} km'),
+          _priceRow(
+            'Jarak tempuh',
+            '${result.totalDistance.toStringAsFixed(0)} km',
+          ),
           const SizedBox(height: 8),
           _priceRow('Estimasi waktu', result.formattedDuration),
 
@@ -668,14 +676,18 @@ class _SearchResultPageState extends State<SearchResultPage> {
               ),
               transitionsBuilder: (_, anim, __, child) {
                 return FadeTransition(
-                  opacity:
-                      CurvedAnimation(parent: anim, curve: Curves.easeOut),
+                  opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
                   child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.04, 0),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                        parent: anim, curve: Curves.easeOutCubic)),
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0.04, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: anim,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
                     child: child,
                   ),
                 );
@@ -755,68 +767,70 @@ class _SearchResultPageState extends State<SearchResultPage> {
   // ─────────────────────────────────────────────────
   Widget _buildEmptyState() {
     return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: _C.textTertiary.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: Icon(
-                Iconsax.route_square,
-                size: 42,
-                color: _C.textTertiary.withValues(alpha: 0.45),
-              ),
-            ),
-            const SizedBox(height: 28),
-            Text(
-              'Rute Tidak Ditemukan',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-                color: _C.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Tidak ditemukan rute yang menghubungkan\n${widget.origin} dan ${widget.destination}.\nSilakan coba kota lain.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w400,
-                color: _C.textTertiary,
-                height: 1.6,
-              ),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Iconsax.search_normal, size: 16),
-              label: const Text('Ubah Pencarian'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _C.primary,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: _C.textTertiary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: Icon(
+                    Iconsax.route_square,
+                    size: 42,
+                    color: _C.textTertiary.withValues(alpha: 0.45),
+                  ),
                 ),
-                textStyle: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                const SizedBox(height: 28),
+                Text(
+                  'Rute Tidak Ditemukan',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                    color: _C.textPrimary,
+                  ),
                 ),
-                elevation: 0,
-              ),
+                const SizedBox(height: 10),
+                Text(
+                  'Tidak ditemukan rute yang menghubungkan\n${widget.origin} dan ${widget.destination}.\nSilakan coba kota lain.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w400,
+                    color: _C.textTertiary,
+                    height: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Iconsax.search_normal, size: 16),
+                  label: const Text('Ubah Pencarian'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _C.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    textStyle: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    )
+          ),
+        )
         .animate()
         .fadeIn(delay: 200.ms, duration: 500.ms)
         .scale(
@@ -884,8 +898,10 @@ class _SearchResultPageState extends State<SearchResultPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: _C.primary,
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(13),
                 ),
@@ -899,8 +915,6 @@ class _SearchResultPageState extends State<SearchResultPage> {
           ],
         ),
       ),
-    )
-        .animate()
-        .fadeIn(delay: 200.ms, duration: 500.ms);
+    ).animate().fadeIn(delay: 200.ms, duration: 500.ms);
   }
 }

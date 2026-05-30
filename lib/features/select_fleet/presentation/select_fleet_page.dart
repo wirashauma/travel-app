@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore_for_file: unused_field, unused_import, prefer_final_fields
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -59,7 +61,7 @@ class SelectFleetPage extends StatefulWidget {
 }
 
 class _SelectFleetPageState extends State<SelectFleetPage> {
-  bool _isBooking = false;
+  final bool _isBooking = false;
 
   // ── Firestore ref ──
   static final _fleetsRef = FirebaseFirestore.instance
@@ -83,15 +85,16 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
   }
 
   // ── Navigate to Seat Selection ──
-  void _goToSeatSelection(
-      String fleetId, String fleetName, int totalSeats) {
+  void _goToSeatSelection(String fleetId, String fleetName, int totalSeats) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -127,9 +130,7 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
           _buildAppBar(topPadding),
 
           // ═══ ROUTE INFO STRIP ═══════════════════
-          _buildRouteStrip()
-              .animate()
-              .fadeIn(delay: 100.ms, duration: 400.ms),
+          _buildRouteStrip().animate().fadeIn(delay: 100.ms, duration: 400.ms),
 
           // ═══ FLEET LIST — StreamBuilder ═════════
           Expanded(
@@ -171,27 +172,23 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
                     final doc = docs[index];
                     final d = doc.data() as Map<String, dynamic>;
                     return _FleetCard(
-                      fleetId: doc.id,
-                      name: d['name'] as String? ?? 'Armada',
-                      imageUrl: d['imageUrl'] as String? ?? '',
-                      totalSeats:
-                          (d['totalSeats'] as num?)?.toInt() ?? 0,
-                      description: d['description'] as String? ?? '',
-                      routePrice: widget.routePrice,
-                      passengers: widget.passengers,
-                      formatPrice: _fmtPrice,
-                      isBooking: _isBooking,
-                      onBook: () => _goToSeatSelection(
-                        doc.id,
-                        d['name'] as String? ?? 'Armada',
-                        (d['totalSeats'] as num?)?.toInt() ?? 0,
-                      ),
-                    )
-                        .animate()
-                        .fadeIn(
-                          delay: (200 + index * 80).ms,
-                          duration: 450.ms,
+                          fleetId: doc.id,
+                          name: d['name'] as String? ?? 'Armada',
+                          imageUrl: d['imageUrl'] as String? ?? '',
+                          totalSeats: (d['totalSeats'] as num?)?.toInt() ?? 0,
+                          description: d['description'] as String? ?? '',
+                          routePrice: widget.routePrice,
+                          passengers: widget.passengers,
+                          formatPrice: _fmtPrice,
+                          isBooking: _isBooking,
+                          onBook: () => _goToSeatSelection(
+                            doc.id,
+                            d['name'] as String? ?? 'Armada',
+                            (d['totalSeats'] as num?)?.toInt() ?? 0,
+                          ),
                         )
+                        .animate()
+                        .fadeIn(delay: (200 + index * 80).ms, duration: 450.ms)
                         .slideY(
                           begin: 0.06,
                           delay: (200 + index * 80).ms,
@@ -216,9 +213,7 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
       padding: EdgeInsets.fromLTRB(8, topPadding + 8, 20, 16),
       decoration: const BoxDecoration(
         color: _C.white,
-        border: Border(
-          bottom: BorderSide(color: _C.borderLight, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: _C.borderLight, width: 1)),
       ),
       child: Row(
         children: [
@@ -301,10 +296,11 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
                   runSpacing: 4,
                   children: [
                     _stripChip(Iconsax.calendar_1, dateStr),
-                    _stripChip(Iconsax.people,
-                        '${widget.passengers} pax'),
-                    _stripChip(Iconsax.clock,
-                        _fmtDuration(widget.totalDurationMinutes)),
+                    _stripChip(Iconsax.people, '${widget.passengers} pax'),
+                    _stripChip(
+                      Iconsax.clock,
+                      _fmtDuration(widget.totalDurationMinutes),
+                    ),
                   ],
                 ),
               ),
@@ -379,10 +375,7 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
           const SizedBox(height: 8),
           Text(
             'Armada belum ditambahkan oleh Super Admin.',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: _C.textTertiary,
-            ),
+            style: GoogleFonts.inter(fontSize: 13, color: _C.textTertiary),
           ),
         ],
       ),
@@ -468,232 +461,245 @@ class _FleetCard extends StatelessWidget {
           }
         }
 
-        final availableSeats =
-            (totalSeats - bookedSeatCount).clamp(0, totalSeats);
+        final availableSeats = (totalSeats - bookedSeatCount).clamp(
+          0,
+          totalSeats,
+        );
         final hasEnoughSeats = availableSeats >= passengers;
         final isLowSeat = availableSeats > 0 && availableSeats <= 3;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _C.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F4C81).withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
+        return Container(
+          decoration: BoxDecoration(
+            color: _C.card,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _C.borderLight),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F4C81).withValues(alpha: 0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // ── Fleet Image ──
-          ClipRRect(
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(18)),
-            child: SizedBox(
-              height: 140,
-              width: double.infinity,
-              child: imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: _C.inputFill,
-                        child: const Center(
-                          child: Icon(
-                            Iconsax.bus,
-                            size: 48,
-                            color: _C.textHint,
+          child: Column(
+            children: [
+              // ── Fleet Image ──
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(18),
+                ),
+                child: SizedBox(
+                  height: 140,
+                  width: double.infinity,
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: _C.inputFill,
+                            child: const Center(
+                              child: Icon(
+                                Iconsax.bus,
+                                size: 48,
+                                color: _C.textHint,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: _C.inputFill,
+                          child: const Center(
+                            child: Icon(
+                              Iconsax.bus,
+                              size: 48,
+                              color: _C.textHint,
+                            ),
                           ),
                         ),
-                      ),
-                    )
-                  : Container(
-                      color: _C.inputFill,
-                      child: const Center(
-                        child: Icon(
-                          Iconsax.bus,
-                          size: 48,
-                          color: _C.textHint,
-                        ),
-                      ),
-                    ),
-            ),
-          ),
+                ),
+              ),
 
-          // ── Fleet Info ──
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name + Seat badge
-                Row(
+              // ── Fleet Info ──
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        name,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: _C.textPrimary,
+                    // Name + Seat badge
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: _C.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: availableSeats == 0
-                            ? _C.danger.withValues(alpha: 0.08)
-                            : isLowSeat
-                                ? const Color(0xFFF59E0B)
-                                    .withValues(alpha: 0.08)
-                                : _C.success.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Iconsax.people,
-                            size: 12,
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
                             color: availableSeats == 0
-                                ? _C.danger
+                                ? _C.danger.withValues(alpha: 0.08)
                                 : isLowSeat
+                                ? const Color(
+                                    0xFFF59E0B,
+                                  ).withValues(alpha: 0.08)
+                                : _C.success.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Iconsax.people,
+                                size: 12,
+                                color: availableSeats == 0
+                                    ? _C.danger
+                                    : isLowSeat
                                     ? const Color(0xFFF59E0B)
                                     : _C.success,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$availableSeats/$totalSeats kursi',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: availableSeats == 0
-                                  ? _C.danger
-                                  : isLowSeat
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$availableSeats/$totalSeats kursi',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: availableSeats == 0
+                                      ? _C.danger
+                                      : isLowSeat
                                       ? const Color(0xFFF59E0B)
                                       : _C.success,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                if (description.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    description,
-                    style: GoogleFonts.inter(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w400,
-                      color: _C.textTertiary,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-
-                const SizedBox(height: 14),
-
-                // Divider
-                Container(height: 1, color: _C.borderLight),
-
-                const SizedBox(height: 14),
-
-                // Price + Book button
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Price
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total ($passengers pax)',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: _C.textTertiary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            formatPrice(routePrice * passengers),
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: _C.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Book button
-                    SizedBox(
-                      height: 44,
-                      child: ElevatedButton(
-                        onPressed:
-                            hasEnoughSeats && !isBooking ? onBook : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              hasEnoughSeats ? _C.primary : _C.border,
-                          foregroundColor:
-                              hasEnoughSeats ? Colors.white : _C.textHint,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: isBooking
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    hasEnoughSeats ? 'Pesan' : 'Kuota Penuh',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  if (hasEnoughSeats) ...[
-                                    const SizedBox(width: 6),
-                                    const Icon(
-                                      Iconsax.arrow_right_3,
-                                      size: 15,
-                                    ),
-                                  ],
-                                ],
-                              ),
+                      ],
+                    ),
+
+                    if (description.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        description,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w400,
+                          color: _C.textTertiary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                    ],
+
+                    const SizedBox(height: 14),
+
+                    // Divider
+                    Container(height: 1, color: _C.borderLight),
+
+                    const SizedBox(height: 14),
+
+                    // Price + Book button
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Price
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Total ($passengers pax)',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: _C.textTertiary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                formatPrice(routePrice * passengers),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: _C.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Book button
+                        SizedBox(
+                          height: 44,
+                          child: ElevatedButton(
+                            onPressed: hasEnoughSeats && !isBooking
+                                ? onBook
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: hasEnoughSeats
+                                  ? _C.primary
+                                  : _C.border,
+                              foregroundColor: hasEnoughSeats
+                                  ? Colors.white
+                                  : _C.textHint,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: isBooking
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        hasEnoughSeats
+                                            ? 'Pesan'
+                                            : 'Kuota Penuh',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      if (hasEnoughSeats) ...[
+                                        const SizedBox(width: 6),
+                                        const Icon(
+                                          Iconsax.arrow_right_3,
+                                          size: 15,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
       }, // StreamBuilder builder
     ); // StreamBuilder
   }

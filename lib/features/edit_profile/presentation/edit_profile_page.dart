@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -58,10 +60,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
     _fetchProfile();
   }
 
@@ -144,8 +148,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         setState(() => _profileImageUrl = secureUrl);
         _showSnack('Foto profil berhasil diperbarui', isError: false);
       } else {
-        _showSnack('Gagal mengunggah foto (${response.statusCode})',
-            isError: true);
+        _showSnack(
+          'Gagal mengunggah foto (${response.statusCode})',
+          isError: true,
+        );
       }
     } catch (e) {
       _showSnack('Terjadi kesalahan: $e', isError: true);
@@ -164,8 +170,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           msg,
           style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
         ),
-        backgroundColor:
-            isError ? const Color(0xFFDC2626) : _C.primary,
+        backgroundColor: isError ? const Color(0xFFDC2626) : _C.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
@@ -186,23 +191,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
     setState(() => _isSaving = true);
 
     AuthService.updateProfile(
-      uid: user.uid,
-      namaLengkap: _nameCtrl.text.trim(),
-      nomorHp: _phoneCtrl.text.trim(),
-      email: _emailCtrl.text.trim(),
-    ).then((_) {
-      if (!mounted) return;
-      setState(() => _isSaving = false);
-      _showSnack('Profil berhasil diperbarui');
+          uid: user.uid,
+          namaLengkap: _nameCtrl.text.trim(),
+          nomorHp: _phoneCtrl.text.trim(),
+          email: _emailCtrl.text.trim(),
+        )
+        .then((_) {
+          if (!mounted) return;
+          setState(() => _isSaving = false);
+          _showSnack('Profil berhasil diperbarui');
 
-      Future.delayed(const Duration(milliseconds: 400), () {
-        if (mounted) Navigator.pop(context);
-      });
-    }).catchError((e) {
-      if (!mounted) return;
-      setState(() => _isSaving = false);
-      _showSnack('Gagal menyimpan: $e', isError: true);
-    });
+          Future.delayed(const Duration(milliseconds: 400), () {
+            if (mounted) Navigator.pop(context);
+          });
+        })
+        .catchError((e) {
+          if (!mounted) return;
+          setState(() => _isSaving = false);
+          _showSnack('Gagal menyimpan: $e', isError: true);
+        });
   }
 
   // ─────────────────────────────────────────────────
@@ -234,8 +241,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Iconsax.warning_2, size: 48,
-                            color: _C.textTertiary),
+                        Icon(
+                          Iconsax.warning_2,
+                          size: 48,
+                          color: _C.textTertiary,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           _fetchError!,
@@ -272,75 +282,75 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
               )
             else
-            // ═══ SCROLLABLE CONTENT ═══
-            Expanded(
-              child: ListView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-                children: [
-                  // Avatar section
-                  _buildAvatarSection(),
-                  const SizedBox(height: 32),
+              // ═══ SCROLLABLE CONTENT ═══
+              Expanded(
+                child: ListView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                  children: [
+                    // Avatar section
+                    _buildAvatarSection(),
+                    const SizedBox(height: 32),
 
-                  // Form
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _buildField(
-                          label: 'Nama Lengkap',
-                          controller: _nameCtrl,
-                          icon: Iconsax.user,
-                          hint: 'Masukkan nama lengkap',
-                          delay: 200,
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Nama tidak boleh kosong'
-                              : null,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildField(
-                          label: 'Nomor HP',
-                          controller: _phoneCtrl,
-                          icon: Iconsax.call,
-                          hint: '08xxxxxxxxxx',
-                          keyboardType: TextInputType.phone,
-                          delay: 280,
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Nomor HP tidak boleh kosong'
-                              : null,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildField(
-                          label: 'Email',
-                          controller: _emailCtrl,
-                          icon: Iconsax.sms,
-                          hint: 'contoh@email.com',
-                          keyboardType: TextInputType.emailAddress,
-                          delay: 360,
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return 'Email tidak boleh kosong';
-                            }
-                            if (!v.contains('@')) return 'Format email salah';
-                            return null;
-                          },
-                        ),
-                      ],
+                    // Form
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          _buildField(
+                            label: 'Nama Lengkap',
+                            controller: _nameCtrl,
+                            icon: Iconsax.user,
+                            hint: 'Masukkan nama lengkap',
+                            delay: 200,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Nama tidak boleh kosong'
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildField(
+                            label: 'Nomor HP',
+                            controller: _phoneCtrl,
+                            icon: Iconsax.call,
+                            hint: '08xxxxxxxxxx',
+                            keyboardType: TextInputType.phone,
+                            delay: 280,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Nomor HP tidak boleh kosong'
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildField(
+                            label: 'Email',
+                            controller: _emailCtrl,
+                            icon: Iconsax.sms,
+                            hint: 'contoh@email.com',
+                            keyboardType: TextInputType.emailAddress,
+                            delay: 360,
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Email tidak boleh kosong';
+                              }
+                              if (!v.contains('@')) return 'Format email salah';
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 40),
+                    const SizedBox(height: 40),
 
-                  // ── LOG OUT BUTTON ──
-                  _buildLogoutButton(),
+                    // ── LOG OUT BUTTON ──
+                    _buildLogoutButton(),
 
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  // ── APP VERSION (secret backdoor trigger) ──
-                  _buildVersionLabel(),
-                ],
+                    // ── APP VERSION (secret backdoor trigger) ──
+                    _buildVersionLabel(),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -404,95 +414,97 @@ class _EditProfilePageState extends State<EditProfilePage> {
         : 'U';
 
     return Center(
-      child: GestureDetector(
-        onTap: _isUploadingImage ? null : _pickAndUploadImage,
-        child: Stack(
-          children: [
-            // ── Main avatar ──
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: _C.border, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: _C.primary.withValues(alpha: 0.08),
-                    blurRadius: 20,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: CircleAvatar(
-                radius: 52,
-                backgroundColor: _C.primary.withValues(alpha: 0.08),
-                backgroundImage:
-                    hasImage ? NetworkImage(_profileImageUrl!) : null,
-                child: hasImage
-                    ? null
-                    : Text(
-                        initial,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w700,
-                          color: _C.primary,
-                        ),
-                      ),
-              ),
-            ),
-
-            // ── Upload loading overlay ──
-            if (_isUploadingImage)
-              Positioned.fill(
-                child: Container(
+          child: GestureDetector(
+            onTap: _isUploadingImage ? null : _pickAndUploadImage,
+            child: Stack(
+              children: [
+                // ── Main avatar ──
+                Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.black.withValues(alpha: 0.45),
+                    border: Border.all(color: _C.border, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _C.primary.withValues(alpha: 0.08),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  child: const Center(
-                    child: SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                  child: CircleAvatar(
+                    radius: 52,
+                    backgroundColor: _C.primary.withValues(alpha: 0.08),
+                    backgroundImage: hasImage
+                        ? NetworkImage(_profileImageUrl!)
+                        : null,
+                    child: hasImage
+                        ? null
+                        : Text(
+                            initial,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w700,
+                              color: _C.primary,
+                            ),
+                          ),
+                  ),
+                ),
+
+                // ── Upload loading overlay ──
+                if (_isUploadingImage)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black.withValues(alpha: 0.45),
+                      ),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // ── Camera badge — bottom-right ──
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: _C.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: _C.white, width: 2.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _C.primary.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Iconsax.camera,
+                        size: 15,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
-              ),
-
-            // ── Camera badge — bottom-right ──
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: _C.primary,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: _C.white, width: 2.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _C.primary.withValues(alpha: 0.25),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    Iconsax.camera,
-                    size: 15,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
-    )
+          ),
+        )
         .animate()
         .fadeIn(delay: 100.ms, duration: 450.ms)
         .scale(
@@ -516,66 +528,71 @@ class _EditProfilePageState extends State<EditProfilePage> {
     String? Function(String?)? validator,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
-            color: _C.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          validator: validator,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: _C.textPrimary,
-          ),
-          cursorColor: _C.primary,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: GoogleFonts.inter(fontSize: 14, color: _C.textHint),
-            prefixIcon: Padding(
-              padding: const EdgeInsets.only(left: 14, right: 10),
-              child: Icon(icon, size: 18, color: _C.textTertiary),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: _C.textSecondary,
+              ),
             ),
-            prefixIconConstraints:
-                const BoxConstraints(minWidth: 0, minHeight: 0),
-            filled: true,
-            fillColor: _C.inputFill,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _C.border),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              validator: validator,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: _C.textPrimary,
+              ),
+              cursorColor: _C.primary,
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: GoogleFonts.inter(fontSize: 14, color: _C.textHint),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.only(left: 14, right: 10),
+                  child: Icon(icon, size: 18, color: _C.textTertiary),
+                ),
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 0,
+                  minHeight: 0,
+                ),
+                filled: true,
+                fillColor: _C.inputFill,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 15,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _C.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _C.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _C.primary, width: 1.5),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red.shade300, width: 1),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Colors.red.shade400,
+                    width: 1.5,
+                  ),
+                ),
+              ),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _C.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _C.primary, width: 1.5),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                  color: Colors.red.shade300, width: 1),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                  color: Colors.red.shade400, width: 1.5),
-            ),
-          ),
-        ),
-      ],
-    )
+          ],
+        )
         .animate()
         .fadeIn(delay: delay.ms, duration: 400.ms)
         .slideY(
@@ -605,9 +622,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
       ),
-    )
-        .animate()
-        .fadeIn(delay: 550.ms, duration: 400.ms);
+    ).animate().fadeIn(delay: 550.ms, duration: 400.ms);
   }
 
   // ─────────────────────────────────────────────────
@@ -623,7 +638,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => Dialog(
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20)),
+            borderRadius: BorderRadius.circular(20),
+          ),
           backgroundColor: _C.white,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
@@ -684,11 +700,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   decoration: InputDecoration(
                     hintText: '• • • • • • • •',
                     hintStyle: GoogleFonts.inter(
-                        fontSize: 14, color: _C.textHint),
+                      fontSize: 14,
+                      color: _C.textHint,
+                    ),
                     filled: true,
                     fillColor: _C.inputFill,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: _C.border),
@@ -700,7 +720,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(
-                          color: _C.primary, width: 1.5),
+                        color: _C.primary,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
@@ -726,8 +748,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             },
                             style: OutlinedButton.styleFrom(
                               foregroundColor: _C.textSecondary,
-                              side: BorderSide(
-                                  color: _C.border, width: 1.5),
+                              side: BorderSide(color: _C.border, width: 1.5),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -758,12 +779,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               }
 
                               // Valid key — show loading
-                              setDialogState(
-                                  () => isProcessing = true);
+                              setDialogState(() => isProcessing = true);
 
                               try {
-                                final uid = FirebaseAuth
-                                    .instance.currentUser?.uid;
+                                final uid =
+                                    FirebaseAuth.instance.currentUser?.uid;
                                 if (uid == null) throw 'User not found';
 
                                 await FirebaseFirestore.instance
@@ -782,26 +802,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                                 // Navigate to Super Admin Dashboard
                                 await Future.delayed(
-                                    const Duration(milliseconds: 500));
+                                  const Duration(milliseconds: 500),
+                                );
                                 if (!context.mounted) return;
                                 Navigator.pushAndRemoveUntil(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        const SuperAdminDashboard(),
+                                    builder: (_) => const SuperAdminDashboard(),
                                   ),
                                   (route) => false,
                                 );
                               } catch (e) {
-                                setDialogState(
-                                    () => isProcessing = false);
+                                setDialogState(() => isProcessing = false);
                                 if (!context.mounted) return;
                                 keyCtrl.dispose();
                                 Navigator.pop(ctx);
-                                _showSnack(
-                                  'Gagal: $e',
-                                  isError: true,
-                                );
+                                _showSnack('Gagal: $e', isError: true);
                               }
                             },
                             style: ElevatedButton.styleFrom(
@@ -837,27 +853,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
   // ─────────────────────────────────────────────────
   Widget _buildLogoutButton() {
     return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: OutlinedButton.icon(
-        onPressed: () => AuthUtils.showLogoutConfirmation(context),
-        icon: const Icon(Iconsax.logout, size: 18),
-        label: Text(
-          'Keluar dari Akun',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton.icon(
+            onPressed: () => AuthUtils.showLogoutConfirmation(context),
+            icon: const Icon(Iconsax.logout, size: 18),
+            label: Text(
+              'Keluar dari Akun',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFFDC4A4A),
+              side: const BorderSide(color: Color(0xFFDC4A4A), width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
           ),
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFDC4A4A),
-          side: const BorderSide(color: Color(0xFFDC4A4A), width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: 450.ms, duration: 400.ms)
         .slideY(
@@ -877,57 +893,58 @@ class _EditProfilePageState extends State<EditProfilePage> {
   // ─────────────────────────────────────────────────
   Widget _buildBottomButton() {
     return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 14, 24, 14),
-        decoration: BoxDecoration(
-          color: _C.white,
-          border: const Border(
-            top: BorderSide(color: _C.borderLight, width: 1),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0F4C81).withValues(alpha: 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, -6),
-            ),
-          ],
-        ),
-        child: SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: _isSaving ? null : _save,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _C.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shadowColor: _C.primary.withValues(alpha: 0.2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 14, 24, 14),
+            decoration: BoxDecoration(
+              color: _C.white,
+              border: const Border(
+                top: BorderSide(color: _C.borderLight, width: 1),
               ),
-              disabledBackgroundColor: _C.primary.withValues(alpha: 0.6),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0F4C81).withValues(alpha: 0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, -6),
+                ),
+              ],
             ),
-            child: _isSaving
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'Simpan Perubahan',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                    ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _C.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shadowColor: _C.primary.withValues(alpha: 0.2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  disabledBackgroundColor: _C.primary.withValues(alpha: 0.6),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                    : Text(
+                        'Simpan Perubahan',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+              ),
+            ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: 450.ms, duration: 400.ms)
         .slideY(begin: 0.08, delay: 450.ms, duration: 400.ms);

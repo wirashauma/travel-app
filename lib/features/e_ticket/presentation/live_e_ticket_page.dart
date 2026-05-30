@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -55,10 +57,12 @@ class LiveETicketPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -85,9 +89,11 @@ class LiveETicketPage extends StatelessWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Iconsax.ticket_expired,
-                              size: 56,
-                              color: _C.textTertiary),
+                          Icon(
+                            Iconsax.ticket_expired,
+                            size: 56,
+                            color: _C.textTertiary,
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'Tiket tidak ditemukan',
@@ -115,10 +121,7 @@ class LiveETicketPage extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        _LiveTicketCard(
-                          booking: booking,
-                          isSmall: isSmall,
-                        ),
+                        _LiveTicketCard(booking: booking, isSmall: isSmall),
                         // ═══ PDF ACTION BUTTONS ═══
                         if (booking.status == BookingStatus.paid ||
                             booking.status == BookingStatus.used ||
@@ -138,11 +141,12 @@ class LiveETicketPage extends StatelessWidget {
                           height: 52,
                           child: ElevatedButton.icon(
                             onPressed: () {
-                              Navigator.of(context, rootNavigator: true)
-                                  .pushAndRemoveUntil(
+                              Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).pushAndRemoveUntil(
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      const MainNavigationScreen(),
+                                  builder: (_) => const MainNavigationScreen(),
                                 ),
                                 (route) => false,
                               );
@@ -217,10 +221,7 @@ class _LiveTicketCard extends StatelessWidget {
   final BookingModel booking;
   final bool isSmall;
 
-  const _LiveTicketCard({
-    required this.booking,
-    required this.isSmall,
-  });
+  const _LiveTicketCard({required this.booking, required this.isSmall});
 
   String get _seatLabel => booking.seatNumbers.isNotEmpty
       ? booking.seatNumbers.map((s) => 'No. $s').join(', ')
@@ -294,195 +295,217 @@ class _LiveTicketCard extends StatelessWidget {
       children: [
         // ═══ TOP HALF — Route & schedule info ═══
         Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: _C.card,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _C.primary.withValues(alpha: 0.06),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: _C.card,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _C.primary.withValues(alpha: 0.06),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(isSmall ? 18 : 22),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Header: App name + status badge ──
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Padding(
+                padding: EdgeInsets.all(isSmall ? 18 : 22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ── Header: App name + status badge ──
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: _C.primary,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Center(
-                            child: Icon(Iconsax.bus, size: 16,
-                                color: Colors.white),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'E-Travel',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: _C.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    // ── REACTIVE STATUS BADGE ──
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 400),
-                      child: Container(
-                        key: ValueKey(booking.status),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _badge.bgColor,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: _badge.borderColor),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        Row(
                           children: [
-                            Icon(_badge.icon, size: 13, color: _badge.color),
-                            const SizedBox(width: 4),
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: _C.primary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Iconsax.bus,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
                             Text(
-                              _badge.label,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: _badge.color,
+                              'E-Travel',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: _C.primary,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // ── Route ──
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Dari',
-                              style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: _C.textTertiary)),
-                          const SizedBox(height: 4),
-                          Text(
-                            booking.origin,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: isSmall ? 17 : 20,
-                              fontWeight: FontWeight.w800,
-                              color: _C.textPrimary,
-                              height: 1.2,
+                        // ── REACTIVE STATUS BADGE ──
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          child: Container(
+                            key: ValueKey(booking.status),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 14),
-                          Container(
-                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: _C.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(10),
+                              color: _badge.bgColor,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: _badge.borderColor),
                             ),
-                            child: const Icon(Iconsax.arrow_right_3,
-                                size: 18, color: _C.primary),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text('Tujuan',
-                              style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: _C.textTertiary)),
-                          const SizedBox(height: 4),
-                          Text(
-                            booking.destination,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: isSmall ? 17 : 20,
-                              fontWeight: FontWeight.w800,
-                              color: _C.textPrimary,
-                              height: 1.2,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _badge.icon,
+                                  size: 13,
+                                  color: _badge.color,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _badge.label,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: _badge.color,
+                                  ),
+                                ),
+                              ],
                             ),
-                            textAlign: TextAlign.end,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // ── Date row ──
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: _C.primary.withValues(alpha: 0.04),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: _C.primary.withValues(alpha: 0.08)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Iconsax.calendar_1,
-                          size: 16, color: _C.primary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          booking.departureDate.isNotEmpty
-                              ? booking.departureDate
-                              : '-',
-                          style: GoogleFonts.inter(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: _C.textPrimary,
                           ),
                         ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // ── Route ──
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Dari',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: _C.textTertiary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                booking.origin,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: isSmall ? 17 : 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: _C.textPrimary,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 14),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: _C.primary.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Iconsax.arrow_right_3,
+                                  size: 18,
+                                  color: _C.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Tujuan',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: _C.textTertiary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                booking.destination,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: isSmall ? 17 : 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: _C.textPrimary,
+                                  height: 1.2,
+                                ),
+                                textAlign: TextAlign.end,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Date row ──
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
                       ),
-                    ],
-                  ),
+                      decoration: BoxDecoration(
+                        color: _C.primary.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _C.primary.withValues(alpha: 0.08),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Iconsax.calendar_1,
+                            size: 16,
+                            color: _C.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              booking.departureDate.isNotEmpty
+                                  ? booking.departureDate
+                                  : '-',
+                              style: GoogleFonts.inter(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: _C.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        )
+              ),
+            )
             .animate()
             .fadeIn(delay: 100.ms, duration: 500.ms)
             .slideY(begin: 0.06, delay: 100.ms, duration: 500.ms),
@@ -492,131 +515,134 @@ class _LiveTicketCard extends StatelessWidget {
           width: double.infinity,
           height: 28,
           child: CustomPaint(
-            painter: _PerforatedLinePainter(
-                bgColor: _C.bg, cardColor: _C.card),
+            painter: _PerforatedLinePainter(bgColor: _C.bg, cardColor: _C.card),
           ),
         ),
 
         // ═══ BOTTOM HALF — Passenger details & QR / STAMP ═══
         Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: _C.card,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(20),
-              bottomRight: Radius.circular(20),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _C.primary.withValues(alpha: 0.06),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: _C.card,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _C.primary.withValues(alpha: 0.06),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(isSmall ? 18 : 22),
-            child: Column(
-              children: [
-                _DetailRow(
-                  icon: Iconsax.user,
-                  label: 'Nama Penumpang',
-                  value: booking.userName,
-                ),
-                const SizedBox(height: 14),
-                _DetailRow(
-                  icon: Iconsax.driver,
-                  label: 'Nomor Kursi',
-                  value: _seatLabel,
-                  isHighlighted: true,
-                ),
-                const SizedBox(height: 14),
-                _DetailRow(
-                  icon: Iconsax.bus,
-                  label: 'Armada',
-                  value: booking.fleetName,
-                ),
-                const SizedBox(height: 14),
-                _DetailRow(
-                  icon: Iconsax.receipt_2,
-                  label: 'Kode Booking',
-                  value: booking.bookingCode,
-                  isMono: true,
-                ),
-                const SizedBox(height: 14),
-                _DetailRow(
-                  icon: Iconsax.money_send,
-                  label: 'Total Dibayar',
-                  value: _price,
-                ),
-
-                const SizedBox(height: 24),
-                Container(height: 1, color: _C.borderLight),
-                const SizedBox(height: 24),
-
-                // ═══ QR CODE or "USED" STAMP — Reactive ═══
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 600),
-                  switchInCurve: Curves.easeOutBack,
-                  child: _isUsed || _isCancelled
-                      ? _buildUsedStamp()
-                      : _buildQrCode(isSmall),
-                ),
-
-                const SizedBox(height: 16),
-
-                // ── Instruction ──
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  child: Container(
-                    key: ValueKey(_isUsed),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: (_isUsed
-                              ? _C.info
-                              : _isCancelled
-                                  ? _C.error
-                                  : _C.primary)
-                          .withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: EdgeInsets.all(isSmall ? 18 : 22),
+                child: Column(
+                  children: [
+                    _DetailRow(
+                      icon: Iconsax.user,
+                      label: 'Nama Penumpang',
+                      value: booking.userName,
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Iconsax.info_circle,
-                          size: 16,
-                          color: (_isUsed
-                                  ? _C.info
-                                  : _isCancelled
+                    const SizedBox(height: 14),
+                    _DetailRow(
+                      icon: Iconsax.driver,
+                      label: 'Nomor Kursi',
+                      value: _seatLabel,
+                      isHighlighted: true,
+                    ),
+                    const SizedBox(height: 14),
+                    _DetailRow(
+                      icon: Iconsax.bus,
+                      label: 'Armada',
+                      value: booking.fleetName,
+                    ),
+                    const SizedBox(height: 14),
+                    _DetailRow(
+                      icon: Iconsax.receipt_2,
+                      label: 'Kode Booking',
+                      value: booking.bookingCode,
+                      isMono: true,
+                    ),
+                    const SizedBox(height: 14),
+                    _DetailRow(
+                      icon: Iconsax.money_send,
+                      label: 'Total Dibayar',
+                      value: _price,
+                    ),
+
+                    const SizedBox(height: 24),
+                    Container(height: 1, color: _C.borderLight),
+                    const SizedBox(height: 24),
+
+                    // ═══ QR CODE or "USED" STAMP — Reactive ═══
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 600),
+                      switchInCurve: Curves.easeOutBack,
+                      child: _isUsed || _isCancelled
+                          ? _buildUsedStamp()
+                          : _buildQrCode(isSmall),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // ── Instruction ──
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: Container(
+                        key: ValueKey(_isUsed),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              (_isUsed
+                                      ? _C.info
+                                      : _isCancelled
                                       ? _C.error
                                       : _C.primary)
-                              .withValues(alpha: 0.6),
+                                  .withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _isUsed
-                                ? 'Tiket ini sudah digunakan. Selamat menikmati perjalanan!'
-                                : _isCancelled
+                        child: Row(
+                          children: [
+                            Icon(
+                              Iconsax.info_circle,
+                              size: 16,
+                              color:
+                                  (_isUsed
+                                          ? _C.info
+                                          : _isCancelled
+                                          ? _C.error
+                                          : _C.primary)
+                                      .withValues(alpha: 0.6),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _isUsed
+                                    ? 'Tiket ini sudah digunakan. Selamat menikmati perjalanan!'
+                                    : _isCancelled
                                     ? 'Tiket ini telah dibatalkan.'
                                     : 'Tunjukkan QR Code ini kepada sopir saat naik',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: _C.textSecondary,
-                              height: 1.4,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: _C.textSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        )
+              ),
+            )
             .animate()
             .fadeIn(delay: 300.ms, duration: 500.ms)
             .slideY(begin: 0.06, delay: 300.ms, duration: 500.ms),
@@ -687,41 +713,45 @@ class _LiveTicketCard extends StatelessWidget {
   Widget _buildUsedStamp() {
     final isCancel = _isCancelled;
     final stampColor = isCancel ? _C.error : _C.info;
-    final stampText =
-        isCancel ? 'TIKET\nDIBATALKAN' : 'TIKET TELAH\nDIGUNAKAN';
+    final stampText = isCancel ? 'TIKET\nDIBATALKAN' : 'TIKET TELAH\nDIGUNAKAN';
 
     return Container(
-      key: const ValueKey('stamp'),
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      child: Center(
-        child: Transform.rotate(
-          angle: -0.15,
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              border: Border.all(color: stampColor, width: 3),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              stampText,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: stampColor,
-                letterSpacing: 3,
-                height: 1.3,
+          key: const ValueKey('stamp'),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          child: Center(
+            child: Transform.rotate(
+              angle: -0.15,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: stampColor, width: 3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  stampText,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: stampColor,
+                    letterSpacing: 3,
+                    height: 1.3,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
-        .scale(begin: const Offset(0.5, 0.5), duration: 500.ms,
-            curve: Curves.easeOutBack)
+        .scale(
+          begin: const Offset(0.5, 0.5),
+          duration: 500.ms,
+          curve: Curves.easeOutBack,
+        )
         .fadeIn(duration: 300.ms);
   }
 }
@@ -751,15 +781,15 @@ class _DetailRow extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: isHighlighted
-                ? _C.primary.withValues(alpha: 0.1)
-                : _C.bg,
+            color: isHighlighted ? _C.primary.withValues(alpha: 0.1) : _C.bg,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Center(
-            child: Icon(icon,
-                size: 16,
-                color: isHighlighted ? _C.primary : _C.textTertiary),
+            child: Icon(
+              icon,
+              size: 16,
+              color: isHighlighted ? _C.primary : _C.textTertiary,
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -767,11 +797,14 @@ class _DetailRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: _C.textTertiary)),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: _C.textTertiary,
+                ),
+              ),
               const SizedBox(height: 3),
               Text(
                 value,
@@ -825,12 +858,15 @@ class _PdfActionButtonsState extends State<_PdfActionButtons> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal menyimpan PDF: $e',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+          content: Text(
+            'Gagal menyimpan PDF: $e',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+          ),
           backgroundColor: _C.error,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -846,12 +882,15 @@ class _PdfActionButtonsState extends State<_PdfActionButtons> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal membagikan: $e',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+          content: Text(
+            'Gagal membagikan: $e',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+          ),
           backgroundColor: _C.error,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -862,77 +901,82 @@ class _PdfActionButtonsState extends State<_PdfActionButtons> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
-      child: Row(
-        children: [
-          // ── Download PDF ──
-          Expanded(
-            child: SizedBox(
-              height: 48,
-              child: OutlinedButton.icon(
-                onPressed: _isDownloading ? null : _downloadPdf,
-                icon: _isDownloading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: _C.primary),
-                      )
-                    : const Icon(Iconsax.document_download, size: 18),
-                label: Text(
-                  'Download PDF',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _C.primary,
-                  side: BorderSide(
-                      color: _C.primary.withValues(alpha: 0.3)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // ── Share Ticket ──
-          Expanded(
-            child: SizedBox(
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: _isSharing ? null : _sharePdf,
-                icon: _isSharing
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Iconsax.share, size: 18),
-                label: Text(
-                  'Bagikan Tiket',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _C.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(13),
+          padding: const EdgeInsets.only(top: 20),
+          child: Row(
+            children: [
+              // ── Download PDF ──
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: _isDownloading ? null : _downloadPdf,
+                    icon: _isDownloading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: _C.primary,
+                            ),
+                          )
+                        : const Icon(Iconsax.document_download, size: 18),
+                    label: Text(
+                      'Download PDF',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _C.primary,
+                      side: BorderSide(
+                        color: _C.primary.withValues(alpha: 0.3),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+              const SizedBox(width: 12),
+              // ── Share Ticket ──
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: _isSharing ? null : _sharePdf,
+                    icon: _isSharing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Iconsax.share, size: 18),
+                    label: Text(
+                      'Bagikan Tiket',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _C.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: 500.ms, duration: 400.ms)
         .slideY(begin: 0.06, delay: 500.ms, duration: 400.ms);
@@ -956,8 +1000,7 @@ class _WhatsAppShareButtonState extends State<_WhatsAppShareButton> {
   Future<void> _sendToWhatsApp() async {
     setState(() => _isSending = true);
     try {
-      final route =
-          '${widget.booking.origin} → ${widget.booking.destination}';
+      final route = '${widget.booking.origin} → ${widget.booking.destination}';
       final success = await WhatsAppTicketService.shareTicketToWhatsApp(
         bookingId: widget.booking.bookingCode,
         route: route,
@@ -974,7 +1017,8 @@ class _WhatsAppShareButtonState extends State<_WhatsAppShareButton> {
             backgroundColor: _C.warning,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
+              borderRadius: BorderRadius.circular(10),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -983,12 +1027,15 @@ class _WhatsAppShareButtonState extends State<_WhatsAppShareButton> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal membuka WhatsApp: $e',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+          content: Text(
+            'Gagal membuka WhatsApp: $e',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+          ),
           backgroundColor: _C.error,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -999,38 +1046,40 @@ class _WhatsAppShareButtonState extends State<_WhatsAppShareButton> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: ElevatedButton.icon(
-          onPressed: _isSending ? null : _sendToWhatsApp,
-          icon: _isSending
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
-                )
-              : const Icon(Icons.chat, size: 18),
-          label: Text(
-            'Kirim ke WhatsApp',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
+          padding: const EdgeInsets.only(top: 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              onPressed: _isSending ? null : _sendToWhatsApp,
+              icon: _isSending
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.chat, size: 18),
+              label: Text(
+                'Kirim ke WhatsApp',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF25D366),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(13),
+                ),
+              ),
             ),
           ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF25D366),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(13),
-            ),
-          ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: 600.ms, duration: 400.ms)
         .slideY(begin: 0.06, delay: 600.ms, duration: 400.ms);

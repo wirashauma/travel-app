@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -148,8 +150,11 @@ class ManageDriverAssignmentsPage extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Iconsax.arrow_left,
-                        color: Colors.white, size: 22),
+                    icon: const Icon(
+                      Iconsax.arrow_left,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 4),
                   Expanded(
@@ -175,8 +180,11 @@ class ManageDriverAssignmentsPage extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Iconsax.user_tag,
-                          color: Colors.white, size: 18),
+                      child: const Icon(
+                        Iconsax.user_tag,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -210,48 +218,49 @@ class ManageDriverAssignmentsPage extends StatelessWidget {
     required String subtitle,
   }) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(48),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: _C.borderLight,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 40, color: _C.textTertiary),
+          child: Padding(
+            padding: const EdgeInsets.all(48),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: _C.borderLight,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 40, color: _C.textTertiary),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: _C.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: _C.textTertiary,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            Text(
-              title,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: _C.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: _C.textTertiary,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    )
+          ),
+        )
         .animate()
         .fadeIn(duration: 400.ms)
         .scale(
-            begin: const Offset(0.95, 0.95),
-            duration: 400.ms,
-            curve: Curves.easeOutBack);
+          begin: const Offset(0.95, 0.95),
+          duration: 400.ms,
+          curve: Curves.easeOutBack,
+        );
   }
 }
 
@@ -281,211 +290,221 @@ class _FleetAssignmentCard extends StatelessWidget {
     final hasDriver = driverId.isNotEmpty;
 
     return Container(
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.border.withValues(alpha: 0.6)),
-        boxShadow: [
-          BoxShadow(
-            color: _C.primary.withValues(alpha: 0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+          decoration: BoxDecoration(
+            color: _C.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _C.border.withValues(alpha: 0.6)),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Top row: Image + fleet info ──
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Fleet image
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    width: 72,
-                    height: 72,
-                    child: imageUrl.isNotEmpty
-                        ? Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _buildImageFallback(),
-                            loadingBuilder: (_, child, progress) {
-                              if (progress == null) return child;
-                              return _buildImageFallback(loading: true);
-                            },
-                          )
-                        : _buildImageFallback(),
-                  ),
-                ),
-                const SizedBox(width: 14),
-
-                // Fleet info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: _C.textPrimary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Top row: Image + fleet info ──
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Fleet image
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        width: 72,
+                        height: 72,
+                        child: imageUrl.isNotEmpty
+                            ? Image.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    _buildImageFallback(),
+                                loadingBuilder: (_, child, progress) {
+                                  if (progress == null) return child;
+                                  return _buildImageFallback(loading: true);
+                                },
+                              )
+                            : _buildImageFallback(),
                       ),
-                      if (description.isNotEmpty) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          description,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: _C.textTertiary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ],
-                      const SizedBox(height: 8),
-                      // Seat info
-                      Row(
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Fleet info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _InfoTag(
-                            icon: Iconsax.people,
-                            label: '$availableSeats/$totalSeats kursi',
-                            color: _C.primary,
+                          Text(
+                            name,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: _C.textPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (description.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              description,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: _C.textTertiary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          // Seat info
+                          Row(
+                            children: [
+                              _InfoTag(
+                                icon: Iconsax.people,
+                                label: '$availableSeats/$totalSeats kursi',
+                                color: _C.primary,
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
 
-          // ── Divider ──
-          Container(height: 1, color: _C.borderLight),
+              // ── Divider ──
+              Container(height: 1, color: _C.borderLight),
 
-          // ── Driver status + action ──
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                // Status badge
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: hasDriver ? _C.successBg : _C.errorBg,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: hasDriver
-                            ? _C.success.withValues(alpha: 0.2)
-                            : _C.error.withValues(alpha: 0.2),
+              // ── Driver status + action ──
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    // Status badge
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: hasDriver ? _C.successBg : _C.errorBg,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: hasDriver
+                                ? _C.success.withValues(alpha: 0.2)
+                                : _C.error.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              hasDriver
+                                  ? Iconsax.user_tick
+                                  : Iconsax.user_remove,
+                              size: 16,
+                              color: hasDriver ? _C.success : _C.error,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    hasDriver
+                                        ? 'Supir Aktif'
+                                        : 'Belum Ada Supir',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: hasDriver ? _C.success : _C.error,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                  if (hasDriver) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      driverName,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: _C.textPrimary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          hasDriver ? Iconsax.user_tick : Iconsax.user_remove,
-                          size: 16,
-                          color: hasDriver ? _C.success : _C.error,
+
+                    const SizedBox(width: 10),
+
+                    // Action button
+                    Material(
+                      color: hasDriver
+                          ? _C.primary.withValues(alpha: 0.08)
+                          : _C.primary,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => _showDriverPicker(
+                          context,
+                          fleetId: fleetId,
+                          fleetName: name,
+                          currentDriverId: driverId,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
+                              Icon(
+                                hasDriver ? Iconsax.refresh : Iconsax.user_add,
+                                size: 16,
+                                color: hasDriver ? _C.primary : _C.white,
+                              ),
+                              const SizedBox(width: 6),
                               Text(
-                                hasDriver ? 'Supir Aktif' : 'Belum Ada Supir',
+                                hasDriver ? 'Ganti' : 'Tugaskan',
                                 style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: hasDriver
-                                      ? _C.success
-                                      : _C.error,
-                                  letterSpacing: 0.3,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: hasDriver ? _C.primary : _C.white,
                                 ),
                               ),
-                              if (hasDriver) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  driverName,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: _C.textPrimary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 10),
-
-                // Action button
-                Material(
-                  color: hasDriver
-                      ? _C.primary.withValues(alpha: 0.08)
-                      : _C.primary,
-                  borderRadius: BorderRadius.circular(12),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => _showDriverPicker(
-                      context,
-                      fleetId: fleetId,
-                      fleetName: name,
-                      currentDriverId: driverId,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            hasDriver ? Iconsax.refresh : Iconsax.user_add,
-                            size: 16,
-                            color: hasDriver ? _C.primary : _C.white,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            hasDriver ? 'Ganti' : 'Tugaskan',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: hasDriver ? _C.primary : _C.white,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    )
+        )
         .animate()
         .fadeIn(
-            delay: Duration(milliseconds: 60 * index), duration: 350.ms)
+          delay: Duration(milliseconds: 60 * index),
+          duration: 350.ms,
+        )
         .slideY(
-            begin: 0.05,
-            delay: Duration(milliseconds: 60 * index),
-            duration: 350.ms);
+          begin: 0.05,
+          delay: Duration(milliseconds: 60 * index),
+          duration: 350.ms,
+        );
   }
 
   Widget _buildImageFallback({bool loading = false}) {
@@ -497,10 +516,15 @@ class _FleetAssignmentCard extends StatelessWidget {
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2, color: _C.textTertiary),
+                  strokeWidth: 2,
+                  color: _C.textTertiary,
+                ),
               )
-            : Icon(Iconsax.bus,
-                size: 28, color: _C.textTertiary.withValues(alpha: 0.5)),
+            : Icon(
+                Iconsax.bus,
+                size: 28,
+                color: _C.textTertiary.withValues(alpha: 0.5),
+              ),
       ),
     );
   }
@@ -558,8 +582,11 @@ class _FleetAssignmentCard extends StatelessWidget {
                         color: _C.primary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Iconsax.user_tag,
-                          size: 20, color: _C.primary),
+                      child: const Icon(
+                        Iconsax.user_tag,
+                        size: 20,
+                        color: _C.primary,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -613,16 +640,16 @@ class _FleetAssignmentCard extends StatelessWidget {
                       return const Padding(
                         padding: EdgeInsets.all(40),
                         child: Center(
-                          child:
-                              CircularProgressIndicator(color: _C.primary),
+                          child: CircularProgressIndicator(color: _C.primary),
                         ),
                       );
                     }
 
                     // ── 2. Error — print ke console + UI ──
                     if (snapshot.hasError) {
-                      print(
-                          '[ManageDriverAssignments] StreamBuilder error: ${snapshot.error}');
+                      debugPrint(
+                        '[ManageDriverAssignments] StreamBuilder error: ${snapshot.error}',
+                      );
                       return Padding(
                         padding: const EdgeInsets.all(32),
                         child: Column(
@@ -634,8 +661,11 @@ class _FleetAssignmentCard extends StatelessWidget {
                                 color: _C.errorBg,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Iconsax.warning_2,
-                                  size: 28, color: _C.error),
+                              child: const Icon(
+                                Iconsax.warning_2,
+                                size: 28,
+                                color: _C.error,
+                              ),
                             ),
                             const SizedBox(height: 14),
                             Text(
@@ -664,16 +694,18 @@ class _FleetAssignmentCard extends StatelessWidget {
                       ..sort((a, b) {
                         final dataA = a.data() as Map<String, dynamic>? ?? {};
                         final dataB = b.data() as Map<String, dynamic>? ?? {};
-                        final nameA = (dataA['name'] as String? ??
-                                dataA['namaLengkap'] as String? ??
-                                dataA['fullName'] as String? ??
-                                'zzz')
-                            .toLowerCase();
-                        final nameB = (dataB['name'] as String? ??
-                                dataB['namaLengkap'] as String? ??
-                                dataB['fullName'] as String? ??
-                                'zzz')
-                            .toLowerCase();
+                        final nameA =
+                            (dataA['name'] as String? ??
+                                    dataA['namaLengkap'] as String? ??
+                                    dataA['fullName'] as String? ??
+                                    'zzz')
+                                .toLowerCase();
+                        final nameB =
+                            (dataB['name'] as String? ??
+                                    dataB['namaLengkap'] as String? ??
+                                    dataB['fullName'] as String? ??
+                                    'zzz')
+                                .toLowerCase();
                         return nameA.compareTo(nameB);
                       });
 
@@ -690,8 +722,11 @@ class _FleetAssignmentCard extends StatelessWidget {
                                 color: _C.warningBg,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Iconsax.people,
-                                  size: 28, color: _C.warning),
+                              child: const Icon(
+                                Iconsax.people,
+                                size: 28,
+                                color: _C.warning,
+                              ),
                             ),
                             const SizedBox(height: 14),
                             Text(
@@ -730,7 +765,8 @@ class _FleetAssignmentCard extends StatelessWidget {
                             driverDoc.data() as Map<String, dynamic>? ?? {};
 
                         // Null-safe field access dengan multiple fallback
-                        final String driverName = data['name'] as String? ??
+                        final String driverName =
+                            data['name'] as String? ??
                             data['namaLengkap'] as String? ??
                             data['fullName'] as String? ??
                             'Supir Tanpa Nama';
@@ -746,217 +782,245 @@ class _FleetAssignmentCard extends StatelessWidget {
                             : '?';
 
                         return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 3),
-                          child: Material(
-                            color: isCurrentDriver
-                                ? _C.primary.withValues(alpha: 0.06)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 4),
-                              shape: RoundedRectangleBorder(
+                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              child: Material(
+                                color: isCurrentDriver
+                                    ? _C.primary.withValues(alpha: 0.06)
+                                    : Colors.transparent,
                                 borderRadius: BorderRadius.circular(12),
-                              ),
-                              leading: CircleAvatar(
-                                radius: 22,
-                                backgroundColor: isCurrentDriver
-                                    ? _C.success.withValues(alpha: 0.12)
-                                    : _C.primary.withValues(alpha: 0.08),
-                                child: Text(
-                                  initials,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
-                                    color: isCurrentDriver
-                                        ? _C.success
-                                        : _C.primary,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
                                   ),
-                                ),
-                              ),
-                              title: Text(
-                                driverName,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: _C.textPrimary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                driverEmail,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: _C.textTertiary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              trailing: isCurrentDriver
-                                  ? Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 5),
-                                      decoration: BoxDecoration(
-                                        color: _C.successBg,
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                        border: Border.all(
-                                            color: _C.success
-                                                .withValues(alpha: 0.3)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  leading: CircleAvatar(
+                                    radius: 22,
+                                    backgroundColor: isCurrentDriver
+                                        ? _C.success.withValues(alpha: 0.12)
+                                        : _C.primary.withValues(alpha: 0.08),
+                                    child: Text(
+                                      initials,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                        color: isCurrentDriver
+                                            ? _C.success
+                                            : _C.primary,
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Iconsax.tick_circle,
-                                              size: 12, color: _C.success),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Aktif',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w700,
-                                              color: _C.success,
-                                            ),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    driverName,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: _C.textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: Text(
+                                    driverEmail,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: _C.textTertiary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  trailing: isCurrentDriver
+                                      ? Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 5,
                                           ),
-                                        ],
-                                      ),
-                                    )
-                                  : Icon(Iconsax.arrow_right_3,
-                                      size: 16, color: _C.textHint),
-                              onTap: isCurrentDriver
-                                  ? null
-                                  : () async {
-                                      // ── Loading dialog ──
-                                      showDialog(
-                                        context: ctx,
-                                        barrierDismissible: false,
-                                        builder: (_) => Center(
-                                          child: Container(
-                                            padding: const EdgeInsets.all(24),
-                                            decoration: BoxDecoration(
-                                              color: _C.white,
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
+                                          decoration: BoxDecoration(
+                                            color: _C.successBg,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
                                             ),
-                                            child: const SizedBox(
-                                              width: 32,
-                                              height: 32,
-                                              child:
-                                                  CircularProgressIndicator(
-                                                strokeWidth: 3,
-                                                color: _C.primary,
+                                            border: Border.all(
+                                              color: _C.success.withValues(
+                                                alpha: 0.3,
                                               ),
                                             ),
                                           ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Iconsax.tick_circle,
+                                                size: 12,
+                                                color: _C.success,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Aktif',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: _C.success,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : Icon(
+                                          Iconsax.arrow_right_3,
+                                          size: 16,
+                                          color: _C.textHint,
                                         ),
-                                      );
+                                  onTap: isCurrentDriver
+                                      ? null
+                                      : () async {
+                                          // ── Loading dialog ──
+                                          showDialog(
+                                            context: ctx,
+                                            barrierDismissible: false,
+                                            builder: (_) => Center(
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  24,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: _C.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                ),
+                                                child: const SizedBox(
+                                                  width: 32,
+                                                  height: 32,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 3,
+                                                        color: _C.primary,
+                                                      ),
+                                                ),
+                                              ),
+                                            ),
+                                          );
 
-                                      try {
-                                        // ── Update Firestore ──
-                                        await FirebaseFirestore.instance
-                                            .collection('fleets')
-                                            .doc(fleetId)
-                                            .update({
-                                          'driverId': driverUid,
-                                          'driverName': driverName,
-                                          'updatedAt':
-                                              FieldValue.serverTimestamp(),
-                                        });
+                                          try {
+                                            // ── Update Firestore ──
+                                            await FirebaseFirestore.instance
+                                                .collection('fleets')
+                                                .doc(fleetId)
+                                                .update({
+                                                  'driverId': driverUid,
+                                                  'driverName': driverName,
+                                                  'updatedAt':
+                                                      FieldValue.serverTimestamp(),
+                                                });
 
-                                        // Tutup loading dialog
-                                        if (ctx.mounted) {
-                                          Navigator.pop(ctx);
-                                        }
-                                        // Tutup bottom sheet
-                                        if (ctx.mounted) {
-                                          Navigator.pop(ctx);
-                                        }
+                                            // Tutup loading dialog
+                                            if (ctx.mounted) {
+                                              Navigator.pop(ctx);
+                                            }
+                                            // Tutup bottom sheet
+                                            if (ctx.mounted) {
+                                              Navigator.pop(ctx);
+                                            }
 
-                                        // SnackBar hijau
-                                        if (parentContext.mounted) {
-                                          ScaffoldMessenger.of(parentContext)
-                                            ..clearSnackBars()
-                                            ..showSnackBar(
-                                              SnackBar(
-                                                content: Row(
-                                                  children: [
-                                                    const Icon(
-                                                        Iconsax.tick_circle,
-                                                        color: Colors.white,
-                                                        size: 18),
-                                                    const SizedBox(width: 10),
-                                                    Expanded(
-                                                      child: Text(
-                                                        'Supir $driverName berhasil ditugaskan!',
-                                                        style:
-                                                            GoogleFonts.inter(
-                                                          fontSize: 13,
+                                            // SnackBar hijau
+                                            if (parentContext.mounted) {
+                                              ScaffoldMessenger.of(
+                                                  parentContext,
+                                                )
+                                                ..clearSnackBars()
+                                                ..showSnackBar(
+                                                  SnackBar(
+                                                    content: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Iconsax.tick_circle,
                                                           color: Colors.white,
+                                                          size: 18,
                                                         ),
+                                                        const SizedBox(
+                                                          width: 10,
+                                                        ),
+                                                        Expanded(
+                                                          child: Text(
+                                                            'Supir $driverName berhasil ditugaskan!',
+                                                            style:
+                                                                GoogleFonts.inter(
+                                                                  fontSize: 13,
+                                                                  color: Colors
+                                                                      .white,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    backgroundColor: _C.success,
+                                                    behavior: SnackBarBehavior
+                                                        .floating,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                    margin:
+                                                        const EdgeInsets.all(
+                                                          16,
+                                                        ),
+                                                    duration: const Duration(
+                                                      seconds: 3,
+                                                    ),
+                                                  ),
+                                                );
+                                            }
+                                          } catch (e) {
+                                            // Tutup loading dialog
+                                            if (ctx.mounted) {
+                                              Navigator.pop(ctx);
+                                            }
+                                            // SnackBar error
+                                            if (ctx.mounted) {
+                                              ScaffoldMessenger.of(ctx)
+                                                ..clearSnackBars()
+                                                ..showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'Gagal menugaskan: $e',
+                                                      style: GoogleFonts.inter(
+                                                        fontSize: 13,
+                                                        color: Colors.white,
                                                       ),
                                                     ),
-                                                  ],
-                                                ),
-                                                backgroundColor: _C.success,
-                                                behavior:
-                                                    SnackBarBehavior.floating,
-                                                shape:
-                                                    RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          12),
-                                                ),
-                                                margin:
-                                                    const EdgeInsets.all(16),
-                                                duration:
-                                                    const Duration(seconds: 3),
-                                              ),
-                                            );
-                                        }
-                                      } catch (e) {
-                                        // Tutup loading dialog
-                                        if (ctx.mounted) {
-                                          Navigator.pop(ctx);
-                                        }
-                                        // SnackBar error
-                                        if (ctx.mounted) {
-                                          ScaffoldMessenger.of(ctx)
-                                            ..clearSnackBars()
-                                            ..showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Gagal menugaskan: $e',
-                                                  style: GoogleFonts.inter(
-                                                    fontSize: 13,
-                                                    color: Colors.white,
+                                                    backgroundColor: _C.error,
+                                                    behavior: SnackBarBehavior
+                                                        .floating,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                    margin:
+                                                        const EdgeInsets.all(
+                                                          16,
+                                                        ),
                                                   ),
-                                                ),
-                                                backgroundColor: _C.error,
-                                                behavior:
-                                                    SnackBarBehavior.floating,
-                                                shape:
-                                                    RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          12),
-                                                ),
-                                                margin:
-                                                    const EdgeInsets.all(16),
-                                              ),
-                                            );
-                                        }
-                                      }
-                                    },
-                            ),
-                          ),
-                        )
+                                                );
+                                            }
+                                          }
+                                        },
+                                ),
+                              ),
+                            )
                             .animate()
                             .fadeIn(
-                                delay: Duration(milliseconds: 40 * i),
-                                duration: 250.ms)
+                              delay: Duration(milliseconds: 40 * i),
+                              duration: 250.ms,
+                            )
                             .slideX(
-                                begin: 0.03,
-                                delay: Duration(milliseconds: 40 * i),
-                                duration: 250.ms);
+                              begin: 0.03,
+                              delay: Duration(milliseconds: 40 * i),
+                              duration: 250.ms,
+                            );
                       },
                     );
                   },
@@ -998,10 +1062,10 @@ class _RemoveAssignmentTileState extends State<_RemoveAssignmentTile> {
           .collection('fleets')
           .doc(widget.fleetId)
           .update({
-        'driverId': '',
-        'driverName': '',
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+            'driverId': '',
+            'driverName': '',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       if (!mounted) return;
       Navigator.pop(context);
@@ -1013,14 +1077,19 @@ class _RemoveAssignmentTileState extends State<_RemoveAssignmentTile> {
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Iconsax.info_circle,
-                      color: Colors.white, size: 18),
+                  const Icon(
+                    Iconsax.info_circle,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'Penugasan supir berhasil dihapus',
                       style: GoogleFonts.inter(
-                          fontSize: 13, color: Colors.white),
+                        fontSize: 13,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
@@ -1028,7 +1097,8 @@ class _RemoveAssignmentTileState extends State<_RemoveAssignmentTile> {
               backgroundColor: _C.warning,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               margin: const EdgeInsets.all(16),
               duration: const Duration(seconds: 2),
             ),
@@ -1061,10 +1131,15 @@ class _RemoveAssignmentTileState extends State<_RemoveAssignmentTile> {
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: _C.error),
+                          strokeWidth: 2,
+                          color: _C.error,
+                        ),
                       )
-                    : const Icon(Iconsax.user_remove,
-                        size: 18, color: _C.error),
+                    : const Icon(
+                        Iconsax.user_remove,
+                        size: 18,
+                        color: _C.error,
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1077,8 +1152,11 @@ class _RemoveAssignmentTileState extends State<_RemoveAssignmentTile> {
                   ),
                 ),
               ),
-              Icon(Iconsax.arrow_right_3,
-                  size: 14, color: _C.error.withValues(alpha: 0.5)),
+              Icon(
+                Iconsax.arrow_right_3,
+                size: 14,
+                color: _C.error.withValues(alpha: 0.5),
+              ),
             ],
           ),
         ),
