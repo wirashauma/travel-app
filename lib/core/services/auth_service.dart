@@ -21,36 +21,61 @@ class AuthService {
     required String password,
     required String namaLengkap,
     String nomorHp = '',
+    // Only allow 'user' or 'admin' when registering from public UI.
+    // Creation of 'super_admin' must be done via admin panel (updateUserRole).
+    String role = 'user',
   }) async {
     try {
-      developer.log('REGISTER MULAI', name: 'AuthService');
+      developer.log(
+        'REGISTER MULAI | email=$email | nama=$namaLengkap | hp=$nomorHp',
+        name: 'AuthService',
+      );
 
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
 
-      developer.log('AUTH BERHASIL', name: 'AuthService');
+      developer.log(
+        'REGISTER AUTH BERHASIL | uid=${credential.user?.uid} | email=${credential.user?.email}',
+        name: 'AuthService',
+      );
 
       final user = credential.user;
 
       if (user != null) {
         await user.updateDisplayName(namaLengkap.trim());
 
+        // sanitize role: only accept 'user' or 'admin'
+        final allowedRole = (role == 'admin') ? 'admin' : 'user';
+
         await _db.collection('users').doc(user.uid).set({
           'uid': user.uid,
           'email': email.trim(),
           'namaLengkap': namaLengkap.trim(),
           'nomorHp': nomorHp.trim(),
-          'role': 'user',
+          'role': allowedRole,
           'isSuspended': false,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
 
       return user;
-    } catch (e) {
-      developer.log('REGISTER GAGAL: $e', name: 'AuthService');
+    } on FirebaseAuthException catch (e, st) {
+      developer.log(
+        'REGISTER GAGAL | type=${e.runtimeType} | code=${e.code} | message=${e.message} | email=$email',
+        name: 'AuthService',
+        error: e,
+        stackTrace: st,
+      );
+      rethrow;
+    } catch (e, st) {
+      developer.log(
+        'REGISTER GAGAL | type=${e.runtimeType} | email=$email',
+        name: 'AuthService',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }

@@ -24,12 +24,16 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  GoogleSignIn? _googleSignIn;
   bool _obscurePassword = true;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    if (!kIsWeb) {
+      _googleSignIn = GoogleSignIn();
+    }
     // Light status bar for white background
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -130,6 +134,14 @@ class _LoginPageState extends State<LoginPage> {
         message = 'Format email tidak valid';
       } else if (err.contains('network-request-failed')) {
         message = 'Tidak ada koneksi internet';
+      } else if (err.contains('unauthorized-domain') ||
+          err.contains('auth-domain-config-required') ||
+          err.contains('origin_mismatch')) {
+        message =
+            'Domain/origin web belum diizinkan di Firebase Auth atau Google Cloud.';
+      } else if (err.contains('operation-not-allowed')) {
+        message =
+            'Login email/password belum diaktifkan di Firebase Authentication.';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -159,31 +171,34 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isGoogleLoading = true);
 
     try {
-      final googleSignIn = GoogleSignIn(
-        clientId: kIsWeb
-            ? '430270320192-6v55curts1667vuk9uoi7okg4omnmm52.apps.googleusercontent.com'
-            : null,
-      );
+      late final UserCredential userCredential;
 
-      // 1. Trigger the Google Sign-In flow
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        // User cancelled
-        if (mounted) setState(() => _isGoogleLoading = false);
-        return;
+      if (kIsWeb) {
+        final provider = GoogleAuthProvider()..addScope('email');
+
+        userCredential = await FirebaseAuth.instance.signInWithPopup(provider);
+      } else {
+        // 1. Trigger the Google Sign-In flow
+        final googleUser = await _googleSignIn!.signIn();
+        if (googleUser == null) {
+          // User cancelled
+          if (mounted) setState(() => _isGoogleLoading = false);
+          return;
+        }
+
+        // 2. Obtain auth details from the request
+        final googleAuth = await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        // 3. Sign in to Firebase with Google credential
+        userCredential = await FirebaseAuth.instance.signInWithCredential(
+          credential,
+        );
       }
 
-      // 2. Obtain auth details from the request
-      final googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // 3. Sign in to Firebase with Google credential
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(
-        credential,
-      );
       final user = userCredential.user;
 
       if (user == null) {
@@ -227,7 +242,7 @@ class _LoginPageState extends State<LoginPage> {
             );
           }
           await AuthService.logout();
-          await googleSignIn.signOut();
+          await _googleSignIn?.signOut();
           return;
         }
       }
@@ -269,6 +284,13 @@ class _LoginPageState extends State<LoginPage> {
         message = 'Tidak ada koneksi internet';
       } else if (err.contains('sign_in_cancelled')) {
         return; // user cancelled, no error message
+      } else if (err.contains('origin_mismatch') ||
+          err.contains('unauthorized_domain')) {
+        message =
+            'Origin web belum diizinkan di Google Cloud/Firebase Auth. Tambahkan origin yang dipakai browser ini.';
+      } else if (err.contains('popup_closed')) {
+        message =
+            'Popup login Google ditutup sebelum selesai. Coba klik lagi dan jangan tutup jendelanya.';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(

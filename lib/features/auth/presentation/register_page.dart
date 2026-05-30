@@ -23,6 +23,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscureConfirm = true;
   bool _isLoading = false;
   bool _agreeToTerms = false;
+  String _selectedRole = 'user';
 
   @override
   void dispose() {
@@ -46,8 +47,9 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           backgroundColor: AuthColors.warning,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -62,6 +64,7 @@ class _RegisterPageState extends State<RegisterPage> {
         password: _passwordController.text,
         namaLengkap: _nameController.text.trim(),
         nomorHp: _phoneController.text.trim(),
+        role: _selectedRole,
       );
 
       if (!mounted) return;
@@ -83,8 +86,9 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           backgroundColor: AuthColors.success,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.all(16),
           duration: const Duration(seconds: 3),
         ),
@@ -98,13 +102,34 @@ class _RegisterPageState extends State<RegisterPage> {
       setState(() => _isLoading = false);
 
       String message = 'Terjadi kesalahan saat mendaftar';
-      if (e.toString().contains('email-already-in-use')) {
+      final err = e.toString();
+      final type = e.runtimeType.toString();
+      if (err.contains('email-already-in-use')) {
         message = 'Email sudah terdaftar, silakan gunakan email lain';
-      } else if (e.toString().contains('weak-password')) {
+      } else if (err.contains('weak-password')) {
         message = 'Password terlalu lemah, minimal 6 karakter';
-      } else if (e.toString().contains('invalid-email')) {
+      } else if (err.contains('invalid-email')) {
         message = 'Format email tidak valid';
+      } else if (err.contains('unauthorized-domain') ||
+          err.contains('auth-domain-config-required') ||
+          err.contains('origin_mismatch')) {
+        message =
+            'Domain web belum diizinkan di Firebase Auth. Tambahkan origin yang dipakai browser ini.';
+      } else if (err.contains('operation-not-allowed')) {
+        message = 'Email/password belum diaktifkan di Firebase Authentication.';
+      } else if (err.contains('network-request-failed')) {
+        message =
+            'Tidak ada koneksi internet atau Firebase sedang tidak merespons.';
+      } else if (err.contains('api-key-not-valid')) {
+        message =
+            'API key Firebase untuk web tidak valid / dibatasi. Cek API key di Google Cloud Console.';
       }
+
+      debugPrint(
+        'REGISTER ERROR | type=$type | runtime=$err\n'
+        'name=${_nameController.text.trim()} | email=${_emailController.text.trim()} | phone=${_phoneController.text.trim()}\n'
+        'agreeToTerms=$_agreeToTerms',
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -114,8 +139,9 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           backgroundColor: AuthColors.error,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -177,21 +203,21 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // ── Name Field ────────────────
                         AuthTextField(
-                          controller: _nameController,
-                          hintText: 'Nama lengkap Anda',
-                          labelText: 'Nama Lengkap',
-                          prefixIcon: Iconsax.user,
-                          textInputAction: TextInputAction.next,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Nama tidak boleh kosong';
-                            }
-                            if (value.trim().length < 3) {
-                              return 'Nama minimal 3 karakter';
-                            }
-                            return null;
-                          },
-                        )
+                              controller: _nameController,
+                              hintText: 'Nama lengkap Anda',
+                              labelText: 'Nama Lengkap',
+                              prefixIcon: Iconsax.user,
+                              textInputAction: TextInputAction.next,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Nama tidak boleh kosong';
+                                }
+                                if (value.trim().length < 3) {
+                                  return 'Nama minimal 3 karakter';
+                                }
+                                return null;
+                              },
+                            )
                             .animate()
                             .fadeIn(delay: 250.ms, duration: 450.ms)
                             .slideY(
@@ -205,22 +231,22 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // ── Phone Field ───────────────
                         AuthTextField(
-                          controller: _phoneController,
-                          hintText: '08xxxxxxxxxx',
-                          labelText: 'Nomor HP',
-                          prefixIcon: Iconsax.call,
-                          keyboardType: TextInputType.phone,
-                          textInputAction: TextInputAction.next,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Nomor HP tidak boleh kosong';
-                            }
-                            if (value.trim().length < 10) {
-                              return 'Nomor HP minimal 10 digit';
-                            }
-                            return null;
-                          },
-                        )
+                              controller: _phoneController,
+                              hintText: '08xxxxxxxxxx',
+                              labelText: 'Nomor HP',
+                              prefixIcon: Iconsax.call,
+                              keyboardType: TextInputType.phone,
+                              textInputAction: TextInputAction.next,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Nomor HP tidak boleh kosong';
+                                }
+                                if (value.trim().length < 10) {
+                                  return 'Nomor HP minimal 10 digit';
+                                }
+                                return null;
+                              },
+                            )
                             .animate()
                             .fadeIn(delay: 325.ms, duration: 450.ms)
                             .slideY(
@@ -234,23 +260,24 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // ── Email Field ───────────────
                         AuthTextField(
-                          controller: _emailController,
-                          hintText: 'contoh@email.com',
-                          labelText: 'Alamat Email',
-                          prefixIcon: Iconsax.sms,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Email tidak boleh kosong';
-                            }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                                .hasMatch(value.trim())) {
-                              return 'Format email tidak valid';
-                            }
-                            return null;
-                          },
-                        )
+                              controller: _emailController,
+                              hintText: 'contoh@email.com',
+                              labelText: 'Alamat Email',
+                              prefixIcon: Iconsax.sms,
+                              keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Email tidak boleh kosong';
+                                }
+                                if (!RegExp(
+                                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                ).hasMatch(value.trim())) {
+                                  return 'Format email tidak valid';
+                                }
+                                return null;
+                              },
+                            )
                             .animate()
                             .fadeIn(delay: 400.ms, duration: 450.ms)
                             .slideY(
@@ -264,36 +291,37 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // ── Password Field ────────────
                         AuthTextField(
-                          controller: _passwordController,
-                          hintText: 'Minimal 6 karakter',
-                          labelText: 'Password',
-                          prefixIcon: Iconsax.lock,
-                          obscureText: _obscurePassword,
-                          textInputAction: TextInputAction.next,
-                          suffixIcon: GestureDetector(
-                            onTap: () => setState(
-                                () => _obscurePassword = !_obscurePassword),
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 14),
-                              child: Icon(
-                                _obscurePassword
-                                    ? Iconsax.eye_slash
-                                    : Iconsax.eye,
-                                color: AuthColors.textTertiary,
-                                size: 20,
+                              controller: _passwordController,
+                              hintText: 'Minimal 6 karakter',
+                              labelText: 'Password',
+                              prefixIcon: Iconsax.lock,
+                              obscureText: _obscurePassword,
+                              textInputAction: TextInputAction.next,
+                              suffixIcon: GestureDetector(
+                                onTap: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 14),
+                                  child: Icon(
+                                    _obscurePassword
+                                        ? Iconsax.eye_slash
+                                        : Iconsax.eye,
+                                    color: AuthColors.textTertiary,
+                                    size: 20,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Password tidak boleh kosong';
-                            }
-                            if (value.length < 6) {
-                              return 'Password minimal 6 karakter';
-                            }
-                            return null;
-                          },
-                        )
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Password tidak boleh kosong';
+                                }
+                                if (value.length < 6) {
+                                  return 'Password minimal 6 karakter';
+                                }
+                                return null;
+                              },
+                            )
                             .animate()
                             .fadeIn(delay: 550.ms, duration: 450.ms)
                             .slideY(
@@ -307,37 +335,38 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // ── Confirm Password ──────────
                         AuthTextField(
-                          controller: _confirmPasswordController,
-                          hintText: 'Ulangi password Anda',
-                          labelText: 'Konfirmasi Password',
-                          prefixIcon: Iconsax.lock_1,
-                          obscureText: _obscureConfirm,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _handleRegister(),
-                          suffixIcon: GestureDetector(
-                            onTap: () => setState(
-                                () => _obscureConfirm = !_obscureConfirm),
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 14),
-                              child: Icon(
-                                _obscureConfirm
-                                    ? Iconsax.eye_slash
-                                    : Iconsax.eye,
-                                color: AuthColors.textTertiary,
-                                size: 20,
+                              controller: _confirmPasswordController,
+                              hintText: 'Ulangi password Anda',
+                              labelText: 'Konfirmasi Password',
+                              prefixIcon: Iconsax.lock_1,
+                              obscureText: _obscureConfirm,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _handleRegister(),
+                              suffixIcon: GestureDetector(
+                                onTap: () => setState(
+                                  () => _obscureConfirm = !_obscureConfirm,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 14),
+                                  child: Icon(
+                                    _obscureConfirm
+                                        ? Iconsax.eye_slash
+                                        : Iconsax.eye,
+                                    color: AuthColors.textTertiary,
+                                    size: 20,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Konfirmasi password tidak boleh kosong';
-                            }
-                            if (value != _passwordController.text) {
-                              return 'Password tidak cocok';
-                            }
-                            return null;
-                          },
-                        )
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Konfirmasi password tidak boleh kosong';
+                                }
+                                if (value != _passwordController.text) {
+                                  return 'Password tidak cocok';
+                                }
+                                return null;
+                              },
+                            )
                             .animate()
                             .fadeIn(delay: 700.ms, duration: 450.ms)
                             .slideY(
@@ -349,19 +378,208 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         const SizedBox(height: 24),
 
+                        // ── Role selection (modern cards aligned with project theme)
+                        Text(
+                          'Pilih Peran',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AuthColors.textPrimary,
+                          ),
+                        ).animate().fadeIn(delay: 780.ms, duration: 300.ms),
+
+                        const SizedBox(height: 12),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () =>
+                                    setState(() => _selectedRole = 'user'),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 320),
+                                  curve: Curves.easeOutCubic,
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(14),
+                                    color: _selectedRole == 'user'
+                                        ? AuthColors.primary.withOpacity(0.06)
+                                        : AuthColors.background,
+                                    border: _selectedRole == 'user'
+                                        ? Border.all(
+                                            color: AuthColors.primary,
+                                            width: 1.5,
+                                          )
+                                        : Border.all(color: AuthColors.border),
+                                    boxShadow: _selectedRole == 'user'
+                                        ? [
+                                            BoxShadow(
+                                              color: AuthColors.primary
+                                                  .withOpacity(0.08),
+                                              blurRadius: 18,
+                                              offset: const Offset(0, 6),
+                                            ),
+                                          ]
+                                        : [],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: _selectedRole == 'user'
+                                              ? AuthColors.primary
+                                              : AuthColors.border,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.person,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Penumpang',
+                                              style:
+                                                  GoogleFonts.plusJakartaSans(
+                                                    fontWeight: FontWeight.w700,
+                                                    color:
+                                                        AuthColors.textPrimary,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Buat akun untuk memesan tiket',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 12,
+                                                color: AuthColors.textTertiary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (_selectedRole == 'user')
+                                        const Icon(
+                                          Icons.check_circle,
+                                          color: Colors.green,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () =>
+                                    setState(() => _selectedRole = 'admin'),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 320),
+                                  curve: Curves.easeOutCubic,
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(14),
+                                    color: _selectedRole == 'admin'
+                                        ? AuthColors.primary.withOpacity(0.06)
+                                        : AuthColors.background,
+                                    border: _selectedRole == 'admin'
+                                        ? Border.all(
+                                            color: AuthColors.primary,
+                                            width: 1.5,
+                                          )
+                                        : Border.all(color: AuthColors.border),
+                                    boxShadow: _selectedRole == 'admin'
+                                        ? [
+                                            BoxShadow(
+                                              color: AuthColors.primary
+                                                  .withOpacity(0.08),
+                                              blurRadius: 18,
+                                              offset: const Offset(0, 6),
+                                            ),
+                                          ]
+                                        : [],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: _selectedRole == 'admin'
+                                              ? AuthColors.primary
+                                              : AuthColors.border,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.directions_bus,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Sopir',
+                                              style:
+                                                  GoogleFonts.plusJakartaSans(
+                                                    fontWeight: FontWeight.w700,
+                                                    color:
+                                                        AuthColors.textPrimary,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Akun untuk sopir/administrator armada',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 12,
+                                                color: AuthColors.textTertiary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (_selectedRole == 'admin')
+                                        const Icon(
+                                          Icons.check_circle,
+                                          color: Colors.green,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ).animate().fadeIn(delay: 800.ms, duration: 300.ms),
+
+                        const SizedBox(height: 16),
+
                         // ── Terms Checkbox ────────────
-                        _buildTermsCheckbox()
-                            .animate()
-                            .fadeIn(delay: 850.ms, duration: 450.ms),
+                        _buildTermsCheckbox().animate().fadeIn(
+                          delay: 850.ms,
+                          duration: 450.ms,
+                        ),
 
                         const SizedBox(height: 28),
 
                         // ── Register Button ───────────
                         AuthPrimaryButton(
-                          text: 'Buat Akun',
-                          isLoading: _isLoading,
-                          onTap: _handleRegister,
-                        )
+                              text: 'Buat Akun',
+                              isLoading: _isLoading,
+                              onTap: _handleRegister,
+                            )
                             .animate()
                             .fadeIn(delay: 950.ms, duration: 450.ms)
                             .slideY(
@@ -380,9 +598,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             actionText: 'Masuk',
                             onTap: () => Navigator.pop(context),
                           ),
-                        )
-                            .animate()
-                            .fadeIn(delay: 1100.ms, duration: 450.ms),
+                        ).animate().fadeIn(delay: 1100.ms, duration: 450.ms),
 
                         SizedBox(height: bottomPadding + 24),
                       ],
@@ -429,17 +645,14 @@ class _RegisterPageState extends State<RegisterPage> {
             height: 22,
             margin: const EdgeInsets.only(top: 1),
             decoration: BoxDecoration(
-              color: _agreeToTerms
-                  ? AuthColors.primary
-                  : Colors.transparent,
+              color: _agreeToTerms ? AuthColors.primary : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
               border: _agreeToTerms
                   ? null
                   : Border.all(color: AuthColors.border, width: 1.5),
             ),
             child: _agreeToTerms
-                ? const Icon(Icons.check_rounded,
-                    size: 14, color: Colors.white)
+                ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
                 : null,
           ),
           const SizedBox(width: 12),
