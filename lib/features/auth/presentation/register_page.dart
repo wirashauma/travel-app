@@ -23,7 +23,6 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscureConfirm = true;
   bool _isLoading = false;
   bool _agreeToTerms = false;
-  String _selectedRole = 'user';
 
   @override
   void dispose() {
@@ -64,7 +63,6 @@ class _RegisterPageState extends State<RegisterPage> {
         password: _passwordController.text,
         namaLengkap: _nameController.text.trim(),
         nomorHp: _phoneController.text.trim(),
-        role: _selectedRole,
       );
 
       if (!mounted) return;
@@ -378,197 +376,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         const SizedBox(height: 24),
 
-                        // ── Role selection (modern cards aligned with project theme)
-                        Text(
-                          'Pilih Peran',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AuthColors.textPrimary,
-                          ),
-                        ).animate().fadeIn(delay: 780.ms, duration: 300.ms),
-
-                        const SizedBox(height: 12),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _selectedRole = 'user'),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 320),
-                                  curve: Curves.easeOutCubic,
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(14),
-                                    color: _selectedRole == 'user'
-                                        ? AuthColors.primary.withOpacity(0.06)
-                                        : AuthColors.background,
-                                    border: _selectedRole == 'user'
-                                        ? Border.all(
-                                            color: AuthColors.primary,
-                                            width: 1.5,
-                                          )
-                                        : Border.all(color: AuthColors.border),
-                                    boxShadow: _selectedRole == 'user'
-                                        ? [
-                                            BoxShadow(
-                                              color: AuthColors.primary
-                                                  .withOpacity(0.08),
-                                              blurRadius: 18,
-                                              offset: const Offset(0, 6),
-                                            ),
-                                          ]
-                                        : [],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: _selectedRole == 'user'
-                                              ? AuthColors.primary
-                                              : AuthColors.border,
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.person,
-                                          color: Colors.white,
-                                          size: 20,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Penumpang',
-                                              style:
-                                                  GoogleFonts.plusJakartaSans(
-                                                    fontWeight: FontWeight.w700,
-                                                    color:
-                                                        AuthColors.textPrimary,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'Buat akun untuk memesan tiket',
-                                              style: GoogleFonts.inter(
-                                                fontSize: 12,
-                                                color: AuthColors.textTertiary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (_selectedRole == 'user')
-                                        const Icon(
-                                          Icons.check_circle,
-                                          color: Colors.green,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _selectedRole = 'admin'),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 320),
-                                  curve: Curves.easeOutCubic,
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(14),
-                                    color: _selectedRole == 'admin'
-                                        ? AuthColors.primary.withOpacity(0.06)
-                                        : AuthColors.background,
-                                    border: _selectedRole == 'admin'
-                                        ? Border.all(
-                                            color: AuthColors.primary,
-                                            width: 1.5,
-                                          )
-                                        : Border.all(color: AuthColors.border),
-                                    boxShadow: _selectedRole == 'admin'
-                                        ? [
-                                            BoxShadow(
-                                              color: AuthColors.primary
-                                                  .withOpacity(0.08),
-                                              blurRadius: 18,
-                                              offset: const Offset(0, 6),
-                                            ),
-                                          ]
-                                        : [],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: _selectedRole == 'admin'
-                                              ? AuthColors.primary
-                                              : AuthColors.border,
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.directions_bus,
-                                          color: Colors.white,
-                                          size: 20,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Sopir',
-                                              style:
-                                                  GoogleFonts.plusJakartaSans(
-                                                    fontWeight: FontWeight.w700,
-                                                    color:
-                                                        AuthColors.textPrimary,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'Akun untuk sopir/administrator armada',
-                                              style: GoogleFonts.inter(
-                                                fontSize: 12,
-                                                color: AuthColors.textTertiary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (_selectedRole == 'admin')
-                                        const Icon(
-                                          Icons.check_circle,
-                                          color: Colors.green,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ).animate().fadeIn(delay: 800.ms, duration: 300.ms),
-
-                        const SizedBox(height: 16),
-
                         // ── Terms Checkbox ────────────
                         _buildTermsCheckbox().animate().fadeIn(
-                          delay: 850.ms,
+                          delay: 775.ms,
                           duration: 450.ms,
                         ),
 
@@ -581,10 +391,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               onTap: _handleRegister,
                             )
                             .animate()
-                            .fadeIn(delay: 950.ms, duration: 450.ms)
+                            .fadeIn(delay: 850.ms, duration: 450.ms)
                             .slideY(
                               begin: 0.1,
-                              delay: 950.ms,
+                              delay: 850.ms,
                               duration: 450.ms,
                               curve: Curves.easeOutCubic,
                             ),
@@ -598,7 +408,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             actionText: 'Masuk',
                             onTap: () => Navigator.pop(context),
                           ),
-                        ).animate().fadeIn(delay: 1100.ms, duration: 450.ms),
+                        ).animate().fadeIn(delay: 950.ms, duration: 450.ms),
 
                         SizedBox(height: bottomPadding + 24),
                       ],
