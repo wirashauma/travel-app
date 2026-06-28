@@ -371,13 +371,11 @@ class BookingService {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-      // Mark refund if paid (80% refund, 20% penalty)
+      // Mark refund if paid (100% penalty / forfeited)
       if (status == 'paid') {
-        final penaltyAmount = (totalPrice * 0.2).round();
-        final refundAmount = totalPrice - penaltyAmount;
-        updates['refundAmount'] = refundAmount;
-        updates['refundPenalty'] = penaltyAmount;
-        updates['refundStatus'] = 'pending';
+        updates['refundAmount'] = 0;
+        updates['refundPenalty'] = totalPrice;
+        updates['refundStatus'] = 'forfeited';
         updates['refundProcessedAt'] = FieldValue.serverTimestamp();
       }
 

@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart' hide Position;
 
 import '../../../core/models/booking_model.dart';
 import 'qr_scanner_page.dart';
@@ -112,6 +115,9 @@ class LiveTripManifestPage extends StatelessWidget {
                   isValidated: b.status.isValidated,
                   bookingCode: b.bookingCode,
                   bookingId: b.id ?? '',
+                  pickupAddress: b.pickupAddress,
+                  pickupLatitude: b.pickupLatitude,
+                  pickupLongitude: b.pickupLongitude,
                 ),
               );
             }
@@ -962,9 +968,39 @@ class LiveTripManifestPage extends StatelessWidget {
                         color: _C.textTertiary,
                       ),
                     ),
+                    if (p.pickupAddress != null && p.pickupAddress!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Iconsax.location, size: 12, color: _C.teal),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Jemput: ${p.pickupAddress}',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: _C.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
+              if (p.pickupLatitude != null && p.pickupLongitude != null) ...[
+                IconButton(
+                  onPressed: () => _showPickupMap(context, p),
+                  icon: const Icon(Iconsax.map_1, size: 20, color: _C.primary),
+                  splashRadius: 20,
+                  tooltip: 'Lihat Peta Titik Jemput',
+                ),
+                const SizedBox(width: 8),
+              ],
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -1065,6 +1101,156 @@ class LiveTripManifestPage extends StatelessWidget {
           curve: Curves.easeOutBack,
         );
   }
+
+  void _showPickupMap(BuildContext context, _Passenger p) {
+    if (p.pickupLatitude == null || p.pickupLongitude == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(ctx).size.height * 0.7,
+          decoration: const BoxDecoration(
+            color: _C.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: _C.border, width: 1)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Alamat Jemput: ${p.name}',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: _C.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            p.pickupAddress ?? 'Tidak ada detail alamat',
+                            style: GoogleFonts.inter(
+                              fontSize: 12.5,
+                              color: _C.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Iconsax.close_circle, size: 22, color: _C.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Map preview
+              Expanded(
+                child: Stack(
+                  children: [
+                    MapWidget(
+                      key: ValueKey('passenger_map_${p.bookingId}'),
+                      mapOptions: MapOptions(
+                        pixelRatio: MediaQuery.of(ctx).devicePixelRatio,
+                        constrainMode: ConstrainMode.HEIGHT_ONLY,
+                        orientation: NorthOrientation.UPWARDS,
+                      ),
+                      viewport: CameraViewportState(
+                        center: Point(
+                          coordinates: Position(p.pickupLongitude!, p.pickupLatitude!),
+                        ),
+                        zoom: 15.0,
+                      ),
+                      styleUri: 'mapbox://styles/mapbox/streets-v12',
+                      onMapCreated: (mapboxMap) async {
+                        // Draw passenger pin
+                        final pointManager = await mapboxMap.annotations.createPointAnnotationManager();
+                        // Render a red pin
+                        await pointManager.create(
+                          PointAnnotationOptions(
+                            geometry: Point(
+                              coordinates: Position(p.pickupLongitude!, p.pickupLatitude!),
+                            ),
+                            textField: 'Lokasi Jemput ${p.name}',
+                            textSize: 11,
+                            textColor: const Color(0xFFDC2626).toARGB32(),
+                            textHaloColor: Colors.white.toARGB32(),
+                            textHaloWidth: 1.5,
+                            iconSize: 0.5,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              // Bottom Button
+              Container(
+                padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(ctx).padding.bottom + 16),
+                decoration: const BoxDecoration(
+                  color: _C.white,
+                  border: Border(top: BorderSide(color: _C.border, width: 1)),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      try {
+                        final permission = await Geolocator.checkPermission();
+                        if (permission == LocationPermission.denied) {
+                          await Geolocator.requestPermission();
+                        }
+                      } catch (_) {}
+
+                      final url = 'https://www.google.com/maps/search/?api=1&query=${p.pickupLatitude},${p.pickupLongitude}';
+                      final uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    icon: const Icon(Iconsax.routing_2, size: 20, color: Colors.white),
+                    label: Text(
+                      'BUKA DI GOOGLE MAPS / NAVIGASI',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _C.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1076,6 +1262,9 @@ class _Passenger {
   final bool isValidated;
   final String bookingCode;
   final String bookingId;
+  final String? pickupAddress;
+  final double? pickupLatitude;
+  final double? pickupLongitude;
 
   const _Passenger({
     required this.name,
@@ -1083,6 +1272,9 @@ class _Passenger {
     required this.isValidated,
     required this.bookingCode,
     required this.bookingId,
+    this.pickupAddress,
+    this.pickupLatitude,
+    this.pickupLongitude,
   });
 }
 

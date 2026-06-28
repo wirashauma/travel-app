@@ -13,7 +13,6 @@ import '../../payment/presentation/payment_page.dart';
 import '../../tracking/presentation/live_tracking_page.dart';
 import 'cancel_booking_page.dart';
 import 'reschedule_page.dart';
-import 'route_view_page.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLORS
@@ -26,7 +25,6 @@ class _C {
   static const Color card = Color(0xFFFFFFFF);
   static const Color borderLight = Color(0xFFF1F5F9);
   static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF475569);
   static const Color textTertiary = Color(0xFF94A3B8);
   static const Color success = Color(0xFF059669);
   static const Color danger = Color(0xFFEF4444);
@@ -144,6 +142,15 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final booking = filtered[index];
+                    
+                    // Background self-healing GC: cancel if expired in database
+                    final isExpired = booking.status == BookingStatus.pending &&
+                        booking.expiryDate != null &&
+                        booking.expiryDate!.isBefore(DateTime.now());
+                    if (isExpired) {
+                      BookingService.cancelBooking(booking.id!);
+                    }
+
                     return _BookingCard(
                       booking: booking,
                       onTap: () {
@@ -335,10 +342,15 @@ class _BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sColor = _statusColor(booking.status);
-    final isClickable = booking.status == BookingStatus.paid ||
+    final isExpired = booking.status == BookingStatus.pending &&
+        booking.expiryDate != null &&
+        booking.expiryDate!.isBefore(DateTime.now());
+
+    final displayStatus = isExpired ? BookingStatus.cancelled : booking.status;
+    final sColor = _statusColor(displayStatus);
+    final isClickable = !isExpired && (booking.status == BookingStatus.paid ||
         booking.status == BookingStatus.used ||
-        booking.status == BookingStatus.completed;
+        booking.status == BookingStatus.completed);
 
     return GestureDetector(
       onTap: isClickable ? onTap : null,
@@ -391,11 +403,11 @@ class _BookingCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(_statusIcon(booking.status),
+                        Icon(_statusIcon(displayStatus),
                             size: 12, color: sColor),
                         const SizedBox(width: 4),
                         Text(
-                          _statusLabel(booking.status),
+                          isExpired ? 'Kedaluwarsa' : _statusLabel(booking.status),
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -525,7 +537,7 @@ class _BookingCard extends StatelessWidget {
                   ),
 
                   // ── Action Buttons ──
-                  if (booking.status == BookingStatus.pending) ...[
+                  if (booking.status == BookingStatus.pending && !isExpired) ...[
                     const SizedBox(height: 12),
                     Container(height: 1, color: _C.borderLight),
                     const SizedBox(height: 12),
@@ -624,6 +636,32 @@ class _BookingCard extends StatelessWidget {
                           foregroundColor: _C.primary,
                           side: BorderSide(
                             color: _C.primary.withValues(alpha: 0.3),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Batalkan Pesanan (Post-Payment)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: OutlinedButton.icon(
+                        onPressed: onCancel,
+                        icon: const Icon(Iconsax.close_circle, size: 18),
+                        label: Text(
+                          'Batalkan Pesanan',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _C.danger,
+                          side: BorderSide(
+                            color: _C.danger.withValues(alpha: 0.3),
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),

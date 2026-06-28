@@ -108,7 +108,11 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
   @override
   void initState() {
     super.initState();
-    _IconCache.ensure();
+    _IconCache.ensure().then((_) {
+      if (mounted) {
+        _tryDraw();
+      }
+    });
   }
 
   @override
@@ -235,16 +239,37 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
     return (12.0 - maxDiff * 1.5).clamp(4.0, 12.0);
   }
 
-  void _fitBounds() {
+  Future<void> _fitBounds() async {
     if (widget.routePoints.isEmpty || _mapboxMap == null) return;
-    final center = _calcCenter();
-    _mapboxMap!.flyTo(
-      CameraOptions(
-        center: Point(coordinates: Position(center.lng, center.lat)),
-        zoom: _calcZoom(),
-      ),
-      MapAnimationOptions(duration: 300),
-    );
+    
+    try {
+      final points = widget.routePoints
+          .map((p) => Point(coordinates: Position(p.lng, p.lat)))
+          .toList();
+
+      final cameraOptions = await _mapboxMap!.cameraForCoordinatesPadding(
+        points,
+        CameraOptions(),
+        MbxEdgeInsets(top: 40.0, left: 40.0, bottom: 40.0, right: 40.0),
+        null,
+        null,
+      );
+
+      await _mapboxMap!.flyTo(
+        cameraOptions,
+        MapAnimationOptions(duration: 800),
+      );
+    } catch (_) {
+      // Fallback if native method fails
+      final center = _calcCenter();
+      await _mapboxMap!.flyTo(
+        CameraOptions(
+          center: Point(coordinates: Position(center.lng, center.lat)),
+          zoom: _calcZoom(),
+        ),
+        MapAnimationOptions(duration: 500),
+      );
+    }
   }
 
   @override

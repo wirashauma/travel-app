@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/models/booking_model.dart';
 import 'ticket_scanner_page.dart';
@@ -571,6 +572,114 @@ class _PassengerCard extends StatelessWidget {
     required this.fmtPrice,
   });
 
+  Future<void> _openGoogleMaps(BuildContext context, BookingModel booking) async {
+    final lat = booking.pickupLatitude;
+    final lng = booking.pickupLongitude;
+    final addr = booking.pickupAddress;
+
+    if ((lat == null || lng == null) && (addr == null || addr.isEmpty)) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFFF1F5F9), width: 1.5),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7), // Amber 100
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Iconsax.warning_2,
+                  color: Color(0xFFD97706), // Amber 700
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Lokasi Tidak Tersedia',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                    color: const Color(0xFF0F172A), // Slate 900
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Penumpang ini belum menentukan alamat penjemputan mereka. Silakan hubungi penumpang secara langsung untuk koordinasi lokasi.',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: const Color(0xFF475569), // Slate 600
+              height: 1.5,
+            ),
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0F4C81),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Mengerti',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    Uri url;
+    if (lat != null && lng != null) {
+      url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+    } else {
+      url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(addr!)}');
+    }
+
+    try {
+      // Modern launch pattern: directly trigger external launch to bypass package visibility queries checks
+      final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        // Fallback to defaults (system browser / maps application)
+        await launchUrl(url, mode: LaunchMode.platformDefault);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tidak dapat membuka peta: $e'),
+            backgroundColor: _C.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isUsed = booking.status == BookingStatus.used;
@@ -858,6 +967,66 @@ class _PassengerCard extends StatelessWidget {
                             : isValidated
                             ? _C.info
                             : _C.primary,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // ── Pickup Address Card ──
+                if (booking.pickupAddress != null && booking.pickupAddress!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _C.bg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _C.borderLight),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Iconsax.location5, size: 14, color: Color(0xFFEF4444)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            booking.pickupAddress!,
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: _C.textSecondary,
+                              fontWeight: FontWeight.w500,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // ── Google Maps Directions Button ──
+                const Divider(height: 24, color: _C.borderLight),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _openGoogleMaps(context, booking),
+                        icon: const Icon(Iconsax.map_1, size: 16, color: Colors.white),
+                        label: Text(
+                          'Petunjuk Arah Penjemputan',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _C.primary,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
                       ),
                     ),
                   ],

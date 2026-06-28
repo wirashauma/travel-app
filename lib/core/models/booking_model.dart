@@ -137,6 +137,9 @@ class BookingModel {
   final int? refundAmount;
   final int? refundPenalty;
   final String? refundStatus;
+  final String? pickupAddress;
+  final double? pickupLatitude;
+  final double? pickupLongitude;
 
   const BookingModel({
     this.id,
@@ -160,6 +163,9 @@ class BookingModel {
     this.refundAmount,
     this.refundPenalty,
     this.refundStatus,
+    this.pickupAddress,
+    this.pickupLatitude,
+    this.pickupLongitude,
   });
 
   /// Create from Firestore document snapshot.
@@ -193,6 +199,9 @@ class BookingModel {
       refundAmount: (d['refundAmount'] as num?)?.toInt(),
       refundPenalty: (d['refundPenalty'] as num?)?.toInt(),
       refundStatus: d['refundStatus'] as String?,
+      pickupAddress: d['pickupAddress'] as String?,
+      pickupLatitude: (d['pickupLatitude'] as num?)?.toDouble(),
+      pickupLongitude: (d['pickupLongitude'] as num?)?.toDouble(),
     );
   }
 
@@ -223,6 +232,9 @@ class BookingModel {
       if (refundAmount != null) 'refundAmount': refundAmount,
       if (refundPenalty != null) 'refundPenalty': refundPenalty,
       if (refundStatus != null) 'refundStatus': refundStatus,
+      if (pickupAddress != null) 'pickupAddress': pickupAddress,
+      if (pickupLatitude != null) 'pickupLatitude': pickupLatitude,
+      if (pickupLongitude != null) 'pickupLongitude': pickupLongitude,
     };
   }
 
@@ -249,6 +261,9 @@ class BookingModel {
     int? refundAmount,
     int? refundPenalty,
     String? refundStatus,
+    String? pickupAddress,
+    double? pickupLatitude,
+    double? pickupLongitude,
   }) {
     return BookingModel(
       id: id ?? this.id,
@@ -272,6 +287,9 @@ class BookingModel {
       refundAmount: refundAmount ?? this.refundAmount,
       refundPenalty: refundPenalty ?? this.refundPenalty,
       refundStatus: refundStatus ?? this.refundStatus,
+      pickupAddress: pickupAddress ?? this.pickupAddress,
+      pickupLatitude: pickupLatitude ?? this.pickupLatitude,
+      pickupLongitude: pickupLongitude ?? this.pickupLongitude,
     );
   }
 }

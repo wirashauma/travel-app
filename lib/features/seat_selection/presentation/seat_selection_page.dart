@@ -107,6 +107,7 @@ class SeatSelectionPage extends StatefulWidget {
 class _SeatSelectionPageState extends State<SeatSelectionPage> {
   final Set<String> _selectedSeats = {};
   late final String _dateStr;
+  bool _isNavigatingToCheckout = false;
 
   String _fmtPrice(int price) {
     final f = NumberFormat('#,###', 'id_ID');
@@ -261,6 +262,8 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
     final sortedSeats = _selectedSeats.toList()
       ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
 
+    setState(() => _isNavigatingToCheckout = true);
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -279,7 +282,11 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
           selectedSeats: sortedSeats,
         ),
       ),
-    );
+    ).then((_) {
+      if (mounted) {
+        setState(() => _isNavigatingToCheckout = false);
+      }
+    });
   }
 
   // ═══════════════════════════════════════════════════
@@ -304,13 +311,15 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
               : <String, SeatState>{};
 
           // ── Auto-deselect seats snatched by others ──
-          final snatched = _selectedSeats
-              .where(
-                (s) =>
-                    seatStates[s] == SeatState.sold ||
-                    seatStates[s] == SeatState.pending,
-              )
-              .toSet();
+          final snatched = _isNavigatingToCheckout
+              ? <String>{}
+              : _selectedSeats
+                  .where(
+                    (s) =>
+                        seatStates[s] == SeatState.sold ||
+                        seatStates[s] == SeatState.pending,
+                  )
+                  .toSet();
 
           if (snatched.isNotEmpty) {
             WidgetsBinding.instance.addPostFrameCallback((_) {

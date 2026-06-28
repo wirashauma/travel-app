@@ -37,7 +37,6 @@ class _DriverPackageConfirmationPageState extends State<DriverPackageConfirmatio
 
   String? _origin;
   String? _destination;
-  String? _fleetId;
 
   @override
   void initState() {
@@ -62,7 +61,6 @@ class _DriverPackageConfirmationPageState extends State<DriverPackageConfirmatio
       final data = doc.data();
       if (mounted) {
         setState(() {
-          _fleetId = doc.id;
           _origin = data['origin'] as String? ?? '';
           _destination = data['destination'] as String? ?? '';
         });

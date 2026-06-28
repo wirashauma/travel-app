@@ -15,21 +15,14 @@ import 'shipment_payment_page.dart';
 class _C {
   static const Color primary = Color(0xFF0F4C81);
   static const Color bg = Color(0xFFFAFBFD);
-  static const Color white = Color(0xFFFFFFFF);
   static const Color card = Color(0xFFFFFFFF);
   static const Color border = Color(0xFFE2E8F0);
   static const Color borderLight = Color(0xFFF1F5F9);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF475569);
   static const Color textTertiary = Color(0xFF94A3B8);
-  static const Color success = Color(0xFF059669);
-  static const Color successBg = Color(0xFFECFDF5);
   static const Color warning = Color(0xFFD97706);
   static const Color warningBg = Color(0xFFFFFBEB);
-  static const Color info = Color(0xFF0EA5E9);
-  static const Color infoBg = Color(0xFFF0F9FF);
-  static const Color danger = Color(0xFFEF4444);
-  static const Color dangerBg = Color(0xFFFEF2F2);
 }
 
 class PackageDeliveryPage extends StatelessWidget {

@@ -41,8 +41,12 @@ class _CancelBookingPageState extends State<CancelBookingPage> {
     return 'Rp ${f.format(price)}';
   }
 
-  int get _penaltyAmount => (widget.booking.totalPrice * 0.2).round();
-  int get _refundAmount => widget.booking.totalPrice - _penaltyAmount;
+  int get _penaltyAmount => widget.booking.status == BookingStatus.paid
+      ? widget.booking.totalPrice
+      : (widget.booking.totalPrice * 0.2).round();
+  int get _refundAmount => widget.booking.status == BookingStatus.paid
+      ? 0
+      : widget.booking.totalPrice - _penaltyAmount;
 
   Future<void> _confirmCancel() async {
     if (_isProcessing) return;
@@ -202,7 +206,7 @@ class _CancelBookingPageState extends State<CancelBookingPage> {
         const SizedBox(height: 14),
         Text(
           widget.booking.status == BookingStatus.paid
-              ? 'Tindakan ini akan dikenai potongan sebesar 20% dari harga tiket sesuai kebijakan yang berlaku.'
+              ? 'Sesuai dengan ketentuan pembatalan tiket yang telah dibayar, seluruh dana pembayaran tiket Anda akan hangus (tidak dikembalikan).'
               : 'Kursi yang sudah dipesan akan dikembalikan ke armada dan tersedia untuk penumpang lain.',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
@@ -342,25 +346,27 @@ class _CancelBookingPageState extends State<CancelBookingPage> {
           const SizedBox(height: 16),
           _refundRow('Total Pembayaran', widget.booking.totalPrice, _C.textPrimary),
           const SizedBox(height: 10),
-          _refundRow('Potongan 20%', _penaltyAmount, _C.danger),
+          _refundRow('Dana Hangus (100%)', _penaltyAmount, _C.danger),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 10),
             child: Divider(height: 1, color: _C.borderLight),
           ),
-          _refundRow('Dana Dikembalikan', _refundAmount, _C.success),
+          _refundRow('Dana Dikembalikan', _refundAmount, _C.textTertiary),
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: _C.warningBg,
+              color: _C.dangerBg,
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: _C.danger.withValues(alpha: 0.15)),
             ),
             child: Text(
-              'Dana akan dikembalikan ke metode pembayaran awal dalam 1×24 jam.',
+              'PENTING: Dana yang sudah dibayarkan tidak dapat dikembalikan / 100% hangus.',
               style: GoogleFonts.inter(
                 fontSize: 11,
-                color: _C.warning,
+                fontWeight: FontWeight.w600,
+                color: _C.danger,
                 height: 1.4,
               ),
             ),

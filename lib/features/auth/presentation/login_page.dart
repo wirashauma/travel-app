@@ -364,6 +364,40 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget _quickLoginButton({
+    required String label,
+    required String email,
+    required Color color,
+  }) {
+    return SizedBox(
+      height: 30,
+      child: OutlinedButton(
+        onPressed: _isLoading || _isGoogleLoading
+            ? null
+            : () {
+                _emailController.text = email;
+                _passwordController.text = '12345678';
+                _handleLogin();
+              },
+        style: OutlinedButton.styleFrom(
+          foregroundColor: color,
+          side: BorderSide(color: color.withValues(alpha: 0.35), width: 1.2),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
@@ -527,7 +561,53 @@ class _LoginPageState extends State<LoginPage> {
                           curve: Curves.easeOutCubic,
                         ),
 
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 24),
+
+                    // ── Quick Login Buttons ─────────────────
+                    Center(
+                      child: Text(
+                        'Quick Login (Demo)',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AuthColors.textTertiary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 1150.ms, duration: 400.ms),
+
+                    const SizedBox(height: 10),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _quickLoginButton(
+                          label: 'Super Admin',
+                          email: 'superadmin@gmail.com',
+                          color: const Color(0xFFDC2626), // Premium red
+                        ),
+                        _quickLoginButton(
+                          label: 'Sopir',
+                          email: 'supir@gmail.com',
+                          color: const Color(0xFFD97706), // Premium amber
+                        ),
+                        _quickLoginButton(
+                          label: 'User',
+                          email: 'user@gmail.com',
+                          color: const Color(0xFF0D9488), // Premium teal
+                        ),
+                      ],
+                    )
+                        .animate()
+                        .fadeIn(delay: 1200.ms, duration: 450.ms)
+                        .slideY(
+                          begin: 0.06,
+                          delay: 1200.ms,
+                          duration: 450.ms,
+                          curve: Curves.easeOutCubic,
+                        ),
+
+                    const SizedBox(height: 28),
 
                     // ── Register link ─────────────────────
                     Center(

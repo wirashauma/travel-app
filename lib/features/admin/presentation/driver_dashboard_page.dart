@@ -711,7 +711,7 @@ class _FleetCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    height: 44,
+                    height: 48,
                     child: ElevatedButton.icon(
                       onPressed: () {
                         Navigator.push(

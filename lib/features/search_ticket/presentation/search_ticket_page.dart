@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/models/lng_lat.dart';
 import '../../../core/services/dijkstra_service.dart';
 import '../../../core/widgets/custom_route_map.dart';
 import '../../seat_selection/presentation/seat_selection_page.dart';
@@ -79,22 +79,22 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
   late final List<String> _cities;
 
   // ── Koordinat kota-kota Sumatera Barat ────────
-  static const Map<String, LatLng> _cityCoordinates = {
-    'Padang': LatLng(-0.9471, 100.4172),
-    'Bukittinggi': LatLng(-0.3055, 100.3691),
-    'Payakumbuh': LatLng(-0.2261, 100.6320),
-    'Batusangkar': LatLng(-0.4586, 100.6180),
-    'Padang Panjang': LatLng(-0.4710, 100.4164),
-    'Solok': LatLng(-0.7994, 100.6553),
-    'Sawahlunto': LatLng(-0.6837, 100.7789),
-    'Pariaman': LatLng(-0.6245, 100.1185),
-    'Pesisir Selatan': LatLng(-1.3571, 100.5740),
-    'Pasaman': LatLng(0.2013, 99.9999),
-    'Pasaman Barat': LatLng(0.3014, 99.6218),
-    'Sijunjung': LatLng(-0.6980, 100.9450),
-    'Dharmasraya': LatLng(-1.0590, 101.3670),
-    'Solok Selatan': LatLng(-1.2375, 101.2690),
-    'Lubuk Basung': LatLng(-0.3103, 100.0787),
+  static const Map<String, LngLat> _cityCoordinates = {
+    'Padang': LngLat(100.4172, -0.9471),
+    'Bukittinggi': LngLat(100.3691, -0.3055),
+    'Payakumbuh': LngLat(100.6320, -0.2261),
+    'Batusangkar': LngLat(100.6180, -0.4586),
+    'Padang Panjang': LngLat(100.4164, -0.4710),
+    'Solok': LngLat(100.6553, -0.7994),
+    'Sawahlunto': LngLat(100.7789, -0.6837),
+    'Pariaman': LngLat(100.1185, -0.6245),
+    'Pesisir Selatan': LngLat(100.5740, -1.3571),
+    'Pasaman': LngLat(99.9999, 0.2013),
+    'Pasaman Barat': LngLat(99.6218, 0.3014),
+    'Sijunjung': LngLat(100.9450, -0.6980),
+    'Dharmasraya': LngLat(101.3670, -1.0590),
+    'Solok Selatan': LngLat(101.2690, -1.2375),
+    'Lubuk Basung': LngLat(100.0787, -0.3103),
   };
 
   @override
@@ -254,8 +254,8 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
           Expanded(
             child: _hasSearched
                 ? (_routeResult != null
-                      ? _buildResultContent()
-                      : _buildNoRoute())
+                    ? _buildResultContent()
+                    : _buildNoRoute())
                 : _buildInitialState(),
           ),
         ],
@@ -630,7 +630,10 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
               textAlign: TextAlign.center,
             ),
           ],
-        ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95)),
+        )
+            .animate()
+            .fadeIn(duration: 400.ms)
+            .scale(begin: const Offset(0.95, 0.95)),
       ),
     );
   }
@@ -688,10 +691,10 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
     );
   }
 
-  // ── Dijkstra Google Maps Widget ──
+  // ── Dijkstra Mapbox Map Widget ──
   Widget _buildDijkstraMap(DijkstraRouteResult result) {
-    // Map city names in the Dijkstra path to LatLng coordinates
-    final routePoints = <LatLng>[];
+    // Map city names in the Dijkstra path to LngLat coordinates
+    final routePoints = <LngLat>[];
     for (final city in result.path) {
       final coord = _cityCoordinates[city];
       if (coord != null) routePoints.add(coord);
@@ -793,19 +796,18 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                           color: i == 0
                               ? _C.success
                               : i == result.path.length - 1
-                              ? _C.error
-                              : _C.orange,
+                                  ? _C.error
+                                  : _C.orange,
                           shape: BoxShape.circle,
                           border: Border.all(color: _C.white, width: 2),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  (i == 0
-                                          ? _C.success
-                                          : i == result.path.length - 1
+                              color: (i == 0
+                                      ? _C.success
+                                      : i == result.path.length - 1
                                           ? _C.error
                                           : _C.orange)
-                                      .withValues(alpha: 0.3),
+                                  .withValues(alpha: 0.3),
                               blurRadius: 4,
                             ),
                           ],
@@ -1029,9 +1031,9 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                 estimatedPrice: estimatedPrice,
               ),
             ).animate().fadeIn(
-              delay: Duration(milliseconds: 100 + (i * 60)),
-              duration: 400.ms,
-            );
+                  delay: Duration(milliseconds: 100 + (i * 60)),
+                  duration: 400.ms,
+                );
           },
         );
       },
@@ -1151,8 +1153,8 @@ class _FleetCard extends StatelessWidget {
       stream: FirebaseFirestore.instance
           .collection('bookings')
           .where('fleetId', isEqualTo: docId)
-          .where('status', whereIn: ['pending', 'paid', 'validated', 'used'])
-          .snapshots(),
+          .where('status',
+              whereIn: ['pending', 'paid', 'validated', 'used']).snapshots(),
       builder: (context, bookingSnap) {
         int bookedSeatCount = 0;
         if (bookingSnap.hasData) {
@@ -1315,8 +1317,8 @@ class _FleetCard extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _C.primary,
                                 foregroundColor: Colors.white,
-                                disabledBackgroundColor: _C.textTertiary
-                                    .withValues(alpha: 0.15),
+                                disabledBackgroundColor:
+                                    _C.textTertiary.withValues(alpha: 0.15),
                                 disabledForegroundColor: _C.textTertiary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -1388,9 +1390,8 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
       if (q.isEmpty) {
         _filteredCities = List.from(widget.cities);
       } else {
-        _filteredCities = widget.cities
-            .where((c) => c.toLowerCase().contains(q))
-            .toList();
+        _filteredCities =
+            widget.cities.where((c) => c.toLowerCase().contains(q)).toList();
       }
     });
   }
@@ -1513,16 +1514,15 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
                           color: isDisabled
                               ? _C.textTertiary.withValues(alpha: 0.3)
                               : isSelected
-                              ? _C.primary
-                              : _C.textTertiary,
+                                  ? _C.primary
+                                  : _C.textTertiary,
                         ),
                         title: Text(
                           city,
                           style: GoogleFonts.inter(
                             fontSize: 14,
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.w400,
+                            fontWeight:
+                                isSelected ? FontWeight.w600 : FontWeight.w400,
                             color: isDisabled
                                 ? _C.textTertiary.withValues(alpha: 0.4)
                                 : _C.textPrimary,

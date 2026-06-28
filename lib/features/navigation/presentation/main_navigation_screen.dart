@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../admin/presentation/driver_dashboard_page.dart';
 import '../../admin/presentation/ticket_scanner_page.dart';
@@ -40,8 +41,28 @@ class _C {
 //     • 'admin'       → _AdminNavShell (BottomAppBar + FAB scanner)
 //     • 'super_admin' → SuperAdminDashboard (standalone)
 // ═══════════════════════════════════════════════════════════
-class MainNavigationScreen extends StatelessWidget {
+class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
+
+  @override
+  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+}
+
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _requestLocationPermission();
+  }
+
+  Future<void> _requestLocationPermission() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        await Geolocator.requestPermission();
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
