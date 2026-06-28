@@ -55,6 +55,18 @@ class CityCoordinatesSeeder {
     'Painan':           {'lat': -1.3460,  'lng': 100.5780},
     'Muaro Sijunjung':  {'lat': -0.7000,  'lng': 101.0000},
     'Dharmasraya':      {'lat': -1.0500,  'lng': 101.5200},
+    // ── 10 Kota/Kab Sumbar yang sebelumnya hilang (fix Google Maps blank) ──
+    'Batusangkar':      {'lat': -0.4619,  'lng': 100.5752},
+    'Lubuk Basung':     {'lat': -0.3169,  'lng': 100.0508},
+    'Pariaman':         {'lat': -0.6267,  'lng': 100.1164},
+    'Pasaman':          {'lat': 0.0839,   'lng': 100.0667},
+    'Pasaman Barat':    {'lat': 0.0833,   'lng': 99.6500},
+    'Padang Panjang':   {'lat': -0.4657,  'lng': 100.4101},
+    'Pesisir Selatan':  {'lat': -1.8606,  'lng': 100.9339},
+    'Sawahlunto':       {'lat': -0.6801,  'lng': 100.7776},
+    'Sijunjung':        {'lat': -0.6922,  'lng': 100.9669},
+    'Solok Selatan':    {'lat': -1.7000,  'lng': 101.3833},
+
 
     // ══════════════════════════════════════════
     //  RIAU

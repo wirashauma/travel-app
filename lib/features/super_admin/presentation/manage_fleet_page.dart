@@ -19,7 +19,7 @@ class _C {
   static const Color primary = Color(0xFF0F4C81);
   static const Color primaryLight = Color(0xFF1A6BB5);
   static const Color teal = Color(0xFF0D9488);
-  static const Color bg = Color(0xFFFAFBFD);
+  static const Color bg = Color(0xFFF1F5F9);
   static const Color card = Color(0xFFFFFFFF);
   static const Color border = Color(0xFFE2E8F0);
   static const Color textPrimary = Color(0xFF0F172A);
@@ -40,7 +40,7 @@ const String _kCloudinaryUrl =
 
 // Default placeholder image for fleets
 const String _kDefaultFleetImage =
-    'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=600&q=80';
+    'https://images.unsplash.com/photo-1748215210950-536c6621629a?w=600&q=80';
 
 // ─────────────────────────────────────────────────────────
 //  DAFTAR ARMADA TRAVEL LOKAL SUMBAR (BAKU)
@@ -75,9 +75,16 @@ const List<String> kSumbarFleetNames = [
 ];
 
 const List<String> kSumbarVehicleTypes = [
+  'Toyota Avanza',
+  'Toyota Calya',
+  'Daihatsu Xenia',
+  'Toyota Innova Reborn',
+  'Innova Reborn',
+  'Toyota Innova Zenix',
+  'Mitsubishi Xpander',
+  'Suzuki Ertiga',
   'Toyota Hiace',
   'Isuzu Elf',
-  'Innova Reborn',
 ];
 
 const List<String> kSumbarCities = [
@@ -110,12 +117,12 @@ const List<Map<String, dynamic>> _kSumatranFleets = [
   {
     'name': 'Minang Travel',
     'imageUrl': '',
-    'totalSeats': 14,
+    'totalSeats': 7,
     'vehicleType': 'Toyota Hiace',
     'origin': 'Padang',
     'destination': 'Bukittinggi',
     'driverId': '',
-    'description': 'Toyota Hiace Commuter — Padang–Bukittinggi–Payakumbuh',
+    'description': 'Toyota Avanza — Padang–Bukittinggi–Payakumbuh',
   },
   {
     'name': 'Tranex Mandiri',
@@ -410,7 +417,7 @@ class ManageFleetPage extends StatelessWidget {
           final docs = snapshot.data?.docs ?? [];
           if (docs.isEmpty) {
             return _EmptyState(
-              icon: Iconsax.bus,
+              icon: Iconsax.car,
               title: 'Belum Ada Armada',
               subtitle:
                   'Tekan tombol + untuk menambahkan armada baru\natau gunakan ikon \u2728 untuk seed data Sumatera.',
@@ -763,16 +770,16 @@ class ManageFleetPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             DropdownButtonFormField<String>(
-                              initialValue: selectedFleetName,
+                              value: selectedFleetName,
                               isExpanded: true,
                               decoration: InputDecoration(
                                 hintText: 'Pilih nama armada',
                                 hintStyle: GoogleFonts.inter(
                                   fontSize: 13,
-                                  color: _C.textTertiary,
+                                  color: _C.textSecondary,
                                 ),
                                 prefixIcon: const Icon(
-                                  Iconsax.bus,
+                                  Iconsax.car,
                                   size: 20,
                                   color: _C.textTertiary,
                                 ),
@@ -828,7 +835,10 @@ class ManageFleetPage extends StatelessWidget {
                                   )
                                   .toList(),
                               onChanged: (val) {
-                                setSheetState(() => selectedFleetName = val);
+                                selectedFleetName = val;
+                              },
+                              onSaved: (val) {
+                                selectedFleetName = val;
                               },
                               validator: (v) => (v == null || v.trim().isEmpty)
                                   ? 'Wajib pilih armada'
@@ -852,7 +862,7 @@ class ManageFleetPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             DropdownButtonFormField<String>(
-                              initialValue:
+                              value:
                                   selectedVehicleType != null &&
                                       kSumbarVehicleTypes.contains(
                                         selectedVehicleType,
@@ -860,11 +870,16 @@ class ManageFleetPage extends StatelessWidget {
                                   ? selectedVehicleType
                                   : null,
                               isExpanded: true,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: _C.textPrimary,
+                              ),
+                              dropdownColor: _C.card,
                               decoration: InputDecoration(
                                 hintText: 'Pilih jenis kendaraan',
                                 hintStyle: GoogleFonts.inter(
                                   fontSize: 14,
-                                  color: _C.textTertiary,
+                                  color: _C.textSecondary,
                                 ),
                                 prefixIcon: const Icon(
                                   Iconsax.car,
@@ -910,9 +925,12 @@ class ManageFleetPage extends StatelessWidget {
                                     ),
                                   )
                                   .toList(),
-                              onChanged: (val) => setSheetState(
-                                () => selectedVehicleType = val,
-                              ),
+                              onChanged: (val) {
+                                selectedVehicleType = val;
+                              },
+                              onSaved: (val) {
+                                selectedVehicleType = val;
+                              },
                               validator: (v) =>
                                   v == null ? 'Wajib pilih kendaraan' : null,
                             ),
@@ -934,17 +952,22 @@ class ManageFleetPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             DropdownButtonFormField<String>(
-                              initialValue:
+                              value:
                                   selectedOrigin != null &&
                                       kSumbarCities.contains(selectedOrigin)
                                   ? selectedOrigin
                                   : null,
                               isExpanded: true,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: _C.textPrimary,
+                              ),
+                              dropdownColor: _C.card,
                               decoration: InputDecoration(
                                 hintText: 'Pilih kota asal',
                                 hintStyle: GoogleFonts.inter(
                                   fontSize: 14,
-                                  color: _C.textTertiary,
+                                  color: _C.textSecondary,
                                 ),
                                 prefixIcon: const Icon(
                                   Iconsax.location,
@@ -990,8 +1013,12 @@ class ManageFleetPage extends StatelessWidget {
                                     ),
                                   )
                                   .toList(),
-                              onChanged: (val) =>
-                                  setSheetState(() => selectedOrigin = val),
+                              onChanged: (val) {
+                                selectedOrigin = val;
+                              },
+                              onSaved: (val) {
+                                selectedOrigin = val;
+                              },
                               validator: (v) =>
                                   v == null ? 'Wajib pilih kota asal' : null,
                             ),
@@ -1013,7 +1040,7 @@ class ManageFleetPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             DropdownButtonFormField<String>(
-                              initialValue:
+                              value:
                                   selectedDestination != null &&
                                       kSumbarCities.contains(
                                         selectedDestination,
@@ -1021,11 +1048,16 @@ class ManageFleetPage extends StatelessWidget {
                                   ? selectedDestination
                                   : null,
                               isExpanded: true,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: _C.textPrimary,
+                              ),
+                              dropdownColor: _C.card,
                               decoration: InputDecoration(
                                 hintText: 'Pilih kota tujuan',
                                 hintStyle: GoogleFonts.inter(
                                   fontSize: 14,
-                                  color: _C.textTertiary,
+                                  color: _C.textSecondary,
                                 ),
                                 prefixIcon: const Icon(
                                   Iconsax.location_tick,
@@ -1071,9 +1103,12 @@ class ManageFleetPage extends StatelessWidget {
                                     ),
                                   )
                                   .toList(),
-                              onChanged: (val) => setSheetState(
-                                () => selectedDestination = val,
-                              ),
+                              onChanged: (val) {
+                                selectedDestination = val;
+                              },
+                              onSaved: (val) {
+                                selectedDestination = val;
+                              },
                               validator: (v) {
                                 if (v == null) return 'Wajib pilih kota tujuan';
                                 if (v == selectedOrigin) {
@@ -1114,16 +1149,56 @@ class ManageFleetPage extends StatelessWidget {
                             onPressed: (isSaving || isUploading)
                                 ? null
                                 : () async {
-                                    if (!formKey.currentState!.validate()) {
-                                      return;
-                                    }
-                                    setSheetState(() => isSaving = true);
-
                                     try {
-                                      final name = selectedFleetName!.trim();
-                                      final totalSeats = int.parse(
-                                        seatsCtrl.text.trim(),
-                                      );
+                                      if (formKey.currentState == null ||
+                                          !formKey.currentState!
+                                              .validate()) {
+                                        if (ctx.mounted) {
+                                          ScaffoldMessenger.of(ctx)
+                                            ..clearSnackBars()
+                                            ..showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Harap isi semua field yang wajib.',
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 13,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                backgroundColor: _C.warning,
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                margin:
+                                                    const EdgeInsets.all(16),
+                                              ),
+                                            );
+                                        }
+                                        return;
+                                      }
+
+                                      formKey.currentState!.save();
+
+                                      setSheetState(() => isSaving = true);
+
+                                      final name = selectedFleetName?.trim();
+                                      if (name == null || name.isEmpty) {
+                                        throw Exception('Nama armada tidak valid');
+                                      }
+
+                                      final totalSeatsText =
+                                          seatsCtrl.text.trim();
+                                      final totalSeats =
+                                          int.tryParse(totalSeatsText);
+                                      if (totalSeats == null ||
+                                          totalSeats <= 0) {
+                                        throw Exception(
+                                          'Jumlah kursi tidak valid',
+                                        );
+                                      }
 
                                       // Upload image to Cloudinary if picked
                                       String imageUrl =
@@ -1249,7 +1324,13 @@ class ManageFleetPage extends StatelessWidget {
                                           ..clearSnackBars()
                                           ..showSnackBar(
                                             SnackBar(
-                                              content: Text('Error: $e'),
+                                              content: Text(
+                                                e.toString(),
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 13,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
                                               backgroundColor: _C.error,
                                               behavior:
                                                   SnackBarBehavior.floating,
@@ -1258,6 +1339,9 @@ class ManageFleetPage extends StatelessWidget {
                                                     BorderRadius.circular(10),
                                               ),
                                               margin: const EdgeInsets.all(16),
+                                              duration: const Duration(
+                                                seconds: 5,
+                                              ),
                                             ),
                                           );
                                       }
@@ -1442,6 +1526,7 @@ class ManageFleetPage extends StatelessWidget {
   ) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: _C.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1725,7 +1810,7 @@ class _FleetCard extends StatelessWidget {
                           color: _C.border.withValues(alpha: 0.3),
                           child: Center(
                             child: Icon(
-                              Iconsax.bus,
+                              Iconsax.car,
                               size: 48,
                               color: _C.textTertiary.withValues(alpha: 0.5),
                             ),

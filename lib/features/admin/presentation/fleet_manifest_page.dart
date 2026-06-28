@@ -83,7 +83,6 @@ class FleetManifestPage extends StatelessWidget {
             .collection('bookings')
             .where('fleetId', isEqualTo: fleetId)
             .where('status', whereIn: ['paid', 'validated', 'used'])
-            .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           final bookingDocs = snapshot.data?.docs ?? [];
@@ -136,9 +135,6 @@ class FleetManifestPage extends StatelessWidget {
                         child: CircularProgressIndicator(color: _C.primary),
                       ),
                     )
-                  // ── EMPTY ──
-                  else if (bookings.isEmpty)
-                    SliverFillRemaining(child: _buildEmptyPassenger())
                   // ── ERROR ──
                   else if (snapshot.hasError)
                     SliverFillRemaining(
@@ -159,6 +155,9 @@ class FleetManifestPage extends StatelessWidget {
                         ),
                       ),
                     )
+                  // ── EMPTY ──
+                  else if (bookings.isEmpty)
+                    SliverFillRemaining(child: _buildEmptyPassenger())
                   // ── PASSENGER LIST ──
                   else
                     SliverPadding(
@@ -266,7 +265,7 @@ class FleetManifestPage extends StatelessWidget {
                     color: _C.success.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Iconsax.bus5, size: 22, color: _C.success),
+                  child: const Icon(Iconsax.car, size: 22, color: _C.success),
                 ),
                 const SizedBox(width: 14),
                 Expanded(

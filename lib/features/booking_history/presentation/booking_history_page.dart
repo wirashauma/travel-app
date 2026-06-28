@@ -9,6 +9,11 @@ import 'package:intl/intl.dart';
 import '../../../core/models/booking_model.dart';
 import '../../../core/services/booking_service.dart';
 import '../../e_ticket/presentation/live_e_ticket_page.dart';
+import '../../payment/presentation/payment_page.dart';
+import '../../tracking/presentation/live_tracking_page.dart';
+import 'cancel_booking_page.dart';
+import 'reschedule_page.dart';
+import 'route_view_page.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLORS
@@ -26,95 +31,24 @@ class _C {
   static const Color success = Color(0xFF059669);
   static const Color danger = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
+
 }
 
 // ─────────────────────────────────────────────────────────
-//  CANCEL BOOKING — Dialog + Firestore Transaction
+//  CANCEL BOOKING — Navigate to full CancelBookingPage
 // ─────────────────────────────────────────────────────────
 Future<void> _confirmCancelBooking(
     BuildContext context, BookingModel booking) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text(
-        'Batalkan Pesanan?',
-        style: GoogleFonts.plusJakartaSans(
-          fontWeight: FontWeight.w700,
-          fontSize: 17,
-          color: _C.textPrimary,
-        ),
-      ),
-      content: Text(
-        'Yakin ingin membatalkan pesanan ini?\n'
-        'Kursi akan dikembalikan ke kuota armada.',
-        style: GoogleFonts.inter(
-          fontSize: 13.5,
-          height: 1.5,
-          color: _C.textSecondary,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(
-            'Tidak',
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w600,
-              color: _C.textTertiary,
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          child: Text(
-            'Ya, Batalkan',
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w700,
-              color: _C.danger,
-            ),
-          ),
-        ),
-      ],
+  final result = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CancelBookingPage(booking: booking),
     ),
   );
 
-  if (confirmed != true || !context.mounted) return;
+  if (result != true || !context.mounted) return;
 
-  try {
-    await BookingService.cancelBooking(booking.id!);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Pesanan ${booking.bookingCode} berhasil dibatalkan',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w500),
-        ),
-        backgroundColor: _C.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  } catch (e) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Gagal membatalkan: $e',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w500),
-        ),
-        backgroundColor: _C.danger,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  }
+  // Success — refresh is handled by StreamBuilder parent
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -125,8 +59,17 @@ Future<void> _confirmCancelBooking(
 //  Status-colored badges: pending → orange, paid → green,
 //                         completed → teal, cancelled → red
 // ═══════════════════════════════════════════════════════════
-class BookingHistoryPage extends StatelessWidget {
+enum _FilterOption { all, pending, paid, completed, cancelled }
+
+class BookingHistoryPage extends StatefulWidget {
   const BookingHistoryPage({super.key});
+
+  @override
+  State<BookingHistoryPage> createState() => _BookingHistoryPageState();
+}
+
+class _BookingHistoryPageState extends State<BookingHistoryPage> {
+  _FilterOption _selectedFilter = _FilterOption.all;
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +100,14 @@ class BookingHistoryPage extends StatelessWidget {
           // ═══ APP BAR ═══
           _AppBar(topPadding: topPadding),
 
+          // ═══ FILTER CHIPS ═══
+          _FilterBar(
+            selected: _selectedFilter,
+            onChanged: (filter) {
+              setState(() => _selectedFilter = filter);
+            },
+          ),
+
           // ═══ BOOKING LIST ═══
           Expanded(
             child: StreamBuilder<List<BookingModel>>(
@@ -178,14 +129,21 @@ class BookingHistoryPage extends StatelessWidget {
                   return const _EmptyState();
                 }
 
+                // Filter
+                final filtered = _filterBookings(bookings);
+
+                if (filtered.isEmpty) {
+                  return _EmptyFilterState();
+                }
+
                 // List
                 return ListView.separated(
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-                  itemCount: bookings.length,
+                  itemCount: filtered.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    final booking = bookings[index];
+                    final booking = filtered[index];
                     return _BookingCard(
                       booking: booking,
                       onTap: () {
@@ -201,7 +159,8 @@ class BookingHistoryPage extends StatelessWidget {
                           );
                         }
                       },
-                      onCancel: booking.status == BookingStatus.pending
+                      onCancel: (booking.status == BookingStatus.pending ||
+                              booking.status == BookingStatus.paid)
                           ? () => _confirmCancelBooking(context, booking)
                           : null,
                     )
@@ -224,6 +183,27 @@ class BookingHistoryPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<BookingModel> _filterBookings(List<BookingModel> bookings) {
+    if (_selectedFilter == _FilterOption.all) return bookings;
+
+    return bookings.where((b) {
+      switch (_selectedFilter) {
+        case _FilterOption.pending:
+          return b.status == BookingStatus.pending;
+        case _FilterOption.paid:
+          return b.status == BookingStatus.paid;
+        case _FilterOption.completed:
+          return b.status == BookingStatus.completed ||
+              b.status == BookingStatus.validated ||
+              b.status == BookingStatus.used;
+        case _FilterOption.cancelled:
+          return b.status == BookingStatus.cancelled;
+        default:
+          return true;
+      }
+    }).toList();
   }
 }
 
@@ -483,7 +463,7 @@ class _BookingCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _metaItem(
-                          Iconsax.bus,
+                          Iconsax.car,
                           booking.fleetName,
                         ),
                       ),
@@ -544,18 +524,59 @@ class _BookingCard extends StatelessWidget {
                     ],
                   ),
 
-                  // ── Batalkan Pesanan (pending only) ──
-                  if (booking.status == BookingStatus.pending &&
-                      onCancel != null) ...[
+                  // ── Action Buttons ──
+                  if (booking.status == BookingStatus.pending) ...[
                     const SizedBox(height: 12),
                     Container(height: 1, color: _C.borderLight),
                     const SizedBox(height: 12),
+                    // Continue Payment
                     SizedBox(
                       width: double.infinity,
-                      height: 40,
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PaymentPage(
+                                bookingId: booking.id!,
+                                bookingCode: booking.bookingCode,
+                                totalAmount: booking.totalPrice,
+                                origin: booking.origin,
+                                destination: booking.destination,
+                                fleetName: booking.fleetName,
+                                passengers: booking.seatsBooked,
+                                departureDate: booking.departureDate,
+                                expiryDate: booking.expiryDate ?? DateTime.now().add(const Duration(minutes: 15)),
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Iconsax.wallet_3, size: 18),
+                        label: Text(
+                          'Lanjutkan Pembayaran',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _C.primary,
+                          foregroundColor: _C.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Cancel (full-width outlined button)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
                       child: OutlinedButton.icon(
                         onPressed: onCancel,
-                        icon: const Icon(Iconsax.close_circle, size: 16),
+                        icon: const Icon(Iconsax.close_circle, size: 18),
                         label: Text(
                           'Batalkan Pesanan',
                           style: GoogleFonts.plusJakartaSans(
@@ -566,10 +587,122 @@ class _BookingCard extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: _C.danger,
                           side: BorderSide(
-                            color: _C.danger.withValues(alpha: 0.4),
+                            color: _C.danger.withValues(alpha: 0.3),
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ] else if (booking.status == BookingStatus.paid) ...[
+                    const SizedBox(height: 12),
+                    Container(height: 1, color: _C.borderLight),
+                    const SizedBox(height: 12),
+                    // Reschedule
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ReschedulePage(booking: booking),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Iconsax.calendar_edit, size: 18),
+                        label: Text(
+                          'Reschedule',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _C.primary,
+                          side: BorderSide(
+                            color: _C.primary.withValues(alpha: 0.3),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Lacak Armada
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => LiveTrackingPage(
+                                fleetId: booking.fleetId,
+                                origin: booking.origin,
+                                destination: booking.destination,
+                                fleetName: booking.fleetName,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Iconsax.routing_2, size: 18),
+                        label: Text(
+                          'Lacak Armada',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _C.primary,
+                          foregroundColor: _C.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ] else if (booking.status == BookingStatus.validated) ...[
+                    const SizedBox(height: 12),
+                    Container(height: 1, color: _C.borderLight),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => LiveTrackingPage(
+                                fleetId: booking.fleetId,
+                                origin: booking.origin,
+                                destination: booking.destination,
+                                fleetName: booking.fleetName,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Iconsax.routing_2, size: 18),
+                        label: Text(
+                          'Lacak Armada',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _C.primary,
+                          foregroundColor: _C.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
@@ -620,7 +753,133 @@ class _BookingCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────
-//  EMPTY STATE
+//  FILTER BAR — Horizontal scrollable filter chips
+// ─────────────────────────────────────────────────
+class _FilterBar extends StatelessWidget {
+  final _FilterOption selected;
+  final ValueChanged<_FilterOption> onChanged;
+
+  const _FilterBar({
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final filters = [
+      (_FilterOption.all, 'Semua'),
+      (_FilterOption.pending, 'Menunggu Bayar'),
+      (_FilterOption.paid, 'Sudah Bayar'),
+      (_FilterOption.completed, 'Selesai'),
+      (_FilterOption.cancelled, 'Dibatalkan'),
+    ];
+
+    return Container(
+      color: _C.white,
+      child: Column(
+        children: [
+          SizedBox(
+            height: 44,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: filters.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final option = filters[index];
+                final isSelected = selected == option.$1;
+                return GestureDetector(
+                  onTap: () => onChanged(option.$1),
+                  child: AnimatedContainer(
+                    duration: 250.ms,
+                    curve: Curves.easeOutCubic,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? _C.primary
+                          : _C.primary.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected
+                            ? _C.primary
+                            : _C.primary.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: Text(
+                      option.$2,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? _C.white : _C.primary,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Container(height: 1, color: _C.borderLight),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.02, duration: 300.ms, curve: Curves.easeOutCubic);
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  EMPTY STATE (after filter)
+// ─────────────────────────────────────────────────
+class _EmptyFilterState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: _C.textTertiary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(
+              Iconsax.search_normal_1,
+              size: 36,
+              color: _C.textTertiary.withValues(alpha: 0.45),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Tidak Ditemukan',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: _C.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tidak ada pesanan dengan\nstatus yang dipilih.',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: _C.textTertiary,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 500.ms)
+        .slideY(begin: 0.05, duration: 500.ms, curve: Curves.easeOutCubic);
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  EMPTY STATE (no bookings at all)
 // ─────────────────────────────────────────────────
 class _EmptyState extends StatelessWidget {
   const _EmptyState();

@@ -92,7 +92,7 @@ class ManageDriverAssignmentsPage extends StatelessWidget {
               if (docs.isEmpty) {
                 return SliverFillRemaining(
                   child: _buildEmptyState(
-                    icon: Iconsax.bus,
+                    icon: Iconsax.car,
                     title: 'Belum Ada Armada',
                     subtitle:
                         'Tambahkan armada terlebih dahulu\ndi menu Manajemen Armada',
@@ -521,7 +521,7 @@ class _FleetAssignmentCard extends StatelessWidget {
                 ),
               )
             : Icon(
-                Iconsax.bus,
+                Iconsax.car,
                 size: 28,
                 color: _C.textTertiary.withValues(alpha: 0.5),
               ),

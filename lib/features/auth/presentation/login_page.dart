@@ -393,7 +393,7 @@ class _LoginPageState extends State<LoginPage> {
                     const AuthHeader(
                       title: 'Selamat Datang\nKembali!',
                       subtitle:
-                          'Masuk ke akun Anda untuk memesan\nperjalanan nyaman ke seluruh Jawa.',
+                          'Masuk ke akun Anda untuk memesan\nperjalanan nyaman ke seluruh Sumatera Barat.',
                     ),
 
                     SizedBox(height: screenHeight * 0.045),

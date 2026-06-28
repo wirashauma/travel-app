@@ -14,6 +14,7 @@ import '../../../core/services/booking_service.dart';
 import '../../../core/services/pdf_ticket_service.dart';
 import '../../../core/services/whatsapp_ticket_service.dart';
 import '../../navigation/presentation/main_navigation_screen.dart';
+import '../../tracking/presentation/live_tracking_page.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLORS — Trust Blue / Clean Slate / No Purple
@@ -133,6 +134,48 @@ class LiveETicketPage extends StatelessWidget {
                             booking.status == BookingStatus.used ||
                             booking.status == BookingStatus.completed)
                           _WhatsAppShareButton(booking: booking),
+
+                        // ═══ LACAK ARMADA ═══
+                        if (booking.status == BookingStatus.paid &&
+                            booking.fleetId.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => LiveTrackingPage(
+                                        fleetId: booking.fleetId,
+                                        origin: booking.origin,
+                                        destination: booking.destination,
+                                        fleetName: booking.fleetName,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Iconsax.routing_2, size: 18),
+                                label: Text(
+                                  'Lacak Armada',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _C.teal,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(13),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
 
                         // ═══ KEMBALI KE BERANDA ═══
                         const SizedBox(height: 20),
@@ -330,7 +373,7 @@ class _LiveTicketCard extends StatelessWidget {
                               ),
                               child: const Center(
                                 child: Icon(
-                                  Iconsax.bus,
+                                  Iconsax.car,
                                   size: 16,
                                   color: Colors.white,
                                 ),
@@ -554,7 +597,7 @@ class _LiveTicketCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     _DetailRow(
-                      icon: Iconsax.bus,
+                      icon: Iconsax.car,
                       label: 'Armada',
                       value: booking.fleetName,
                     ),

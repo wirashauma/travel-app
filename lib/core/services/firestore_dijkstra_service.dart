@@ -93,6 +93,17 @@ class FirestoreDijkstraService {
     return findCheapestPath(startNode, endNode);
   }
 
+  /// Check if a package route (pkgOrigin → pkgDest) is covered by a fleet's route.
+  /// Returns true only if both cities are on the path and pkgOrigin comes before pkgDest.
+  Future<bool> isRouteCovered(String fleetOrigin, String fleetDest, String pkgOrigin, String pkgDest) async {
+    final edges = await _fetchEdges();
+    final result = _run(edges, fleetOrigin, fleetDest, (e) => e.distance);
+    if (result == null) return false;
+    final oIdx = result.path.indexOf(pkgOrigin);
+    final dIdx = result.path.indexOf(pkgDest);
+    return oIdx != -1 && dIdx != -1 && oIdx < dIdx;
+  }
+
   /// Get all unique city names from the routes collection.
   Future<List<String>> getAllCities() async {
     final edges = await _fetchEdges();
@@ -122,13 +133,30 @@ class FirestoreDijkstraService {
     }).toList();
   }
 
-  /// Parse "5 jam 30 menit" → 330 minutes.
+  /// Parse duration string → minutes.
+  ///
+  /// Supported formats (case-insensitive):
+  ///   "5 jam 30 menit"  → 330
+  ///   "1.5 Jam"         → 90   (decimal hours)
+  ///   "2.5 Jam"         → 150
+  ///   "45 Menit"        → 45
+  ///   "30 menit"        → 30
   static int _parseDuration(String raw) {
+    if (raw.isEmpty) return 0;
     int minutes = 0;
-    final jamMatch = RegExp(r'(\d+)\s*jam').firstMatch(raw);
-    if (jamMatch != null) minutes += int.parse(jamMatch.group(1)!) * 60;
-    final menitMatch = RegExp(r'(\d+)\s*menit').firstMatch(raw);
-    if (menitMatch != null) minutes += int.parse(menitMatch.group(1)!);
+    // Match decimal or integer hours, case-insensitive
+    final jamMatch = RegExp(r'(\d+(?:\.\d+)?)\s*jam', caseSensitive: false)
+        .firstMatch(raw);
+    if (jamMatch != null) {
+      final hours = double.tryParse(jamMatch.group(1)!) ?? 0;
+      minutes += (hours * 60).round();
+    }
+    // Match minutes, case-insensitive
+    final menitMatch =
+        RegExp(r'(\d+)\s*menit', caseSensitive: false).firstMatch(raw);
+    if (menitMatch != null) {
+      minutes += int.parse(menitMatch.group(1)!);
+    }
     return minutes;
   }
 

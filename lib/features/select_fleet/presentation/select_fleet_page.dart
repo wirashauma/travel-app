@@ -358,7 +358,7 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
               borderRadius: BorderRadius.circular(24),
             ),
             child: Icon(
-              Iconsax.bus,
+              Iconsax.car,
               size: 36,
               color: _C.textTertiary.withValues(alpha: 0.45),
             ),
@@ -499,7 +499,7 @@ class _FleetCard extends StatelessWidget {
                             color: _C.inputFill,
                             child: const Center(
                               child: Icon(
-                                Iconsax.bus,
+                                Iconsax.car,
                                 size: 48,
                                 color: _C.textHint,
                               ),
@@ -510,7 +510,7 @@ class _FleetCard extends StatelessWidget {
                           color: _C.inputFill,
                           child: const Center(
                             child: Icon(
-                              Iconsax.bus,
+                              Iconsax.car,
                               size: 48,
                               color: _C.textHint,
                             ),

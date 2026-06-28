@@ -193,7 +193,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         const AuthHeader(
                           title: 'Buat Akun Baru',
                           subtitle:
-                              'Bergabung dengan E-Travel dan nikmati\nperjalanan nyaman ke seluruh Jawa.',
+                              'Bergabung dengan E-Travel dan nikmati\nperjalanan nyaman ke seluruh Sumatera Barat.',
                           showLogo: false,
                         ),
 

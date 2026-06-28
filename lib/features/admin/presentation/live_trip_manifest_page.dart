@@ -456,7 +456,7 @@ class LiveTripManifestPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _infoChip(Iconsax.calendar_1, departureDate),
-                    _infoChip(Iconsax.bus, fleetName),
+                    _infoChip(Iconsax.car, fleetName),
                     _infoChip(Iconsax.people, '$bookedSeats/$totalSeats'),
                   ],
                 ),
@@ -656,7 +656,7 @@ class LiveTripManifestPage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Iconsax.bus, size: 15, color: _C.textTertiary),
+                  const Icon(Iconsax.car, size: 15, color: _C.textTertiary),
                   const SizedBox(width: 6),
                   Text(
                     'Denah Kursi',

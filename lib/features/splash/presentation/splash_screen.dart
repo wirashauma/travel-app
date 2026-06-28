@@ -373,7 +373,7 @@ class _SplashScreenState extends State<SplashScreen>
           ],
         ),
         child: Icon(
-          Iconsax.bus5,
+          Iconsax.car,
           size: iconSize,
           color: Colors.white,
         ),

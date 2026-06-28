@@ -8,10 +8,10 @@ import 'package:intl/intl.dart';
 
 
 import '../../../core/constants/app_constants.dart';
-import '../../../core/services/dijkstra_service.dart';
+import '../../../core/services/firestore_dijkstra_service.dart';
 import '../../edit_profile/presentation/edit_profile_page.dart';
 import '../../booking_history/presentation/booking_history_page.dart';
-import '../../search_ticket/presentation/search_ticket_page.dart';
+import '../../search_result/presentation/search_result_page.dart';
 import 'popular_routes_page.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -30,6 +30,8 @@ class _C {
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textTertiary = Color(0xFF94A3B8);
   static const Color textHint = Color(0xFFCBD5E1);
+  static const Color success = Color(0xFF059669);
+  static const Color danger = Color(0xFFDC2626);
   static const Color orange = Color(0xFFF97316);
   static const Color amber = Color(0xFFF59E0B);
 }
@@ -84,7 +86,7 @@ class _HomeSearchPageState extends State<HomeSearchPage>
   // ── Load cities from Firestore routes ─────────
   Future<void> _loadCities() async {
     try {
-      final cities = DijkstraService.instance.getAllCities();
+      final cities = await FirestoreDijkstraService.instance.getAllCities();
       if (!mounted) return;
       setState(() {
         _cities = cities;
@@ -228,11 +230,11 @@ class _HomeSearchPageState extends State<HomeSearchPage>
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => SearchTicketPage(
-          initialOrigin: _originCity,
-          initialDestination: _destinationCity,
-          initialDate: _selectedDate,
-          initialPassengers: _passengers,
+        pageBuilder: (_, __, ___) => SearchResultPage(
+          origin: _originCity!,
+          destination: _destinationCity!,
+          date: _selectedDate,
+          passengers: _passengers,
         ),
         transitionsBuilder: (_, anim, __, child) {
           return FadeTransition(
@@ -444,7 +446,7 @@ class _HomeSearchPageState extends State<HomeSearchPage>
   }
 
   // ─────────────────────────────────────────────────
-  //  2. SEARCH CARD
+  //  2. SEARCH CARD — Grab/Gojek‑inspired design
   // ─────────────────────────────────────────────────
   Widget _buildSearchCard() {
     return Padding(
@@ -452,56 +454,46 @@ class _HomeSearchPageState extends State<HomeSearchPage>
       child: Container(
         decoration: BoxDecoration(
           color: _C.card,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF0F4C81).withValues(alpha: 0.06),
               blurRadius: 32,
               offset: const Offset(0, 8),
             ),
-            const BoxShadow(
-              color: Color(0x05000000),
-              blurRadius: 2,
-              offset: Offset(0, 1),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
           ],
-          border: Border.all(color: _C.borderLight),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              // ── Origin / Destination with swap ──
-              _buildRouteInputs(),
+        child: Column(
+          children: [
+            // ── Route section ─────────────────────
+            _buildRouteSection(),
 
-              const SizedBox(height: 18),
-
-              // ── Divider ────────────────────────
-              Container(
-                height: 1,
-                color: _C.borderLight,
+            // ── Divider ────────────────────────────
+            Container(height: 1, color: _C.borderLight),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+              child: Column(
+                children: [
+                  // ── Date & Passengers row ──────────
+                  Row(
+                    children: [
+                      Expanded(child: _buildDateChip()),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildPassengerChip()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // ── Search Button ──────────────────
+                  _buildSearchButton(),
+                ],
               ),
-
-              const SizedBox(height: 18),
-
-              // ── Date & Passengers ──────────────
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(child: _buildDateSelector()),
-                    const SizedBox(width: 14),
-                    Expanded(child: _buildPassengerSelector()),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 22),
-
-              // ── Search Button ──────────────────
-              _buildSearchButton(),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     )
@@ -515,112 +507,147 @@ class _HomeSearchPageState extends State<HomeSearchPage>
         );
   }
 
-  // ── Origin + Swap + Destination ─────────────────
-  Widget _buildRouteInputs() {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // Origin & Destination fields with right padding for swap button
-        Padding(
-          padding: const EdgeInsets.only(right: 54),
-          child: Column(
-            children: [
-              // Origin
-              _buildLocationField(
-                label: 'Dari',
-                city: _originCity,
-                hint: 'Kota asal',
-                icon: Iconsax.location,
-                iconColor: _C.teal,
-                onTap: () => _showCityPicker(isOrigin: true),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Destination
-              _buildLocationField(
-                label: 'Ke',
-                city: _destinationCity,
-                hint: 'Kota tujuan',
-                icon: Iconsax.location_tick,
-                iconColor: _C.orange,
-                onTap: () => _showCityPicker(isOrigin: false),
-              ),
-            ],
-          ),
-        ),
-
-        // Swap button — vertically centered between fields
-        Positioned(
-          right: 0,
-          top: 0,
-          bottom: 0,
-          child: Center(
-            child: RotationTransition(
-              turns: _swapRotation,
-              child: GestureDetector(
-                onTap: _swapCities,
-                child: Container(
-                  width: 42,
-                  height: 42,
+  // ── Route Section — connected Grab‑style ────────
+  Widget _buildRouteSection() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Left: dot‑connector line
+            SizedBox(
+              width: 20,
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+                // Origin dot
+                Container(
+                  width: 10, height: 10,
                   decoration: BoxDecoration(
-                    color: _C.primary.withValues(alpha: 0.07),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _C.primary.withValues(alpha: 0.12),
-                    ),
-                  ),
-                  child: const Icon(
-                    Iconsax.arrow_swap_horizontal,
-                    size: 18,
-                    color: _C.primary,
+                    color: _C.success,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _C.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _C.success.withValues(alpha: 0.25),
+                        blurRadius: 6,
+                      ),
+                    ],
                   ),
                 ),
-              ),
+                // Connector line
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 3),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          _C.success.withValues(alpha: 0.4),
+                          _C.danger.withValues(alpha: 0.4),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Destination dot
+                Container(
+                  width: 10, height: 10,
+                  decoration: BoxDecoration(
+                    color: _C.danger,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _C.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _C.danger.withValues(alpha: 0.25),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 14),
+          // Right: fields
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Origin
+                _buildLocationTile(
+                  label: 'Dari',
+                  value: _originCity,
+                  hint: 'Kota asal',
+                  onTap: () => _showCityPicker(isOrigin: true),
+                ),
+                // Swap button
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: _swapCities,
+                    child: RotationTransition(
+                      turns: _swapRotation,
+                      child: Container(
+                        width: 32, height: 32,
+                        margin: const EdgeInsets.symmetric(vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _C.primary.withValues(alpha: 0.07),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Iconsax.arrow_swap_horizontal,
+                          size: 16, color: _C.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Destination
+                _buildLocationTile(
+                  label: 'Ke',
+                  value: _destinationCity,
+                  hint: 'Kota tujuan',
+                  onTap: () => _showCityPicker(isOrigin: false),
+                ),
+              ],
+            ),
+          ),
+          // Right arrow indicator
+          Padding(
+            padding: const EdgeInsets.only(top: 26),
+            child: Icon(
+              Iconsax.arrow_right_3,
+              size: 18,
+              color: _C.textTertiary.withValues(alpha: 0.3),
+            ),
+          ),
+        ],
+      ),
+      ),
     );
   }
 
-  // ── Location Field ──────────────────────────────
-  Widget _buildLocationField({
+  // ── Location Tile — minimal line‑based input ────
+  Widget _buildLocationTile({
     required String label,
-    required String? city,
+    required String? value,
     required String hint,
-    required IconData icon,
-    required Color iconColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: _C.inputFill,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: city != null
-                ? _C.primary.withValues(alpha: 0.15)
-                : _C.border,
+          border: Border(
+            bottom: BorderSide(color: _C.borderLight, width: 1),
           ),
         ),
         child: Row(
           children: [
-            // Icon
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 17, color: iconColor),
-            ),
-            const SizedBox(width: 12),
-
-            // Text
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -633,23 +660,19 @@ class _HomeSearchPageState extends State<HomeSearchPage>
                       color: _C.textTertiary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
-                    city ?? hint,
+                    value ?? hint,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14.5,
-                      fontWeight: city != null ? FontWeight.w700 : FontWeight.w400,
-                      color: city != null ? _C.textPrimary : _C.textHint,
+                      fontSize: 15,
+                      fontWeight: value != null ? FontWeight.w700 : FontWeight.w400,
+                      color: value != null ? _C.textPrimary : _C.textHint,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-            ),
-
-            Icon(
-              Iconsax.arrow_right_3,
-              size: 16,
-              color: _C.textTertiary.withValues(alpha: 0.5),
             ),
           ],
         ),
@@ -657,8 +680,8 @@ class _HomeSearchPageState extends State<HomeSearchPage>
     );
   }
 
-  // ── Date Selector ───────────────────────────────
-  Widget _buildDateSelector() {
+  // ── Date Chip ────────────────────────────────────
+  Widget _buildDateChip() {
     final isToday = DateUtils.isSameDay(_selectedDate, DateTime.now());
     final formatted = isToday
         ? 'Hari Ini'
@@ -667,56 +690,46 @@ class _HomeSearchPageState extends State<HomeSearchPage>
     return GestureDetector(
       onTap: _pickDate,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: _C.inputFill,
+          color: _C.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _C.border),
+          border: Border.all(color: _C.borderLight),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
-            // Icon + Label
-            Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _C.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Iconsax.calendar_1,
-                    size: 16,
-                    color: _C.primary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Tanggal',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: _C.textTertiary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            // Value
-            Text(
-              formatted,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: _C.textPrimary,
+            Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                color: _C.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              child: Icon(Iconsax.calendar_1, size: 16, color: _C.primary),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tanggal',
+                    style: GoogleFonts.inter(
+                      fontSize: 10, fontWeight: FontWeight.w500,
+                      color: _C.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    formatted,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13, fontWeight: FontWeight.w700,
+                      color: _C.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -724,99 +737,70 @@ class _HomeSearchPageState extends State<HomeSearchPage>
     );
   }
 
-  // ── Passenger Selector ──────────────────────────
-  Widget _buildPassengerSelector() {
+  // ── Passenger Chip ───────────────────────────────
+  Widget _buildPassengerChip() {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: _C.inputFill,
+        color: _C.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _C.border),
+        border: Border.all(color: _C.borderLight),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Icon + Label
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 28, height: 28,
                 decoration: BoxDecoration(
                   color: _C.amber.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Iconsax.people,
-                  size: 16,
-                  color: _C.amber.withValues(alpha: 0.85),
-                ),
+                child: Icon(Iconsax.people, size: 14, color: _C.amber.withValues(alpha: 0.85)),
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Penumpang',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: _C.textTertiary,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Penumpang',
+                    style: GoogleFonts.inter(
+                      fontSize: 10, fontWeight: FontWeight.w500,
+                      color: _C.textTertiary,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  Text(
+                    '$_passengers Orang',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13, fontWeight: FontWeight.w700,
+                      color: _C.textPrimary,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          // Value + Counter
+          const SizedBox(height: 6),
+          // Counter buttons
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
+              _miniBtn(Icons.remove_rounded, _passengers > 1,
+                  () { if (_passengers > 1) setState(() => _passengers--); }
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Text(
-                  '$_passengers Orang',
+                  '$_passengers',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 13, fontWeight: FontWeight.w800,
                     color: _C.textPrimary,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _counterButton(
-                    icon: Icons.remove_rounded,
-                    enabled: _passengers > 1,
-                    onTap: () {
-                      if (_passengers > 1) setState(() => _passengers--);
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Text(
-                      '$_passengers',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: _C.textPrimary,
-                      ),
-                    ),
-                  ),
-                  _counterButton(
-                    icon: Icons.add_rounded,
-                    enabled: _passengers < AppConstants.seatsPerVehicle,
-                    onTap: () {
-                      if (_passengers < AppConstants.seatsPerVehicle) {
-                        setState(() => _passengers++);
-                      }
-                    },
-                  ),
-                ],
+              _miniBtn(Icons.add_rounded, _passengers < AppConstants.seatsPerVehicle,
+                  () { if (_passengers < AppConstants.seatsPerVehicle) setState(() => _passengers++); }
               ),
             ],
           ),
@@ -825,32 +809,21 @@ class _HomeSearchPageState extends State<HomeSearchPage>
     );
   }
 
-  Widget _counterButton({
-    required IconData icon,
-    required bool enabled,
-    required VoidCallback onTap,
-  }) {
+  Widget _miniBtn(IconData icon, bool enabled, VoidCallback onTap) {
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: Container(
-        width: 28,
-        height: 28,
+        width: 26, height: 26,
         decoration: BoxDecoration(
-          color: enabled
-              ? _C.primary.withValues(alpha: 0.08)
-              : _C.inputFill,
+          color: enabled ? _C.primary.withValues(alpha: 0.08) : _C.bg,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: enabled
                 ? _C.primary.withValues(alpha: 0.15)
-                : _C.border,
+                : _C.borderLight,
           ),
         ),
-        child: Icon(
-          icon,
-          size: 14,
-          color: enabled ? _C.primary : _C.textHint,
-        ),
+        child: Icon(icon, size: 13, color: enabled ? _C.primary : _C.textHint),
       ),
     );
   }
@@ -864,10 +837,10 @@ class _HomeSearchPageState extends State<HomeSearchPage>
         height: 52,
         decoration: BoxDecoration(
           color: _C.primary,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: _C.primary.withValues(alpha: 0.2),
+              color: _C.primary.withValues(alpha: 0.25),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -876,14 +849,14 @@ class _HomeSearchPageState extends State<HomeSearchPage>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Iconsax.search_normal, size: 18, color: Colors.white),
+            Icon(Iconsax.search_normal, size: 18, color: _C.white),
             const SizedBox(width: 10),
             Text(
-              'Cari Rute Tiket',
+              'Cari Tiket',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: _C.white,
                 letterSpacing: 0.2,
               ),
             ),

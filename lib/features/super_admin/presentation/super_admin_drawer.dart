@@ -113,8 +113,8 @@ class SuperAdminDrawer extends StatelessWidget {
                   index: 0,
                 ),
                 _DrawerMenuItem(
-                  icon: Iconsax.bus,
-                  activeIcon: Iconsax.bus5,
+                  icon: Iconsax.car,
+                  activeIcon: Iconsax.car,
                   label: 'Manajemen Armada',
                   isSelected: currentMenu == SuperAdminMenu.fleet,
                   onTap: () => _handleTap(context, SuperAdminMenu.fleet),

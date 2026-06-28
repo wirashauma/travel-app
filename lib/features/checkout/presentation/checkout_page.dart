@@ -396,7 +396,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   const SizedBox(height: 20),
 
                   // ── Section: Armada ──
-                  _sectionTitle('Armada', Iconsax.bus, 150),
+                  _sectionTitle('Armada', Iconsax.car, 150),
                   const SizedBox(height: 10),
                   _buildFleetCard(200),
 
@@ -657,7 +657,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               color: _C.primary.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Iconsax.bus, size: 24, color: _C.primary),
+            child: const Icon(Iconsax.car, size: 24, color: _C.primary),
           ),
           const SizedBox(width: 14),
           Expanded(

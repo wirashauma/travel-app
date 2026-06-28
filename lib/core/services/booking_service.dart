@@ -72,8 +72,10 @@ class BookingService {
     return await _db.runTransaction<BookingModel>((transaction) async {
       // ── STEP 1: Read seat_locks document (atomic lock) ──
       final lockSnap = await transaction.get(lockRef);
+      final lockData =
+          lockSnap.exists ? lockSnap.data() : null;
       final seatEntries = Map<String, dynamic>.from(
-        (lockSnap.data())?['seats'] ?? {},
+        lockData?['seats'] ?? {},
       );
 
       // ── STEP 2: Read fleet document ──
@@ -214,57 +216,63 @@ class BookingService {
       final currentStatus = data['status'] as String? ?? '';
 
       // Only confirm if booking is still pending
-      if (currentStatus != 'pending') return;
+      if (currentStatus == 'pending') {
+        final fleetId = data['fleetId'] as String? ?? '';
+        final dateStr = data['departureDate'] as String? ?? '';
+        final seatLabels =
+            List<String>.from(data['selectedSeatLabels'] ?? []);
 
-      final fleetId = data['fleetId'] as String? ?? '';
-      final dateStr = data['departureDate'] as String? ?? '';
-      final seatLabels =
-          List<String>.from(data['selectedSeatLabels'] ?? []);
+        // Read seat_locks (conditionally, but BEFORE any write)
+        DocumentSnapshot? lockSnap;
+        DocumentReference? lockRef;
+        if (fleetId.isNotEmpty &&
+            dateStr.isNotEmpty &&
+            seatLabels.isNotEmpty) {
+          lockRef =
+              _db.collection('seat_locks').doc(_lockDocId(fleetId, dateStr));
+          lockSnap = await transaction.get(lockRef);
+        }
 
-      // Read seat_locks (conditionally, but BEFORE any write)
-      DocumentSnapshot? lockSnap;
-      DocumentReference? lockRef;
-      if (fleetId.isNotEmpty &&
-          dateStr.isNotEmpty &&
-          seatLabels.isNotEmpty) {
-        lockRef =
-            _db.collection('seat_locks').doc(_lockDocId(fleetId, dateStr));
-        lockSnap = await transaction.get(lockRef);
-      }
-
-      // ════════════════════════════════════════════════════
-      // PHASE 2: LOGIC & VALIDATION
-      // ════════════════════════════════════════════════════
-      Map<String, dynamic>? updatedSeats;
-      if (lockSnap != null && lockSnap.exists && lockRef != null) {
-        final seats = Map<String, dynamic>.from(
-          (lockSnap.data() as Map<String, dynamic>?)?['seats'] ?? {},
-        );
-        for (final seat in seatLabels) {
-          if (seats.containsKey(seat)) {
-            final entry =
-                Map<String, dynamic>.from(seats[seat] as Map);
-            if (entry['bookingId'] == bookingId) {
-              seats[seat] = {
-                'bookingId': bookingId,
-                'status': 'paid',
-              };
+        // ════════════════════════════════════════════════════
+        // PHASE 2: LOGIC & VALIDATION
+        // ════════════════════════════════════════════════════
+        Map<String, dynamic>? updatedSeats;
+        if (lockSnap != null && lockSnap.exists && lockRef != null) {
+          final seats = Map<String, dynamic>.from(
+            (lockSnap.data() as Map<String, dynamic>?)?['seats'] ?? {},
+          );
+          for (final seat in seatLabels) {
+            if (seats.containsKey(seat)) {
+              final entry =
+                  Map<String, dynamic>.from(seats[seat] as Map);
+              if (entry['bookingId'] == bookingId) {
+                seats[seat] = {
+                  'bookingId': bookingId,
+                  'status': 'paid',
+                };
+              }
             }
           }
+          updatedSeats = seats;
         }
-        updatedSeats = seats;
-      }
 
-      // ════════════════════════════════════════════════════
-      // PHASE 3: ALL WRITES LAST
-      // ════════════════════════════════════════════════════
-      transaction.update(bookingRef, {
-        'status': BookingStatus.paid.value,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+        // ════════════════════════════════════════════════════
+        // PHASE 3: ALL WRITES LAST
+        // ════════════════════════════════════════════════════
+        transaction.update(bookingRef, {
+          'status': BookingStatus.paid.value,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
 
-      if (updatedSeats != null && lockRef != null) {
-        transaction.update(lockRef, {'seats': updatedSeats});
+        if (updatedSeats != null && lockRef != null) {
+          transaction.update(lockRef, {'seats': updatedSeats});
+        }
+      } else if (currentStatus == 'paid') {
+        // Admin fee payment for reschedule — write marker
+        transaction.update(bookingRef, {
+          'adminFeePaidAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
       }
     });
   }
@@ -287,8 +295,8 @@ class BookingService {
       final data = bookingSnap.data()!;
       final status = data['status'] as String? ?? '';
 
-      // Only cancel pending bookings
-      if (status != 'pending') return;
+      // Allow cancel for pending AND paid bookings
+      if (status != 'pending' && status != 'paid') return;
 
       final fleetId = data['fleetId'] as String? ?? '';
       final dateStr = data['departureDate'] as String? ?? '';
@@ -296,6 +304,8 @@ class BookingService {
           List<String>.from(data['selectedSeatLabels'] ?? []);
       final seatsBooked =
           (data['seatsBooked'] as num?)?.toInt() ?? seatLabels.length;
+      final totalPrice =
+          (data['totalPrice'] as num?)?.toInt() ?? 0;
 
       // Read seat_locks BEFORE any write
       DocumentSnapshot? lockSnap;
@@ -356,10 +366,22 @@ class BookingService {
       // ════════════════════════════════════════════════════
       // PHASE 3: ALL WRITES LAST
       // ════════════════════════════════════════════════════
-      transaction.update(bookingRef, {
+      final updates = <String, dynamic>{
         'status': 'cancelled',
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+
+      // Mark refund if paid (80% refund, 20% penalty)
+      if (status == 'paid') {
+        final penaltyAmount = (totalPrice * 0.2).round();
+        final refundAmount = totalPrice - penaltyAmount;
+        updates['refundAmount'] = refundAmount;
+        updates['refundPenalty'] = penaltyAmount;
+        updates['refundStatus'] = 'pending';
+        updates['refundProcessedAt'] = FieldValue.serverTimestamp();
+      }
+
+      transaction.update(bookingRef, updates);
 
       if (updatedSeats != null && lockRef != null) {
         transaction.update(lockRef, {'seats': updatedSeats});
@@ -372,6 +394,140 @@ class BookingService {
         });
       }
     });
+  }
+
+  /// Reschedule booking to a new date. Charges 10% admin fee.
+  static Future<int> rescheduleBooking(
+    String bookingId,
+    String newDepartureDate,
+    String newDepartureTime,
+  ) async {
+    final bookingRef = _db.collection('bookings').doc(bookingId);
+    int adminFee = 0;
+
+    await _db.runTransaction((transaction) async {
+      final bookingSnap = await transaction.get(bookingRef);
+      if (!bookingSnap.exists) return;
+
+      final data = bookingSnap.data()!;
+      final status = data['status'] as String? ?? '';
+
+      // Only reschedule pending or paid bookings
+      if (status != 'pending' && status != 'paid') return;
+
+      final fleetId = data['fleetId'] as String? ?? '';
+      final oldDateStr = data['departureDate'] as String? ?? '';
+      final seatLabels =
+          List<String>.from(data['selectedSeatLabels'] ?? []);
+
+      if (fleetId.isEmpty || oldDateStr.isEmpty) return;
+
+      final oldLockRef =
+          _db.collection('seat_locks').doc(_lockDocId(fleetId, oldDateStr));
+      final newLockRef =
+          _db.collection('seat_locks').doc(_lockDocId(fleetId, newDepartureDate));
+
+      // Read both lock docs
+      final oldLockSnap = await transaction.get(oldLockRef);
+      final newLockSnap = await transaction.get(newLockRef);
+
+      // Read fleet doc
+      final fleetRef = _db.collection('fleets').doc(fleetId);
+      final fleetSnap = await transaction.get(fleetRef);
+      if (!fleetSnap.exists) return;
+      final fleetData = fleetSnap.data() as Map<String, dynamic>;
+      final totalSeats = (fleetData['totalSeats'] as num?)?.toInt() ?? 0;
+
+      // Remove seats from old lock
+      Map<String, dynamic> oldSeats = {};
+      if (oldLockSnap.exists) {
+        oldSeats = Map<String, dynamic>.from(
+          (oldLockSnap.data() as Map?)?['seats'] ?? {},
+        );
+      }
+      for (final seat in seatLabels) {
+        if (oldSeats.containsKey(seat)) {
+          final entry = Map<String, dynamic>.from(oldSeats[seat] as Map);
+          if (entry['bookingId'] == bookingId) {
+            oldSeats.remove(seat);
+          }
+        }
+      }
+
+      // Check availability on new date
+      Map<String, dynamic> newSeats = {};
+      if (newLockSnap.exists) {
+        newSeats = Map<String, dynamic>.from(
+          (newLockSnap.data() as Map?)?['seats'] ?? {},
+        );
+      }
+
+      int activeNewLocks = 0;
+      for (final entry in newSeats.values) {
+        final e = Map<String, dynamic>.from(entry as Map);
+        final st = e['status'] as String? ?? '';
+        if (st == 'paid' || st == 'used' || st == 'validated' || st == 'pending') {
+          activeNewLocks++;
+        }
+      }
+      final availableOnNew = totalSeats - activeNewLocks;
+      if (availableOnNew < seatLabels.length) {
+        throw Exception(
+          'Hanya $availableOnNew kursi tersedia pada tanggal $newDepartureDate',
+        );
+      }
+
+      // Add seats to new lock
+      for (final seat in seatLabels) {
+        newSeats[seat] = {
+          'bookingId': bookingId,
+          'status': status,
+          'expiryDate': data['expiryDate'],
+        };
+      }
+
+      // Compute new availableSeats for new date
+      activeNewLocks = 0;
+      if (newLockSnap.exists) {
+        for (final entry in newSeats.values) {
+          final e = Map<String, dynamic>.from(entry as Map);
+          final st = e['status'] as String? ?? '';
+          if (st == 'paid' || st == 'used' || st == 'validated' || st == 'pending') {
+            activeNewLocks++;
+          }
+        }
+      }
+      final newAvailableNew = (totalSeats - activeNewLocks).clamp(0, totalSeats);
+
+      // Biaya admin 10% (tidak mengubah totalPrice untuk booking paid)
+      final currentTotalPrice = (data['totalPrice'] as num?)?.toInt() ?? 0;
+      adminFee = (currentTotalPrice * 0.1).round();
+
+      final updates = <String, dynamic>{
+        'departureDate': newDepartureDate,
+        'departureTime': newDepartureTime,
+        'adminFee': FieldValue.increment(adminFee),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      // Untuk pending: tambahkan admin fee ke totalPrice (belum bayar)
+      // Untuk paid: totalPrice tetap, admin fee dibayar terpisah via Midtrans
+      if (status == 'pending') {
+        updates['totalPrice'] = currentTotalPrice + adminFee;
+      }
+
+      // ALL WRITES
+      transaction.update(bookingRef, updates);
+
+      transaction.update(oldLockRef, {'seats': oldSeats});
+      transaction.set(newLockRef, {'seats': newSeats}, SetOptions(merge: true));
+
+      transaction.update(fleetRef, {
+        'availableSeats': newAvailableNew,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+
+    return adminFee;
   }
 
   // ─────────────────────────────────────────────────────
@@ -533,6 +689,8 @@ class BookingService {
       return BookingModel.fromFirestore(snap);
     });
   }
+
+  /// One-time read of a booking document.
 
   // ─────────────────────────────────────────────────────
   //  HELPER — Generate human-readable booking code

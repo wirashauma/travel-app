@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' hide Settings;
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'firebase_options.dart';
@@ -41,6 +42,10 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  MapboxOptions.setAccessToken(
+    'pk.eyJ1IjoiY29kZWluMjEiLCJhIjoiY21jMW53a21iMGV3ajJrczd2bTR3b25mciJ9.VufbKuZE1e18mU4zCbvVyw',
+  );
 
   runApp(const ETravelApp());
 }

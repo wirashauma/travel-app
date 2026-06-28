@@ -48,28 +48,28 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Padang Panjang',
     'distance': 70,
     'price': 35000,
-    'duration': '1.5 Jam',
+    'duration': '1 jam 30 menit',
   },
   {
     'from': 'Padang',
     'to': 'Pariaman',
     'distance': 55,
     'price': 25000,
-    'duration': '1 Jam',
+    'duration': '1 jam',
   },
   {
     'from': 'Padang',
     'to': 'Solok',
     'distance': 64,
     'price': 40000,
-    'duration': '1.5 Jam',
+    'duration': '1 jam 30 menit',
   },
   {
     'from': 'Padang',
     'to': 'Pesisir Selatan',
     'distance': 77,
     'price': 45000,
-    'duration': '2 Jam',
+    'duration': '2 jam',
   },
   // ── Padang Panjang hub ──
   {
@@ -77,21 +77,21 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Bukittinggi',
     'distance': 20,
     'price': 15000,
-    'duration': '30 Menit',
+    'duration': '30 menit',
   },
   {
     'from': 'Padang Panjang',
     'to': 'Batusangkar',
     'distance': 40,
     'price': 25000,
-    'duration': '1 Jam',
+    'duration': '1 jam',
   },
   {
     'from': 'Padang Panjang',
     'to': 'Solok',
     'distance': 35,
     'price': 20000,
-    'duration': '45 Menit',
+    'duration': '45 menit',
   },
   // ── Bukittinggi hub ──
   {
@@ -99,35 +99,35 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Payakumbuh',
     'distance': 37,
     'price': 20000,
-    'duration': '45 Menit',
+    'duration': '45 menit',
   },
   {
     'from': 'Bukittinggi',
     'to': 'Pasaman',
     'distance': 100,
     'price': 55000,
-    'duration': '2 Jam',
+    'duration': '2 jam',
   },
   {
     'from': 'Bukittinggi',
     'to': 'Pariaman',
     'distance': 65,
     'price': 35000,
-    'duration': '1.5 Jam',
+    'duration': '1 jam 30 menit',
   },
   {
     'from': 'Bukittinggi',
     'to': 'Lubuk Basung',
     'distance': 25,
     'price': 15000,
-    'duration': '35 Menit',
+    'duration': '35 menit',
   },
   {
     'from': 'Bukittinggi',
     'to': 'Batusangkar',
     'distance': 45,
     'price': 25000,
-    'duration': '1 Jam',
+    'duration': '1 jam',
   },
   // ── Payakumbuh hub ──
   {
@@ -135,14 +135,14 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Batusangkar',
     'distance': 30,
     'price': 20000,
-    'duration': '40 Menit',
+    'duration': '40 menit',
   },
   {
     'from': 'Payakumbuh',
     'to': 'Sijunjung',
     'distance': 100,
     'price': 55000,
-    'duration': '2 Jam',
+    'duration': '2 jam',
   },
   // ── Solok hub ──
   {
@@ -150,14 +150,14 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Sawahlunto',
     'distance': 38,
     'price': 25000,
-    'duration': '50 Menit',
+    'duration': '50 menit',
   },
   {
     'from': 'Solok',
     'to': 'Solok Selatan',
     'distance': 90,
     'price': 50000,
-    'duration': '2 Jam',
+    'duration': '2 jam',
   },
   // ── Sawahlunto hub ──
   {
@@ -165,14 +165,14 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Sijunjung',
     'distance': 30,
     'price': 20000,
-    'duration': '40 Menit',
+    'duration': '40 menit',
   },
   {
     'from': 'Sawahlunto',
     'to': 'Batusangkar',
     'distance': 55,
     'price': 30000,
-    'duration': '1 Jam',
+    'duration': '1 jam',
   },
   // ── Pesisir Selatan ──
   {
@@ -180,7 +180,7 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Solok Selatan',
     'distance': 110,
     'price': 60000,
-    'duration': '2.5 Jam',
+    'duration': '2 jam 30 menit',
   },
   // ── Pasaman hub ──
   {
@@ -188,7 +188,7 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Pasaman Barat',
     'distance': 50,
     'price': 30000,
-    'duration': '1 Jam',
+    'duration': '1 jam',
   },
   // ── Pariaman ──
   {
@@ -196,7 +196,7 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Pasaman Barat',
     'distance': 115,
     'price': 65000,
-    'duration': '2.5 Jam',
+    'duration': '2 jam 30 menit',
   },
   // ── Sijunjung – Dharmasraya corridor ──
   {
@@ -204,7 +204,7 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Dharmasraya',
     'distance': 80,
     'price': 45000,
-    'duration': '1.5 Jam',
+    'duration': '1 jam 30 menit',
   },
   // ── Solok Selatan – Dharmasraya ──
   {
@@ -212,7 +212,7 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Dharmasraya',
     'distance': 95,
     'price': 55000,
-    'duration': '2 Jam',
+    'duration': '2 jam',
   },
   // ── Lubuk Basung – Pariaman ──
   {
@@ -220,7 +220,7 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Pariaman',
     'distance': 50,
     'price': 30000,
-    'duration': '1 Jam',
+    'duration': '1 jam',
   },
   // ── Lubuk Basung – Pasaman Barat ──
   {
@@ -228,9 +228,10 @@ const List<Map<String, dynamic>> _kSumbarRoutes = [
     'to': 'Pasaman Barat',
     'distance': 90,
     'price': 50000,
-    'duration': '2 Jam',
+    'duration': '2 jam',
   },
 ];
+
 
 // ═══════════════════════════════════════════════════════════
 //  MANAGE ROUTES PAGE — Firestore-backed Dijkstra edges
@@ -900,7 +901,7 @@ class ManageRoutesPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            initialValue:
+                            value:
                                 selectedFrom != null &&
                                     _kSumbarCities.contains(selectedFrom)
                                 ? selectedFrom
@@ -976,7 +977,7 @@ class ManageRoutesPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            initialValue:
+                            value:
                                 selectedTo != null &&
                                     _kSumbarCities.contains(selectedTo)
                                 ? selectedTo

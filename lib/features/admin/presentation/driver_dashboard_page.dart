@@ -10,6 +10,8 @@ import 'package:intl/intl.dart';
 
 import '../../../core/utils/logout_dialog.dart';
 import '../../edit_profile/presentation/edit_profile_page.dart';
+import '../../package/presentation/driver_package_confirmation_page.dart';
+import 'driver_trip_page.dart';
 import 'fleet_manifest_page.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -115,6 +117,9 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
 
               // ── SECTION TITLE ──
               SliverToBoxAdapter(child: _buildSectionTitle(fleetDocs.length)),
+
+              // ── PAKET BUTTON ──
+              SliverToBoxAdapter(child: _buildPackageCard()),
 
               // ── EMPTY STATE ──
               if (fleetDocs.isEmpty)
@@ -324,6 +329,47 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
   }
 
   // ─────────────────────────────────────────────────────
+  //  PAKET CARD — Konfirmasi Paket
+  // ─────────────────────────────────────────────────────
+  Widget _buildPackageCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+      child: InkWell(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DriverPackageConfirmationPage())),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFF0D9488), Color(0xFF14B8A6)]),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Iconsax.box_2, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Konfirmasi Paket', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                    const SizedBox(height: 2),
+                    Text('Kelola & konfirmasi pengiriman paket', style: GoogleFonts.inter(fontSize: 12, color: Colors.white70)),
+                  ],
+                ),
+              ),
+              Icon(Iconsax.arrow_right_1, color: Colors.white.withValues(alpha: 0.8)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────
   //  SECTION TITLE
   // ─────────────────────────────────────────────────────
   Widget _buildSectionTitle(int count) {
@@ -376,7 +422,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
                     color: _C.warningBg,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Iconsax.bus, size: 56, color: _C.warning),
+                  child: Icon(Iconsax.car, size: 56, color: _C.warning),
                 ),
                 const SizedBox(height: 24),
                 Text(
@@ -476,7 +522,7 @@ class _FleetCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
-                          Iconsax.bus5,
+                          Iconsax.car,
                           size: 22,
                           color: _C.success,
                         ),
@@ -577,54 +623,68 @@ class _FleetCard extends StatelessWidget {
                   // ── Bottom: Seat count + View button ──
                   Row(
                     children: [
-                      // Seat count with real-time sub-stream
-                      StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('bookings')
-                            .where('fleetId', isEqualTo: fleetId)
-                            .where(
-                              'status',
-                              whereIn: ['paid', 'validated', 'used'],
-                            )
-                            .snapshots(),
-                        builder: (context, snap) {
-                          final ticketCount = snap.data?.docs.length ?? 0;
-                          return Row(
-                            children: [
-                              Icon(
-                                Iconsax.people,
-                                size: 14,
-                                color: _C.textTertiary,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                '$ticketCount penumpang',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: _C.textTertiary,
+                      Flexible(
+                        child: StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('bookings')
+                              .where('fleetId', isEqualTo: fleetId)
+                              .where(
+                                'status',
+                                whereIn: ['paid', 'validated', 'used'],
+                              )
+                              .snapshots(),
+                          builder: (context, snap) {
+                            final ticketCount =
+                                snap.data?.docs.length ?? 0;
+                            return Row(
+                              children: [
+                                Flexible(
+                                  flex: 0,
+                                  child: Icon(
+                                    Iconsax.people,
+                                    size: 14,
+                                    color: _C.textTertiary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 14),
-                              Icon(
-                                Iconsax.driver,
-                                size: 14,
-                                color: _C.textTertiary,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                '$bookedSeats/$totalSeats kursi',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: _C.textTertiary,
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    '$ticketCount penumpang',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: _C.textTertiary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          );
-                        },
+                                const SizedBox(width: 10),
+                                Flexible(
+                                  flex: 0,
+                                  child: Icon(
+                                    Iconsax.driver,
+                                    size: 14,
+                                    color: _C.textTertiary,
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    '$bookedSeats/$totalSeats kursi',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: _C.textTertiary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -645,6 +705,45 @@ class _FleetCard extends StatelessWidget {
                         ],
                       ),
                     ],
+                  ),
+
+                  // ── Mulai Perjalanan ──
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DriverTripPage(
+                              fleetId: fleetId,
+                              fleetName: fleetName,
+                              origin: origin,
+                              destination: destination,
+                              vehicleType: vehicleType,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Iconsax.routing_2, size: 18),
+                      label: Text(
+                        'Atur Perjalanan',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _C.primary,
+                        foregroundColor: _C.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

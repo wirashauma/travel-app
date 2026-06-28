@@ -134,6 +134,9 @@ class BookingModel {
   final DateTime? expiryDate;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int? refundAmount;
+  final int? refundPenalty;
+  final String? refundStatus;
 
   const BookingModel({
     this.id,
@@ -154,6 +157,9 @@ class BookingModel {
     this.expiryDate,
     this.createdAt,
     this.updatedAt,
+    this.refundAmount,
+    this.refundPenalty,
+    this.refundStatus,
   });
 
   /// Create from Firestore document snapshot.
@@ -184,6 +190,9 @@ class BookingModel {
       expiryDate: (d['expiryDate'] as Timestamp?)?.toDate(),
       createdAt: (d['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (d['updatedAt'] as Timestamp?)?.toDate(),
+      refundAmount: (d['refundAmount'] as num?)?.toInt(),
+      refundPenalty: (d['refundPenalty'] as num?)?.toInt(),
+      refundStatus: d['refundStatus'] as String?,
     );
   }
 
@@ -211,6 +220,9 @@ class BookingModel {
           ? Timestamp.fromDate(createdAt!)
           : FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
+      if (refundAmount != null) 'refundAmount': refundAmount,
+      if (refundPenalty != null) 'refundPenalty': refundPenalty,
+      if (refundStatus != null) 'refundStatus': refundStatus,
     };
   }
 
@@ -234,6 +246,9 @@ class BookingModel {
     DateTime? expiryDate,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? refundAmount,
+    int? refundPenalty,
+    String? refundStatus,
   }) {
     return BookingModel(
       id: id ?? this.id,
@@ -254,6 +269,9 @@ class BookingModel {
       expiryDate: expiryDate ?? this.expiryDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      refundAmount: refundAmount ?? this.refundAmount,
+      refundPenalty: refundPenalty ?? this.refundPenalty,
+      refundStatus: refundStatus ?? this.refundStatus,
     );
   }
 }

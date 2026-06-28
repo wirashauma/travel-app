@@ -426,7 +426,7 @@ class _TripManifestPageState extends State<TripManifestPage> {
                   children: [
                     _buildInfoChip(Iconsax.clock, time),
                     _buildInfoChipText(Iconsax.calendar_1, date),
-                    _buildInfoChip(Iconsax.bus, _trip.vehiclePlate),
+                    _buildInfoChip(Iconsax.car, _trip.vehiclePlate),
                   ],
                 ),
               ),
@@ -569,7 +569,7 @@ class _TripManifestPageState extends State<TripManifestPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Iconsax.bus, size: 15, color: _C.textTertiary),
+                  Icon(Iconsax.car, size: 15, color: _C.textTertiary),
                   const SizedBox(width: 6),
                   Text(
                     'Denah Kursi',

@@ -311,7 +311,7 @@ class SuperAdminDashboard extends StatelessWidget {
             isLoading: isLoading,
           ),
           StatCardData(
-            icon: Iconsax.bus,
+            icon: Iconsax.car,
             label: 'Armada Aktif',
             value: '...',
             color: _C.info,
@@ -341,7 +341,7 @@ class SuperAdminDashboard extends StatelessWidget {
                   if (fleetSnap.hasData) {
                     final count = fleetSnap.data!.docs.length;
                     stats[2] = StatCardData(
-                      icon: Iconsax.bus,
+                      icon: Iconsax.car,
                       label: 'Armada Aktif',
                       value: NumberFormat('#,###', 'id_ID').format(count),
                       color: _C.info,
@@ -401,7 +401,7 @@ class SuperAdminDashboard extends StatelessWidget {
         ),
       ),
       MenuCardData(
-        icon: Iconsax.bus,
+        icon: Iconsax.car,
         label: 'Manajemen\nArmada',
         color: _C.teal,
         bgColor: _C.teal.withValues(alpha: 0.08),

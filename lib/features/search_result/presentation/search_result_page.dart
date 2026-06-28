@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../../core/models/lng_lat.dart';
 import '../../../core/services/city_coordinates_seeder.dart';
 import '../../../core/services/firestore_dijkstra_service.dart';
+import '../../../core/services/mapbox_directions_service.dart';
 import '../../../core/widgets/custom_route_map.dart';
 import '../../select_fleet/presentation/select_fleet_page.dart';
 
@@ -54,7 +55,7 @@ class SearchResultPage extends StatefulWidget {
 class _SearchResultPageState extends State<SearchResultPage> {
   // ── State ──────────────────────────────────────
   DijkstraResult? _result;
-  List<LatLng> _routeLatLngs = [];
+  List<LngLat> _routeLatLngs = [];
   bool _isLoading = true;
   bool _hasError = false;
 
@@ -77,40 +78,47 @@ class _SearchResultPageState extends State<SearchResultPage> {
         widget.origin,
         widget.destination,
       );
-      // Convert city names → LatLng for the map
-      List<LatLng> latLngs = [];
+      // Convert city names → LngLat for the map
+      List<LngLat> latLngs = [];
       if (result != null) {
-        // Try local static map first, fall back to Firestore
-        Map<String, Map<String, double>>? coordsMap;
-        try {
-          coordsMap = await CityCoordinatesSeeder.fetchAllCoordinates();
-        } catch (_) {
-          coordsMap = null;
-        }
-
+        // 1) Coba lokal dulu (0ms, tanpa network)
+        final missingCities = <String>[];
         for (final cityName in result.path) {
-          // 1) Check Firestore coordinates
-          final firestoreCoords = coordsMap?[cityName];
-          if (firestoreCoords != null) {
-            latLngs.add(
-              LatLng(firestoreCoords['lat']!, firestoreCoords['lng']!),
-            );
-            continue;
-          }
-          // 2) Fallback to static local map
           final localCoords = CityCoordinatesSeeder.getCoordinates(cityName);
           if (localCoords != null) {
-            latLngs.add(LatLng(localCoords['lat']!, localCoords['lng']!));
+            latLngs.add(LngLat(localCoords['lng']!, localCoords['lat']!));
+          } else {
+            missingCities.add(cityName);
           }
+        }
+        // 2) Fallback Firestore hanya untuk kota yang tidak ada di lokal
+        if (missingCities.isNotEmpty) {
+          try {
+            final coordsMap = await CityCoordinatesSeeder.fetchAllCoordinates();
+            for (final cityName in missingCities) {
+              final fc = coordsMap[cityName];
+              if (fc != null) {
+                latLngs.add(LngLat(fc['lng']!, fc['lat']!));
+              }
+            }
+          } catch (_) {}
         }
       }
 
       if (!mounted) return;
+
+      // 3) Tampilkan rute lurus DULU, upgrade ke road route async
       setState(() {
         _result = result;
         _routeLatLngs = latLngs;
         _isLoading = false;
       });
+
+      // 4) Upgrade ke road-following route di background
+      try {
+        final roadRoute = await MapboxDirectionsService.instance.getRoute(latLngs);
+        if (mounted) setState(() => _routeLatLngs = roadRoute);
+      } catch (_) {}
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -711,7 +719,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Iconsax.bus, size: 18),
+            const Icon(Iconsax.car, size: 18),
             const SizedBox(width: 10),
             const Text('Pilih Armada'),
             const SizedBox(width: 6),

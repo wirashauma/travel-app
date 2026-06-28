@@ -1,33 +1,13 @@
-import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
-/// ═══════════════════════════════════════════════════════════════════════
-///  CUSTOM ROUTE MAP — Reusable Google Maps Widget
-///
-///  Menampilkan peta rute Dijkstra dengan:
-///  • Custom silver/retro map style (tema Trust Blue)
-///  • Polyline biru Trust Blue (width: 4)
-///  • Custom Marker hijau (origin) & merah (destination)
-///  • Auto-fit camera bounds (LatLngBounds + padding 50)
-///  • Loading state handling
-///
-///  Usage:
-///  ```dart
-///  CustomRouteMap(
-///    routePoints: [LatLng(3.59, 98.67), LatLng(-0.94, 100.41)],
-///    originName: 'Medan',
-///    destinationName: 'Padang',
-///  )
-///  ```
-/// ═══════════════════════════════════════════════════════════════════════
+import '../models/lng_lat.dart';
 
-// ─────────────────────────────────────────────────────────
-//  COLORS
-// ─────────────────────────────────────────────────────────
 class _C {
   static const Color primary = Color(0xFF0F4C81);
   static const Color bg = Color(0xFFFAFBFD);
@@ -37,103 +17,70 @@ class _C {
   static const Color textTertiary = Color(0xFF94A3B8);
 }
 
-// ─────────────────────────────────────────────────────────
-//  CUSTOM MAP STYLE — Silver/Retro Trust Blue Theme
-//  Muted tones, subtle labels, elegant feel.
-// ─────────────────────────────────────────────────────────
-const String _kMapStyleJson = '''
-[
-  {
-    "elementType": "geometry",
-    "stylers": [{"color": "#f5f5f5"}]
-  },
-  {
-    "elementType": "labels.icon",
-    "stylers": [{"visibility": "off"}]
-  },
-  {
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#616161"}]
-  },
-  {
-    "elementType": "labels.text.stroke",
-    "stylers": [{"color": "#f5f5f5"}]
-  },
-  {
-    "featureType": "administrative",
-    "elementType": "geometry",
-    "stylers": [{"visibility": "off"}]
-  },
-  {
-    "featureType": "administrative.land_parcel",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#bdbdbd"}]
-  },
-  {
-    "featureType": "poi",
-    "stylers": [{"visibility": "off"}]
-  },
-  {
-    "featureType": "road",
-    "elementType": "geometry",
-    "stylers": [{"color": "#ffffff"}]
-  },
-  {
-    "featureType": "road",
-    "elementType": "labels.icon",
-    "stylers": [{"visibility": "off"}]
-  },
-  {
-    "featureType": "road.arterial",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#757575"}]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "geometry",
-    "stylers": [{"color": "#dadada"}]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#616161"}]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#9e9e9e"}]
-  },
-  {
-    "featureType": "transit",
-    "stylers": [{"visibility": "off"}]
-  },
-  {
-    "featureType": "water",
-    "elementType": "geometry",
-    "stylers": [{"color": "#c9d6e3"}]
-  },
-  {
-    "featureType": "water",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#9e9e9e"}]
+// ── Cache global icon bytes (render sekali, pakai banyak) ──
+class _IconCache {
+  static Uint8List? origin;
+  static Uint8List? dest;
+  static Uint8List? dot;
+
+  static Future<void> ensure() async {
+    if (origin != null) return;
+    origin = await _renderPin(const Color(0xFF059669));
+    dest = await _renderPin(Colors.red);
+    dot = await _renderDot(const Color(0xFFF59E0B));
   }
-]
-''';
 
+  static Future<Uint8List> _renderPin(Color color, {double size = 72}) async {
+    final w = size * 0.7;
+    final h = size;
+    final cx = w / 2;
+    final r = w / 2;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    canvas.drawCircle(Offset(cx, r), r, Paint()..color = color);
+    final path = Path()
+      ..moveTo(cx, h)
+      ..lineTo(0, r * 1.05)
+      ..lineTo(w, r * 1.05)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
+    canvas.drawCircle(Offset(cx, r), r * 0.4, Paint()..color = Colors.white);
+
+    final img = await recorder.endRecording().toImage(w.toInt(), h.toInt());
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    return data!.buffer.asUint8List();
+  }
+
+  static Future<Uint8List> _renderDot(Color color, {double size = 28}) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    canvas.drawCircle(Offset(size / 2, size / 2), size / 2, Paint()..color = color);
+    canvas.drawCircle(
+      Offset(size / 2, size / 2),
+      size / 2 - 3,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5,
+    );
+
+    final img = await recorder.endRecording().toImage(size.toInt(), size.toInt());
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    return data!.buffer.asUint8List();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CustomRouteMap — Map widget untuk menampilkan rute
+// ═══════════════════════════════════════════════════════
 class CustomRouteMap extends StatefulWidget {
-  /// List of LatLng points forming the Dijkstra route path.
-  final List<LatLng> routePoints;
-
-  /// Display name for origin city.
+  final List<LngLat> routePoints;
   final String originName;
-
-  /// Display name for destination city.
   final String destinationName;
-
-  /// Height of the map widget.
   final double height;
-
-  /// Border radius (default 16).
   final double borderRadius;
 
   const CustomRouteMap({
@@ -150,15 +97,18 @@ class CustomRouteMap extends StatefulWidget {
 }
 
 class _CustomRouteMapState extends State<CustomRouteMap> {
-  final Completer<GoogleMapController> _controller = Completer();
-  bool _isMapReady = false;
-  Set<Marker> _markers = {};
-  Set<Polyline> _polylines = {};
+  MapboxMap? _mapboxMap;
+  PointAnnotationManager? _pointManager;
+  PolylineAnnotationManager? _polylineManager;
+
+  bool _managersReady = false;
+  bool _styleLoaded = false;
+  bool _annotationsDrawn = false;
 
   @override
   void initState() {
     super.initState();
-    _buildMapElements();
+    _IconCache.ensure();
   }
 
   @override
@@ -167,142 +117,143 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
     if (oldWidget.routePoints != widget.routePoints ||
         oldWidget.originName != widget.originName ||
         oldWidget.destinationName != widget.destinationName) {
-      _buildMapElements();
-      _fitBounds();
+      _annotationsDrawn = false;
+      _tryDraw();
     }
   }
 
-  /// Build markers and polylines from route points.
-  Future<void> _buildMapElements() async {
-    if (widget.routePoints.isEmpty) return;
+  Future<void> _onMapCreated(MapboxMap map) async {
+    _mapboxMap = map;
+    _pointManager = await map.annotations.createPointAnnotationManager();
+    _polylineManager = await map.annotations.createPolylineAnnotationManager();
+    _managersReady = true;
+    _tryDraw();
+  }
 
+  void _onStyleLoaded(_) {
+    if (_styleLoaded) return;
+    _styleLoaded = true;
+    _tryDraw();
+  }
+
+  void _tryDraw() {
+    if (_annotationsDrawn) return;
+    if (!_managersReady || !_styleLoaded) return;
+    if (widget.routePoints.isEmpty) return;
+    if (_IconCache.origin == null || _IconCache.dest == null || _IconCache.dot == null) return;
+    _annotationsDrawn = true;
+    _rebuildAnnotations();
+    _fitBounds();
+  }
+
+  Future<void> _rebuildAnnotations() async {
+    if (widget.routePoints.isEmpty) return;
+    await _polylineManager?.deleteAll();
+    await _pointManager?.deleteAll();
+
+    final coords =
+        widget.routePoints.map((p) => Position(p.lng, p.lat)).toList();
+
+    // Polyline
+    await _polylineManager?.create(PolylineAnnotationOptions(
+      geometry: LineString(coordinates: coords),
+      lineColor: _C.primary.toARGB32(),
+      lineWidth: 4.5,
+      lineJoin: LineJoin.ROUND,
+    ));
+    await _polylineManager?.setLineCap(LineCap.ROUND);
+
+    // Origin marker
     final origin = widget.routePoints.first;
-    final destination = widget.routePoints.last;
+    await _pointManager?.create(PointAnnotationOptions(
+      geometry: Point(coordinates: Position(origin.lng, origin.lat)),
+      image: _IconCache.origin,
+      iconSize: 0.45,
+      textField: widget.originName,
+      textOffset: [0.0, 2.2],
+      textSize: 11.0,
+      textColor: _C.textPrimary.toARGB32(),
+      textHaloColor: Colors.white.toARGB32(),
+      textHaloWidth: 1.5,
+    ));
 
-    // Create custom marker bitmaps
-    final originIcon = await _createCustomMarkerBitmap(
-      label: widget.originName,
-      color: const Color(0xFF059669), // Green
-      isOrigin: true,
-    );
-    final destIcon = await _createCustomMarkerBitmap(
-      label: widget.destinationName,
-      color: const Color(0xFFDC2626), // Red
-      isOrigin: false,
-    );
+    // Destination marker
+    final dest = widget.routePoints.last;
+    await _pointManager?.create(PointAnnotationOptions(
+      geometry: Point(coordinates: Position(dest.lng, dest.lat)),
+      image: _IconCache.dest,
+      iconSize: 0.45,
+      textField: widget.destinationName,
+      textOffset: [0.0, 2.2],
+      textSize: 11.0,
+      textColor: _C.textPrimary.toARGB32(),
+      textHaloColor: Colors.white.toARGB32(),
+      textHaloWidth: 1.5,
+    ));
 
-    final markers = <Marker>{
-      Marker(
-        markerId: const MarkerId('origin'),
-        position: origin,
-        icon: originIcon,
-        infoWindow: InfoWindow(
-          title: widget.originName,
-          snippet: 'Titik Keberangkatan',
-        ),
-      ),
-      Marker(
-        markerId: const MarkerId('destination'),
-        position: destination,
-        icon: destIcon,
-        infoWindow: InfoWindow(
-          title: widget.destinationName,
-          snippet: 'Titik Tujuan',
-        ),
-      ),
-    };
-
-    // Add transit markers for intermediate points
-    for (int i = 1; i < widget.routePoints.length - 1; i++) {
-      markers.add(
-        Marker(
-          markerId: MarkerId('transit_$i'),
-          position: widget.routePoints[i],
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueOrange,
-          ),
-          infoWindow: InfoWindow(title: 'Transit $i'),
-        ),
-      );
+    // Waypoint transit (titik tengah)
+    if (widget.routePoints.length > 2) {
+      for (int i = 1; i < widget.routePoints.length - 1; i++) {
+        final p = widget.routePoints[i];
+        await _pointManager?.create(PointAnnotationOptions(
+          geometry: Point(coordinates: Position(p.lng, p.lat)),
+          image: _IconCache.dot,
+          iconSize: 0.4,
+        ));
+      }
     }
 
-    final polylines = <Polyline>{
-      Polyline(
-        polylineId: const PolylineId('dijkstra_route'),
-        points: widget.routePoints,
-        color: _C.primary, // Trust Blue
-        width: 4,
-        patterns: [],
-        geodesic: true,
-        jointType: JointType.round,
-        startCap: Cap.roundCap,
-        endCap: Cap.roundCap,
-      ),
-    };
-
-    if (mounted) {
-      setState(() {
-        _markers = markers;
-        _polylines = polylines;
-      });
-    }
+    if (mounted) setState(() {});
   }
 
-  /// Create a custom marker bitmap with colored pin.
-  Future<BitmapDescriptor> _createCustomMarkerBitmap({
-    required String label,
-    required Color color,
-    required bool isOrigin,
-  }) async {
-    // Use default colored markers for reliability
-    if (isOrigin) {
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
-    } else {
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+  // ── Calc helpers ──────────────────────────────────────
+  LngLat _calcCenter() {
+    if (widget.routePoints.isEmpty) return const LngLat(117.0, -2.5);
+    double s = widget.routePoints.first.lat, n = widget.routePoints.first.lat;
+    double w = widget.routePoints.first.lng, e = widget.routePoints.first.lng;
+    for (final p in widget.routePoints) {
+      if (p.lat < s) s = p.lat;
+      if (p.lat > n) n = p.lat;
+      if (p.lng < w) w = p.lng;
+      if (p.lng > e) e = p.lng;
     }
+    return LngLat((w + e) / 2, (s + n) / 2);
   }
 
-  /// Fit camera bounds to show all route points.
-  Future<void> _fitBounds() async {
-    if (widget.routePoints.isEmpty) return;
-    if (!_controller.isCompleted) return;
-
-    final controller = await _controller.future;
-    final bounds = _calculateBounds(widget.routePoints);
-    await controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50.0));
+  double _calcZoom() {
+    if (widget.routePoints.length < 2) return 5.0;
+    double s = widget.routePoints.first.lat, n = widget.routePoints.first.lat;
+    double w = widget.routePoints.first.lng, e = widget.routePoints.first.lng;
+    for (final p in widget.routePoints) {
+      if (p.lat < s) s = p.lat;
+      if (p.lat > n) n = p.lat;
+      if (p.lng < w) w = p.lng;
+      if (p.lng > e) e = p.lng;
+    }
+    final maxDiff = (n - s) > (e - w) ? (n - s) : (e - w);
+    if (maxDiff <= 0) return 10.0;
+    return (12.0 - maxDiff * 1.5).clamp(4.0, 12.0);
   }
 
-  /// Calculate LatLngBounds from a list of points.
-  LatLngBounds _calculateBounds(List<LatLng> points) {
-    double south = points.first.latitude;
-    double north = points.first.latitude;
-    double west = points.first.longitude;
-    double east = points.first.longitude;
-
-    for (final point in points) {
-      if (point.latitude < south) south = point.latitude;
-      if (point.latitude > north) north = point.latitude;
-      if (point.longitude < west) west = point.longitude;
-      if (point.longitude > east) east = point.longitude;
-    }
-
-    return LatLngBounds(
-      southwest: LatLng(south, west),
-      northeast: LatLng(north, east),
+  void _fitBounds() {
+    if (widget.routePoints.isEmpty || _mapboxMap == null) return;
+    final center = _calcCenter();
+    _mapboxMap!.flyTo(
+      CameraOptions(
+        center: Point(coordinates: Position(center.lng, center.lat)),
+        zoom: _calcZoom(),
+      ),
+      MapAnimationOptions(duration: 300),
     );
   }
-
-  // ── Initial camera — center of Indonesia (Sumatera focus)
-  static const _initialCamera = CameraPosition(
-    target: LatLng(0.5, 101.5), // Center of Sumatera
-    zoom: 5,
-  );
 
   @override
   Widget build(BuildContext context) {
     if (widget.routePoints.isEmpty) {
       return _buildEmptyMap();
     }
+
+    final center = _calcCenter();
 
     return Container(
       height: widget.height,
@@ -321,139 +272,92 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
         borderRadius: BorderRadius.circular(widget.borderRadius),
         child: Stack(
           children: [
-            // ── Google Map ──
-            GoogleMap(
-              initialCameraPosition: _initialCamera,
-              style: _kMapStyleJson,
-              markers: _markers,
-              polylines: _polylines,
-              mapType: MapType.normal,
-              myLocationEnabled: false,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-              compassEnabled: false,
-              rotateGesturesEnabled: false,
-              tiltGesturesEnabled: false,
-              liteModeEnabled: false,
-              onMapCreated: (GoogleMapController controller) async {
-                _controller.complete(controller);
-                // Fit bounds after map is created
-                if (widget.routePoints.length >= 2) {
-                  final bounds = _calculateBounds(widget.routePoints);
-                  await Future.delayed(const Duration(milliseconds: 300));
-                  await controller.animateCamera(
-                    CameraUpdate.newLatLngBounds(bounds, 50.0),
-                  );
-                }
-                if (mounted) setState(() => _isMapReady = true);
-              },
+            // ── Map tampil langsung, tanpa loading overlay ──
+            MapWidget(
+              key: const ValueKey('route_map'),
+              mapOptions: MapOptions(
+                pixelRatio: MediaQuery.of(context).devicePixelRatio,
+                constrainMode: ConstrainMode.HEIGHT_ONLY,
+                orientation: NorthOrientation.UPWARDS,
+              ),
+              viewport: CameraViewportState(
+                center: Point(
+                    coordinates: Position(center.lng, center.lat)),
+                zoom: _calcZoom(),
+              ),
+              styleUri: 'mapbox://styles/mapbox/streets-v12',
+              onMapCreated: _onMapCreated,
+              onStyleLoadedListener: _onStyleLoaded,
             ),
 
-            // ── Loading overlay ──
-            if (!_isMapReady)
-              Container(
-                color: _C.bg,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: _C.primary.withValues(alpha: 0.6),
-                        ),
+            // ── Label rute (overlay atas) ──────────────
+            Positioned(
+              top: 10,
+              left: 10,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _C.white.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Iconsax.routing_2, size: 13, color: _C.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${widget.originName} → ${widget.destinationName}',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: _C.textPrimary,
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Memuat peta...',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: _C.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+            ),
 
-            // ── Route label overlay (top-left) ──
-            if (_isMapReady)
-              Positioned(
-                top: 10,
-                left: 10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _C.white.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Iconsax.routing_2, size: 13, color: _C.primary),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${widget.originName} → ${widget.destinationName}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: _C.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
+            // ── Legenda ───────────────────────────────
+            Positioned(
+              bottom: 10,
+              left: 10,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: _C.white.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ),
-
-            // ── Legend (bottom-left) ──
-            if (_isMapReady)
-              Positioned(
-                bottom: 10,
-                left: 10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _C.white.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(6),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _legendDot(const Color(0xFF059669), 'Asal'),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _legendDot(const Color(0xFF059669), 'Asal'),
+                    const SizedBox(width: 10),
+                    _legendDot(const Color(0xFFDC2626), 'Tujuan'),
+                    if (widget.routePoints.length > 2) ...[
                       const SizedBox(width: 10),
-                      _legendDot(const Color(0xFFDC2626), 'Tujuan'),
-                      if (widget.routePoints.length > 2) ...[
-                        const SizedBox(width: 10),
-                        _legendDot(const Color(0xFFF59E0B), 'Transit'),
-                      ],
+                      _legendDot(const Color(0xFFF59E0B), 'Transit'),
                     ],
-                  ),
+                  ],
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -494,11 +398,8 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Iconsax.map,
-              size: 32,
-              color: _C.textTertiary.withValues(alpha: 0.4),
-            ),
+            Icon(Iconsax.map,
+                size: 32, color: _C.textTertiary.withValues(alpha: 0.4)),
             const SizedBox(height: 8),
             Text(
               'Tidak ada data rute',
@@ -512,7 +413,7 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
 
   @override
   void dispose() {
-    _controller.future.then((c) => c.dispose());
+    _mapboxMap?.dispose();
     super.dispose();
   }
 }

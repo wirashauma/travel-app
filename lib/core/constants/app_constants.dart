@@ -7,18 +7,18 @@ class AppConstants {
   static const int totalFleet = 10;
   static const int seatsPerVehicle = 8;
 
-  // Dummy Cities
+  // Dummy Cities (Sumatera Barat)
   static const List<String> cities = [
-    'Jakarta',
-    'Bandung',
-    'Semarang',
-    'Yogyakarta',
-    'Surabaya',
-    'Malang',
-    'Cirebon',
-    'Purwokerto',
-    'Solo',
-    'Madiun',
+    'Padang',
+    'Bukittinggi',
+    'Payakumbuh',
+    'Batusangkar',
+    'Pariaman',
+    'Padang Panjang',
+    'Sawahlunto',
+    'Solok',
+    'Lubuk Basung',
+    'Dharmasraya',
   ];
 
   // Animation durations

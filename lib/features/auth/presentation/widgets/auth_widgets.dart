@@ -319,7 +319,7 @@ class AuthHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(
-              Icons.directions_bus_rounded,
+              Icons.directions_car_rounded,
               size: 30,
               color: Colors.white,
             ),

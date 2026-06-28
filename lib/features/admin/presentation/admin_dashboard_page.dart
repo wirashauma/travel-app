@@ -319,7 +319,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Iconsax.bus, size: 56, color: _C.textHint),
+                Icon(Iconsax.car, size: 56, color: _C.textHint),
                 const SizedBox(height: 16),
                 Text(
                   'Belum ada armada ditugaskan',
@@ -572,7 +572,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
     final stats = [
       _StatItem(
-        icon: Iconsax.bus,
+        icon: Iconsax.car,
         label: 'Total Trip',
         value: '${allTrips.length}',
         color: _C.primary,
@@ -672,7 +672,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Iconsax.bus, size: 56, color: _C.textHint),
+            Icon(Iconsax.car, size: 56, color: _C.textHint),
             const SizedBox(height: 16),
             Text(
               emptyMessage,
@@ -907,7 +907,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   ),
                   child: Row(
                     children: [
-                      Icon(Iconsax.bus, size: 15, color: _C.textTertiary),
+                      Icon(Iconsax.car, size: 15, color: _C.textTertiary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
