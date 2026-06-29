@@ -537,17 +537,18 @@ class _FleetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final targetDate = DateFormat('dd MMM yyyy').format(departureDate);
     // ── StreamBuilder: hitung kursi terpakai dari bookings ──
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('bookings')
           .where('fleetId', isEqualTo: fleetId)
+          .where('departureDate', isEqualTo: targetDate)
           .where('status', whereIn: ['pending', 'paid', 'validated', 'used'])
           .snapshots(),
       builder: (context, bookingSnap) {
         int bookedSeatCount = 0;
         if (bookingSnap.hasData) {
-          final targetDate = DateFormat('dd MMM yyyy').format(departureDate);
           for (final doc in bookingSnap.data!.docs) {
             final d = doc.data() as Map<String, dynamic>;
             final status = d['status'] as String? ?? '';

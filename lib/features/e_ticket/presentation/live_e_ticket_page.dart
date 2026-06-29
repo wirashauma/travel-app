@@ -278,6 +278,14 @@ class _LiveTicketCard extends StatelessWidget {
           bgColor: _C.errorBg,
           borderColor: _C.error.withValues(alpha: 0.3),
         );
+      case BookingStatus.noShow:
+        return _StatusBadge(
+          label: 'Tidak Datang',
+          icon: Iconsax.user_remove,
+          color: _C.error,
+          bgColor: _C.errorBg,
+          borderColor: _C.error.withValues(alpha: 0.3),
+        );
       case BookingStatus.pending:
         return _StatusBadge(
           label: 'Pending',

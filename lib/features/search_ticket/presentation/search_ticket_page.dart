@@ -1219,12 +1219,14 @@ class _FleetCard extends StatelessWidget {
     final totalSeats = (data['totalSeats'] as num?)?.toInt() ?? 0;
     final description = data['description'] as String? ?? '';
     final totalPrice = estimatedPrice * passengers;
+    final targetDate = DateFormat('dd MMM yyyy').format(date);
 
     // ── Real-time seat availability from bookings ──
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('bookings')
           .where('fleetId', isEqualTo: docId)
+          .where('departureDate', isEqualTo: targetDate)
           .where('status',
               whereIn: ['pending', 'paid', 'validated', 'used']).snapshots(),
       builder: (context, bookingSnap) {

@@ -104,7 +104,7 @@ class _FleetManifestPageState extends State<FleetManifestPage>
         stream: FirebaseFirestore.instance
             .collection('bookings')
             .where('fleetId', isEqualTo: widget.fleetId)
-            .where('status', whereIn: ['paid', 'validated', 'used'])
+            .where('status', whereIn: ['paid', 'validated', 'used', 'no_show'])
             .snapshots(),
         builder: (context, snapshot) {
           final bookingDocs = snapshot.data?.docs ?? [];
@@ -1540,6 +1540,7 @@ class _CompactPassengerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUsed      = booking.status == BookingStatus.used;
+    final isNoShow    = booking.status == BookingStatus.noShow;
     final isValidated = booking.status == BookingStatus.validated;
 
     final Color statusColor;
@@ -1550,6 +1551,10 @@ class _CompactPassengerCard extends StatelessWidget {
       statusColor = _C.success;
       statusIcon  = Iconsax.tick_circle;
       statusLabel = 'Sudah Naik';
+    } else if (isNoShow) {
+      statusColor = _C.error;
+      statusIcon  = Iconsax.user_remove;
+      statusLabel = 'Tidak Datang';
     } else if (isValidated) {
       statusColor = _C.info;
       statusIcon  = Iconsax.shield_tick;

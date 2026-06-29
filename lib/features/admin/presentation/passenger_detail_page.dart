@@ -49,24 +49,28 @@ class PassengerDetailPage extends StatelessWidget {
   Color get _statusColor {
     if (booking.status == BookingStatus.used) return _C.success;
     if (booking.status == BookingStatus.validated) return _C.info;
+    if (booking.status == BookingStatus.noShow) return _C.error;
     return _C.warning;
   }
 
   Color get _statusBg {
     if (booking.status == BookingStatus.used) return _C.successBg;
     if (booking.status == BookingStatus.validated) return _C.infoBg;
+    if (booking.status == BookingStatus.noShow) return const Color(0xFFFEE2E2);
     return _C.warningBg;
   }
 
   IconData get _statusIcon {
     if (booking.status == BookingStatus.used) return Iconsax.tick_circle;
     if (booking.status == BookingStatus.validated) return Iconsax.shield_tick;
+    if (booking.status == BookingStatus.noShow) return Iconsax.user_remove;
     return Iconsax.clock;
   }
 
   String get _statusLabel {
     if (booking.status == BookingStatus.used) return 'Sudah Naik';
     if (booking.status == BookingStatus.validated) return 'Tervalidasi';
+    if (booking.status == BookingStatus.noShow) return 'Tidak Datang';
     return 'Belum Check-in';
   }
 
@@ -712,8 +716,10 @@ class PassengerDetailPage extends StatelessWidget {
   // ─────────────────────────────────────────────────────
   Widget _buildBottomBar(BuildContext context, double bottomPad) {
     final isUsed = booking.status == BookingStatus.used;
+    final isNoShow = booking.status == BookingStatus.noShow;
     final isValidated = booking.status == BookingStatus.validated;
-    final canMarkDone = !isUsed;
+    final canMarkDone = !isUsed && !isNoShow;
+    final canMarkNoShow = (booking.status == BookingStatus.paid || booking.status == BookingStatus.validated);
 
     return Container(
       padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPad + 12),
@@ -756,6 +762,33 @@ class PassengerDetailPage extends StatelessWidget {
             ),
             const SizedBox(width: 12),
           ],
+          // No-Show Button
+          if (canMarkNoShow) ...[
+            SizedBox(
+              height: 50,
+              width: 120,
+              child: OutlinedButton.icon(
+                onPressed: () => _markAsNoShow(context),
+                icon: const Icon(Iconsax.user_remove, size: 18, color: _C.error),
+                label: Text(
+                  'No-Show',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: _C.error,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _C.error,
+                  side: const BorderSide(color: _C.error, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
           // Mark as done button
           Expanded(
             flex: 2,
@@ -771,9 +804,11 @@ class PassengerDetailPage extends StatelessWidget {
                 label: Text(
                   isUsed
                       ? 'Sudah Dijemput'
-                      : isValidated
-                          ? 'Tandai Selesai'
-                          : 'Konfirmasi Naik',
+                      : isNoShow
+                          ? 'Tidak Datang'
+                          : isValidated
+                              ? 'Tandai Selesai'
+                              : 'Konfirmasi Naik',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -781,11 +816,11 @@ class PassengerDetailPage extends StatelessWidget {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isUsed
+                  backgroundColor: isUsed || isNoShow
                       ? const Color(0xFF94A3B8)
                       : _C.success,
                   disabledBackgroundColor: const Color(0xFF94A3B8),
-                  elevation: isUsed ? 0 : 4,
+                  elevation: isUsed || isNoShow ? 0 : 4,
                   shadowColor: _C.success.withValues(alpha: 0.3),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -816,6 +851,82 @@ class PassengerDetailPage extends StatelessWidget {
               style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white),
             ),
             backgroundColor: _C.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal: $e'),
+            backgroundColor: _C.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _markAsNoShow(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Tandai No-Show?',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF0F172A),
+            fontSize: 16,
+          ),
+        ),
+        content: Text(
+          'Apakah Anda yakin penumpang ini tidak datang (absen)? Tindakan ini tidak dapat dibatalkan.',
+          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF475569), height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.inter(color: _C.textTertiary, fontWeight: FontWeight.w600),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _C.error,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(
+              'Ya, Absen',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(booking.id)
+          .update({'status': 'no_show', 'updatedAt': FieldValue.serverTimestamp()});
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${booking.userName} ditandai sebagai No-Show.',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white),
+            ),
+            backgroundColor: _C.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),

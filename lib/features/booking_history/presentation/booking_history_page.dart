@@ -304,6 +304,8 @@ class _BookingCard extends StatelessWidget {
         return _C.teal;
       case BookingStatus.cancelled:
         return _C.danger;
+      case BookingStatus.noShow:
+        return _C.danger;
     }
   }
 
@@ -321,6 +323,8 @@ class _BookingCard extends StatelessWidget {
         return 'Selesai';
       case BookingStatus.cancelled:
         return 'Dibatalkan';
+      case BookingStatus.noShow:
+        return 'Tidak Datang';
     }
   }
 
@@ -338,6 +342,8 @@ class _BookingCard extends StatelessWidget {
         return Iconsax.verify;
       case BookingStatus.cancelled:
         return Iconsax.close_circle;
+      case BookingStatus.noShow:
+        return Iconsax.user_remove;
     }
   }
 

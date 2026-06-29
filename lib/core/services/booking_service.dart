@@ -44,9 +44,9 @@ class BookingService {
   /// Duration for pending booking expiry.
   static const Duration kExpiryDuration = Duration(minutes: 15);
 
-  /// Generate the seat_locks document ID for a fleet+date pair.
-  static String _lockDocId(String fleetId, String departureDate) =>
-      '${fleetId}_${departureDate.replaceAll(' ', '_')}';
+  /// Generate the seat_locks document ID for a fleet+date+time.
+  static String _lockDocId(String fleetId, String departureDate, String departureTime) =>
+      '${fleetId}_${departureDate.replaceAll(' ', '_')}_${departureTime.replaceAll(' ', '_')}';
 
   // ─────────────────────────────────────────────────────
   //  CREATE BOOKING — Atomic Transaction with Seat Locks
@@ -64,7 +64,7 @@ class BookingService {
     final now = DateTime.now();
     final expiryDate = now.add(kExpiryDuration);
 
-    final lockDocId = _lockDocId(booking.fleetId, booking.departureDate);
+    final lockDocId = _lockDocId(booking.fleetId, booking.departureDate, booking.departureTime);
     final lockRef = _db.collection('seat_locks').doc(lockDocId);
     final fleetRef = _db.collection('fleets').doc(booking.fleetId);
     final bookingsRef = _db.collection('bookings');
@@ -219,6 +219,7 @@ class BookingService {
       if (currentStatus == 'pending') {
         final fleetId = data['fleetId'] as String? ?? '';
         final dateStr = data['departureDate'] as String? ?? '';
+        final depTime = data['departureTime'] as String? ?? '';
         final seatLabels =
             List<String>.from(data['selectedSeatLabels'] ?? []);
 
@@ -227,9 +228,10 @@ class BookingService {
         DocumentReference? lockRef;
         if (fleetId.isNotEmpty &&
             dateStr.isNotEmpty &&
+            depTime.isNotEmpty &&
             seatLabels.isNotEmpty) {
           lockRef =
-              _db.collection('seat_locks').doc(_lockDocId(fleetId, dateStr));
+              _db.collection('seat_locks').doc(_lockDocId(fleetId, dateStr, depTime));
           lockSnap = await transaction.get(lockRef);
         }
 
@@ -300,6 +302,7 @@ class BookingService {
 
       final fleetId = data['fleetId'] as String? ?? '';
       final dateStr = data['departureDate'] as String? ?? '';
+      final depTime = data['departureTime'] as String? ?? '';
       final seatLabels =
           List<String>.from(data['selectedSeatLabels'] ?? []);
       final seatsBooked =
@@ -310,9 +313,9 @@ class BookingService {
       // Read seat_locks BEFORE any write
       DocumentSnapshot? lockSnap;
       DocumentReference? lockRef;
-      if (fleetId.isNotEmpty && dateStr.isNotEmpty) {
+      if (fleetId.isNotEmpty && dateStr.isNotEmpty && depTime.isNotEmpty) {
         lockRef =
-            _db.collection('seat_locks').doc(_lockDocId(fleetId, dateStr));
+            _db.collection('seat_locks').doc(_lockDocId(fleetId, dateStr, depTime));
         lockSnap = await transaction.get(lockRef);
       }
 
@@ -415,15 +418,16 @@ class BookingService {
 
       final fleetId = data['fleetId'] as String? ?? '';
       final oldDateStr = data['departureDate'] as String? ?? '';
+      final oldTimeStr = data['departureTime'] as String? ?? '';
       final seatLabels =
           List<String>.from(data['selectedSeatLabels'] ?? []);
 
-      if (fleetId.isEmpty || oldDateStr.isEmpty) return;
+      if (fleetId.isEmpty || oldDateStr.isEmpty || oldTimeStr.isEmpty) return;
 
       final oldLockRef =
-          _db.collection('seat_locks').doc(_lockDocId(fleetId, oldDateStr));
+          _db.collection('seat_locks').doc(_lockDocId(fleetId, oldDateStr, oldTimeStr));
       final newLockRef =
-          _db.collection('seat_locks').doc(_lockDocId(fleetId, newDepartureDate));
+          _db.collection('seat_locks').doc(_lockDocId(fleetId, newDepartureDate, newDepartureTime));
 
       // Read both lock docs
       final oldLockSnap = await transaction.get(oldLockRef);

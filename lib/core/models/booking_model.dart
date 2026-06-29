@@ -74,7 +74,8 @@ enum BookingStatus {
   validated, // ticket pre-validated before departure day
   used,       // ticket scanned on departure day
   completed,  // legacy — kept for backward compat
-  cancelled;
+  cancelled,
+  noShow;
 
   String get value {
     switch (this) {
@@ -90,6 +91,8 @@ enum BookingStatus {
         return 'completed';
       case BookingStatus.cancelled:
         return 'cancelled';
+      case BookingStatus.noShow:
+        return 'no_show';
     }
   }
 
@@ -108,6 +111,9 @@ enum BookingStatus {
         return BookingStatus.completed;
       case 'cancelled':
         return BookingStatus.cancelled;
+      case 'no_show':
+      case 'noshow':
+        return BookingStatus.noShow;
       default:
         return BookingStatus.pending;
     }

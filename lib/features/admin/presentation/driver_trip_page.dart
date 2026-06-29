@@ -211,7 +211,7 @@ class _DriverTripPageState extends State<DriverTripPage> {
       final snap = await FirebaseFirestore.instance
           .collection('bookings')
           .where('fleetId', isEqualTo: widget.fleetId)
-          .where('status', whereIn: ['paid', 'validated', 'used'])
+          .where('status', whereIn: ['paid', 'validated', 'used', 'no_show'])
           .get();
 
       final filteredBookings = snap.docs
@@ -221,7 +221,11 @@ class _DriverTripPageState extends State<DriverTripPage> {
                         b.departureDate == todayStr)
           .toList();
 
-      final pendingPickups = filteredBookings.where((b) => b.status != BookingStatus.used && b.status != BookingStatus.validated).toList();
+      final pendingPickups = filteredBookings.where((b) => 
+        b.status != BookingStatus.used && 
+        b.status != BookingStatus.validated &&
+        b.status != BookingStatus.noShow
+      ).toList();
 
       if (pendingPickups.isNotEmpty) {
         if (mounted) {

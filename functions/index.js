@@ -207,17 +207,110 @@ exports.midtransWebhook = functions.https.onRequest(async (req, res) => {
     }
 
     if (newStatus) {
-      const updates = {
-        status: newStatus,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      };
+      await admin.firestore().runTransaction(async (t) => {
+        const bSnap = await t.get(bookingRef);
+        if (!bSnap.exists) return;
+        const bData = bSnap.data();
+        const currentStatus = bData.status || '';
 
-      if (newStatus === 'paid') {
-        updates.paidAt = admin.firestore.FieldValue.serverTimestamp();
-      }
+        const bookingUpdates = {
+          status: newStatus,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
 
-      await bookingRef.update(updates);
-      functions.logger.info('Booking status updated', { orderId, newStatus });
+        if (newStatus === 'paid') {
+          bookingUpdates.paidAt = admin.firestore.FieldValue.serverTimestamp();
+        }
+
+        const fleetId = bData.fleetId || '';
+        const departureDate = bData.departureDate || '';
+        const departureTime = bData.departureTime || '';
+        const seatLabels = bData.selectedSeatLabels || [];
+        const seatsBooked = bData.seatsBooked || seatLabels.length;
+        const totalPrice = bData.totalPrice || 0;
+
+        let lockRef = null;
+        let lockSnap = null;
+        if (fleetId && departureDate && departureTime) {
+          const datePart = departureDate.replace(/ /g, '_');
+          const timePart = departureTime.replace(/ /g, '_');
+          const lockDocId = `${fleetId}_${datePart}_${timePart}`;
+          lockRef = admin.firestore().collection('seat_locks').doc(lockDocId);
+          lockSnap = await t.get(lockRef);
+        }
+
+        let fleetRef = null;
+        let fleetSnap = null;
+        if (fleetId) {
+          fleetRef = admin.firestore().collection('fleets').doc(fleetId);
+          fleetSnap = await t.get(fleetRef);
+        }
+
+        if (newStatus === 'paid' && currentStatus === 'pending') {
+          if (lockSnap && lockSnap.exists && lockRef) {
+            const seats = lockSnap.data().seats || {};
+            const updatedSeats = { ...seats };
+            let changed = false;
+            for (const seat of seatLabels) {
+              if (updatedSeats[seat] && updatedSeats[seat].bookingId === orderId) {
+                updatedSeats[seat] = {
+                  bookingId: orderId,
+                  status: 'paid',
+                };
+                changed = true;
+              }
+            }
+            if (changed) {
+              t.update(lockRef, { seats: updatedSeats });
+            }
+          }
+        } else if (newStatus === 'cancelled' && (currentStatus === 'pending' || currentStatus === 'paid')) {
+          let updatedSeats = null;
+          if (lockSnap && lockSnap.exists && lockRef) {
+            const seats = lockSnap.data().seats || {};
+            updatedSeats = { ...seats };
+            let changed = false;
+            for (const seat of seatLabels) {
+              if (updatedSeats[seat] && updatedSeats[seat].bookingId === orderId) {
+                delete updatedSeats[seat];
+                changed = true;
+              }
+            }
+            if (changed) {
+              t.update(lockRef, { seats: updatedSeats });
+            }
+          }
+
+          if (fleetSnap && fleetSnap.exists && fleetRef) {
+            const fleetData = fleetSnap.data();
+            const totalSeats = fleetData.totalSeats || 0;
+            const remainingSeats = updatedSeats || {};
+            let activeLocks = 0;
+            for (const seatKey in remainingSeats) {
+              const entry = remainingSeats[seatKey];
+              const st = entry.status || '';
+              if (['paid', 'used', 'validated', 'completed', 'pending'].includes(st)) {
+                activeLocks++;
+              }
+            }
+            const newAvailableSeats = Math.max(0, Math.min(totalSeats, totalSeats - activeLocks));
+            t.update(fleetRef, {
+              availableSeats: newAvailableSeats,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+
+          if (currentStatus === 'paid') {
+            bookingUpdates.refundAmount = 0;
+            bookingUpdates.refundPenalty = totalPrice;
+            bookingUpdates.refundStatus = 'forfeited';
+            bookingUpdates.refundProcessedAt = admin.firestore.FieldValue.serverTimestamp();
+          }
+        }
+
+        t.update(bookingRef, bookingUpdates);
+      });
+      functions.logger.info('Booking status updated via transaction', { orderId, newStatus });
     }
 
     res.status(200).json({ ok: true });

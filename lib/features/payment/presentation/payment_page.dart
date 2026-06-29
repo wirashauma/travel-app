@@ -152,6 +152,7 @@ class _PaymentPageState extends State<PaymentPage> {
           );
         }
       case BookingStatus.cancelled:
+      case BookingStatus.noShow:
         _timer.cancel();
         _bookingSub?.cancel();
         if (mounted) {

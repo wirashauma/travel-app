@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import '../../../core/services/firestore_dijkstra_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -959,15 +960,18 @@ class _FleetCard extends StatelessWidget {
     final name = data['name'] as String? ?? 'Armada Tanpa Nama';
     final imageUrl = data['imageUrl'] as String? ?? _kDefaultFleetImage;
     final totalSeats = (data['totalSeats'] as num?)?.toInt() ?? 0;
+    final todayDate = DateFormat('dd MMM yyyy').format(DateTime.now());
+
     // ── StreamBuilder: hitung kursi terpakai dari bookings ──
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('bookings')
           .where('fleetId', isEqualTo: docId)
+          .where('departureDate', isEqualTo: todayDate)
           .where('status',
               whereIn: ['pending', 'paid', 'validated', 'used']).snapshots(),
       builder: (context, bookingSnap) {
-        // Hitung total kursi terpakai dari SEMUA booking aktif
+        // Hitung total kursi terpakai dari booking aktif hari ini
         int bookedSeatCount = 0;
         if (bookingSnap.hasData) {
           for (final doc in bookingSnap.data!.docs) {
