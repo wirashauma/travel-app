@@ -11,6 +11,7 @@ import 'package:geolocator/geolocator.dart' hide Position;
 
 import '../../../core/models/booking_model.dart';
 import 'qr_scanner_page.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLOR PALETTE — Trust Blue (consistent with app)
@@ -207,10 +208,8 @@ class LiveTripManifestPage extends StatelessWidget {
                   // ── PASSENGER LIST ──
                   if (snapshot.connectionState == ConnectionState.waiting &&
                       bookings.isEmpty)
-                    const SliverFillRemaining(
-                      child: Center(
-                        child: CircularProgressIndicator(color: _C.primary),
-                      ),
+                    SliverFillRemaining(
+                      child: SkeletonLoader.list(itemCount: 4),
                     )
                   else if (passengers.isEmpty)
                     SliverFillRemaining(

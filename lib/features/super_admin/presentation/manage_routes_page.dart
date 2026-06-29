@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/services/city_coordinates_seeder.dart';
 import '../../../core/services/firestore_dijkstra_service.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLOR PALETTE — Trust Blue / No Purple
@@ -57,9 +58,7 @@ class ManageRoutesPage extends StatelessWidget {
         stream: _routesRef.snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: _C.primary),
-            );
+            return SkeletonLoader.list();
           }
 
           if (snapshot.hasError) {

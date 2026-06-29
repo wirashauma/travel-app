@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../shared/widgets/skeleton_loader.dart';
 
 // ─────────────────────────────────────────────────────────
 //  STAT CARD — Reusable statistics card widget
@@ -89,12 +90,10 @@ class StatCard extends StatelessWidget {
             ],
           ),
           if (data.isLoading)
-            SizedBox(
-              height: isSmall ? 16 : 18,
-              width: isSmall ? 16 : 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: data.color,
+            SkeletonLoader(
+              child: SkeletonLoader.bar(
+                width: isSmall ? 60 : 80,
+                height: isSmall ? 16 : 18,
               ),
             )
           else

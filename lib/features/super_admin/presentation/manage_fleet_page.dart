@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLOR PALETTE — Trust Blue / No Purple
@@ -59,9 +60,7 @@ class ManageFleetPage extends StatelessWidget {
         builder: (context, snapshot) {
           // ── Loading ──
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: _C.primary),
-            );
+            return SkeletonLoader.list();
           }
           // ── Error ──
           if (snapshot.hasError) {

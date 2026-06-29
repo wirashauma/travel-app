@@ -10,6 +10,7 @@ import '../../../core/models/shipment_model.dart';
 import '../../../core/services/firestore_dijkstra_service.dart';
 import '../../../core/services/shipment_service.dart';
 import 'shipment_payment_page.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 class _C {
   static const Color primary = Color(0xFF0F4C81);
@@ -849,10 +850,7 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
         _sectionHeader(Iconsax.car, 'Pilih Armada'),
         const SizedBox(height: 12),
         if (_loadingFleets)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
-          )
+          SkeletonLoader.list(itemCount: 2)
         else if (_matchingFleets.isEmpty)
           Container(
             width: double.infinity,

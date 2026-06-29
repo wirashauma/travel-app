@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:iconsax/iconsax.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 // ─────────────────────────────────────────────────────────
 
@@ -126,13 +126,9 @@ class ManageDriverAssignmentsPage extends StatelessWidget {
 
               if (snapshot.connectionState == ConnectionState.waiting) {
 
-                return const SliverFillRemaining(
+                return SliverFillRemaining(
 
-                  child: Center(
-
-                    child: CircularProgressIndicator(color: _C.primary),
-
-                  ),
+                  child: SkeletonLoader.list(itemCount: 4),
 
                 );
 
@@ -1402,17 +1398,7 @@ class _FleetAssignmentCard extends StatelessWidget {
 
                         if (snapshot.connectionState == ConnectionState.waiting) {
 
-                          return const Padding(
-
-                            padding: EdgeInsets.all(40),
-
-                            child: Center(
-
-                              child: CircularProgressIndicator(color: _C.primary),
-
-                            ),
-
-                          );
+                          return SkeletonLoader.list(itemCount: 3);
 
                         }
 
@@ -1652,6 +1638,8 @@ class _FleetAssignmentCard extends StatelessWidget {
 
                             final String driverEmail = data['email'] as String? ?? 'Tidak ada email';
 
+                            final String? driverPic = data['profileImageUrl'] as String?;
+
                             final String driverUid = driverDoc.id;
 
                             final bool isCurrentDriver = driverUid == currentDriverId;
@@ -1700,21 +1688,31 @@ class _FleetAssignmentCard extends StatelessWidget {
 
                                         : _C.primary.withValues(alpha: 0.08),
 
-                                    child: Text(
+                                    backgroundImage: driverPic != null && driverPic.isNotEmpty
 
-                                      initials,
+                                        ? NetworkImage(driverPic)
 
-                                      style: GoogleFonts.plusJakartaSans(
+                                        : null,
 
-                                        fontSize: 17,
+                                    child: driverPic == null || driverPic.isEmpty
 
-                                        fontWeight: FontWeight.w700,
+                                        ? Text(
 
-                                        color: isCurrentDriver ? _C.success : _C.primary,
+                                            initials,
 
-                                      ),
+                                            style: GoogleFonts.plusJakartaSans(
 
-                                    ),
+                                              fontSize: 17,
+
+                                              fontWeight: FontWeight.w700,
+
+                                              color: isCurrentDriver ? _C.success : _C.primary,
+
+                                            ),
+
+                                          )
+
+                                        : null,
 
                                   ),
 

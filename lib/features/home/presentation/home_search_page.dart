@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -386,55 +387,75 @@ class _HomeSearchPageState extends State<HomeSearchPage>
           const SizedBox(width: 8),
 
           // Profile avatar — tappable
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const EditProfilePage(),
-                  transitionsBuilder: (_, anim, __, child) {
-                    return FadeTransition(
-                      opacity: CurvedAnimation(
-                          parent: anim, curve: Curves.easeOut),
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0.04, 0),
-                          end: Offset.zero,
-                        ).animate(CurvedAnimation(
-                            parent: anim, curve: Curves.easeOutCubic)),
-                        child: child,
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(FirebaseAuth.instance.currentUser?.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              final userData = snapshot.data?.data() as Map<String, dynamic>? ?? {};
+              final name = userData['namaLengkap'] as String? ?? '';
+              final profileUrl = userData['profileImageUrl'] as String?;
+              final initials = name.isNotEmpty
+                  ? name.trim().substring(0, 1).toUpperCase()
+                  : _userInitial;
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (_, __, ___) => const EditProfilePage(),
+                      transitionsBuilder: (_, anim, __, child) {
+                        return FadeTransition(
+                          opacity: CurvedAnimation(
+                              parent: anim, curve: Curves.easeOut),
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.04, 0),
+                              end: Offset.zero,
+                            ).animate(CurvedAnimation(
+                                parent: anim, curve: Curves.easeOutCubic)),
+                            child: child,
+                          ),
+                        );
+                      },
+                      transitionDuration: const Duration(milliseconds: 300),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _C.border, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _C.primary.withValues(alpha: 0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
-                    );
-                  },
-                  transitionDuration: const Duration(milliseconds: 300),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundColor: _C.primary.withValues(alpha: 0.1),
+                    backgroundImage: profileUrl != null && profileUrl.isNotEmpty
+                        ? NetworkImage(profileUrl)
+                        : null,
+                    child: profileUrl == null || profileUrl.isEmpty
+                        ? Text(
+                            initials,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: _C.primary,
+                            ),
+                          )
+                        : null,
+                  ),
                 ),
               );
             },
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: _C.border, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: _C.primary.withValues(alpha: 0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: CircleAvatar(
-                radius: 24,
-                backgroundColor: _C.primary.withValues(alpha: 0.1),
-                child: Text(
-                  _userInitial,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: _C.primary,
-                  ),
-                ),
-              ),
-            ),
           ),
         ],
       ),

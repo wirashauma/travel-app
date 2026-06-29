@@ -18,6 +18,7 @@ import '../../../core/services/city_coordinates_seeder.dart';
 import '../../../core/services/mapbox_directions_service.dart';
 import '../../../core/services/driver_tracking_service.dart';
 import 'ticket_scanner_page.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import 'passenger_detail_page.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -177,10 +178,8 @@ class _FleetManifestPageState extends State<FleetManifestPage>
                   // ── PASSENGER LIST ──
                   if (snapshot.connectionState == ConnectionState.waiting &&
                       bookings.isEmpty)
-                    const SliverFillRemaining(
-                      child: Center(
-                        child: CircularProgressIndicator(color: _C.primary),
-                      ),
+                    SliverFillRemaining(
+                      child: SkeletonLoader.list(itemCount: 4),
                     )
                   else if (bookings.isEmpty)
                     SliverToBoxAdapter(child: _buildEmptyState())

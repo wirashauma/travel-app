@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../shared/widgets/skeleton_loader.dart';
 
 // ═══════════════════════════════════════════════════════════
 //  FIRESTORE LIST VIEW — Reusable StreamBuilder + ListView
@@ -66,9 +67,7 @@ class FirestoreListView<T> extends StatelessWidget {
       builder: (context, snapshot) {
         // ── State 1: Loading ──
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: CircularProgressIndicator(color: primaryColor),
-          );
+          return SkeletonLoader.list();
         }
 
         // ── State 2: Error ──
@@ -163,10 +162,7 @@ class FirestoreDocBuilder<T> extends StatelessWidget {
       builder: (context, snapshot) {
         // ── Loading ──
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return loadingWidget ??
-              Center(
-                child: CircularProgressIndicator(color: primaryColor),
-              );
+          return loadingWidget ?? SkeletonLoader.card();
         }
 
         // ── Error ──

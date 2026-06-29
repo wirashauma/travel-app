@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -66,6 +67,7 @@ class PassengerHomeScreen extends StatelessWidget {
         builder: (context, snapshot) {
           final data = snapshot.data?.data() as Map<String, dynamic>? ?? {};
           final name = data['namaLengkap'] as String? ?? user.displayName ?? 'Pengguna';
+          final profileImageUrl = data['profileImageUrl'] as String?;
 
           return RefreshIndicator(
             onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
@@ -76,14 +78,9 @@ class PassengerHomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── HEADER BLOCK ──
-                  _buildHeader(context, name),
+                  _buildHeader(context, name, profileImageUrl),
 
-                  const SizedBox(height: 56),
-
-                  // ── UPCOMING TRIP SECTION ──
-                  _buildUpcomingTripSection(context, user.uid),
-
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 72),
 
                   // ── PROMOTIONS CAROUSEL ──
                   _buildPromotions(context),
@@ -92,6 +89,11 @@ class PassengerHomeScreen extends StatelessWidget {
 
                   // ── POPULAR RUTES ──
                   _buildPopularRoutes(context),
+
+                  const SizedBox(height: 28),
+
+                  // ── DEPARTURE SCHEDULE SECTION ──
+                  _buildDepartureScheduleSection(context, user.uid),
 
                   const SizedBox(height: 40),
                 ],
@@ -103,7 +105,7 @@ class PassengerHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String name) {
+  Widget _buildHeader(BuildContext context, String name, String? profileImageUrl) {
     final top = MediaQuery.of(context).padding.top;
     return Stack(
       clipBehavior: Clip.none,
@@ -111,26 +113,13 @@ class PassengerHomeScreen extends StatelessWidget {
         // 1. Blue Container containing header text and background circle
         Container(
           width: double.infinity,
-          padding: EdgeInsets.fromLTRB(24, top + 16, 24, 76),
+          padding: EdgeInsets.fromLTRB(24, top + 16, 24, 88),
           decoration: const BoxDecoration(
             color: _C.primary,
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
           ),
           child: Stack(
             children: [
-              // Background subtle design circle
-              Positioned(
-                right: -50,
-                top: -50,
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.04),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
               Row(
                 children: [
                   Expanded(
@@ -166,14 +155,19 @@ class PassengerHomeScreen extends StatelessWidget {
                       child: CircleAvatar(
                         radius: 22,
                         backgroundColor: Colors.white12,
-                        child: Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                        backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
+                            ? NetworkImage(profileImageUrl)
+                            : null,
+                        child: profileImageUrl == null || profileImageUrl.isEmpty
+                            ? Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : null,
                       ),
                     ),
                   ),
@@ -186,7 +180,7 @@ class PassengerHomeScreen extends StatelessWidget {
         Positioned(
           left: 32,
           right: 32,
-          bottom: -32,
+          bottom: -48,
           child: _buildLayananUtamaCard(context),
         ),
       ],
@@ -195,22 +189,23 @@ class PassengerHomeScreen extends StatelessWidget {
 
   Widget _buildLayananUtamaCard(BuildContext context) {
     final services = [
-      ('Pesan Tiket', Iconsax.ticket, _C.primary, 2),
-      ('Kirim Paket', Iconsax.box_2, _C.success, 1),
-      ('Riwayat', Iconsax.receipt_2, _C.warning, 3),
-      ('Bantuan CS', Iconsax.message_question, Colors.purple, -1),
+      ('Pesan Tiket', Iconsax.ticket, 2),
+      ('Kirim Paket', Iconsax.box_2, 1),
+      ('Riwayat', Iconsax.receipt_2, 3),
+      ('Bantuan CS', Iconsax.message_question, -1),
     ];
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 15,
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
@@ -218,7 +213,7 @@ class PassengerHomeScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: services.map((s) {
-          final (label, icon, color, tabIdx) = s;
+          final (label, icon, tabIdx) = s;
           return Expanded(
             child: GestureDetector(
               onTap: () {
@@ -241,20 +236,19 @@ class PassengerHomeScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 50,
+                    height: 50,
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: color.withValues(alpha: 0.15)),
+                      color: _C.primary.withValues(alpha: 0.06),
+                      shape: BoxShape.circle,
                     ),
-                    child: Icon(icon, size: 18, color: color),
+                    child: Icon(icon, size: 20, color: _C.primary),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     label,
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: _C.textPrimary,
                     ),
@@ -269,7 +263,7 @@ class PassengerHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildUpcomingTripSection(BuildContext context, String userId) {
+  Widget _buildDepartureScheduleSection(BuildContext context, String userId) {
     return StreamBuilder<List<BookingModel>>(
       stream: BookingService.userBookingsStream(userId),
       builder: (context, snapshot) {
@@ -279,7 +273,76 @@ class PassengerHomeScreen extends StatelessWidget {
           return b.status == BookingStatus.paid || b.status == BookingStatus.validated;
         }).toList();
 
-        if (upcoming.isEmpty) return const SizedBox.shrink();
+        if (upcoming.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Jadwal Keberangkatan',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: _C.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _C.borderLight),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: _C.primary.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Iconsax.car,
+                          color: _C.primary,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'Jadwal Kosong',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: _C.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Belum ada jadwal keberangkatan aktif untuk Anda.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: _C.textTertiary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 350.ms, duration: 400.ms);
+        }
 
         final ticket = upcoming.first;
         final formattedPrice = NumberFormat('#,###', 'id_ID').format(ticket.totalPrice);
@@ -293,7 +356,7 @@ class PassengerHomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Perjalanan Mendatang',
+                    'Jadwal Keberangkatan',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -444,98 +507,7 @@ class PassengerHomeScreen extends StatelessWidget {
   }
 
   Widget _buildPromotions(BuildContext context) {
-    final promos = [
-      ('Promo Lebaran', 'Diskon Mudik 20% ke semua rute Minang Travel', 'Diskon 20%', 'mudik_promo'),
-      ('Kirim Paket Hemat', 'Ongkir hemat paket sedang cuma Rp 20.000', 'Hemat Ongkir', 'paket_promo'),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Promo Spesial Untukmu',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: _C.textPrimary,
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        SizedBox(
-          height: 120,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: promos.length,
-            itemBuilder: (context, index) {
-              final (title, desc, badge, _) = promos[index];
-              return Container(
-                width: MediaQuery.of(context).size.width * 0.75,
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: index == 0
-                        ? [const Color(0xFF0F4C81), const Color(0xFF1E88E5)]
-                        : [const Color(0xFF00796B), const Color(0xFF00BFA5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Stack(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white24,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            badge,
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          title,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          desc,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: Colors.white70,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    ).animate().fadeIn(delay: 250.ms, duration: 400.ms);
+    return const _PromotionsCarousel();
   }
 
   Widget _buildPopularRoutes(BuildContext context) {
@@ -658,6 +630,7 @@ class DriverHomeScreen extends StatelessWidget {
         builder: (context, snapshot) {
           final userData = snapshot.data?.data() as Map<String, dynamic>? ?? {};
           final name = userData['namaLengkap'] as String? ?? user.displayName ?? 'Supir';
+          final profileImageUrl = userData['profileImageUrl'] as String?;
 
           return RefreshIndicator(
             onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
@@ -668,7 +641,7 @@ class DriverHomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── HEADER BLOCK ──
-                  _buildDriverHeader(context, name),
+                  _buildDriverHeader(context, name, profileImageUrl),
 
                   const SizedBox(height: 24),
 
@@ -695,7 +668,7 @@ class DriverHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDriverHeader(BuildContext context, String name) {
+  Widget _buildDriverHeader(BuildContext context, String name, String? profileImageUrl) {
     final top = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
@@ -779,14 +752,19 @@ class DriverHomeScreen extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 26,
                       backgroundColor: Colors.white12,
-                      child: Text(
-                        name.isNotEmpty ? name[0].toUpperCase() : 'S',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
+                          ? NetworkImage(profileImageUrl)
+                          : null,
+                      child: profileImageUrl == null || profileImageUrl.isEmpty
+                          ? Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : 'S',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            )
+                          : null,
                     ),
                   ),
                 ),
@@ -1121,5 +1099,140 @@ class DriverHomeScreen extends StatelessWidget {
         ).animate().fadeIn(delay: 250.ms, duration: 400.ms);
       },
     );
+  }
+}
+
+class _PromotionsCarousel extends StatefulWidget {
+  const _PromotionsCarousel();
+
+  @override
+  State<_PromotionsCarousel> createState() => _PromotionsCarouselState();
+}
+
+class _PromotionsCarouselState extends State<_PromotionsCarousel> {
+  late final PageController _pageController;
+  late final Timer _timer;
+  int _currentPage = 1000;
+
+  final List<(String, String, String, List<Color>)> _promos = [
+    ('Promo Lebaran', 'Diskon Mudik 20% ke semua rute Minang Travel', 'Diskon 20%', [Color(0xFF0F4C81), Color(0xFF1E88E5)]),
+    ('Kirim Paket Hemat', 'Ongkir hemat paket sedang cuma Rp 20.000', 'Hemat Ongkir', [Color(0xFF00796B), Color(0xFF00BFA5)]),
+    ('Cashback Spesial', 'Cashback Rp 10.000 untuk tiket pergi-pulang', 'Cashback 10rb', [Color(0xFFE65100), Color(0xFFFFB74D)]),
+    ('Hemat Gajian', 'Potongan Rp 15.000 khusus untuk pengguna baru', 'Diskon 15rb', [Color(0xFF7B1FA2), Color(0xFFE040FB)]),
+    ('Rute Baru Solok', 'Nikmati rute baru Padang - Solok hemat Rp 5.000', 'Rute Baru', [Color(0xFFC62828), Color(0xFFFF8A80)]),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _currentPage, viewportFraction: 0.85);
+    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (!mounted) return;
+      _currentPage++;
+      _pageController.animateToPage(
+        _currentPage,
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Promo Spesial Untukmu',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 125,
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (page) {
+              _currentPage = page;
+            },
+            itemBuilder: (context, index) {
+              final promoIndex = index % _promos.length;
+              final (title, desc, badge, colors) = _promos[promoIndex];
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: colors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors[0].withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        badge,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      title,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      desc,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    ).animate().fadeIn(delay: 250.ms, duration: 400.ms);
   }
 }

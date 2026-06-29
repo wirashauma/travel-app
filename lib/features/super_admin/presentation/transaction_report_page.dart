@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLOR PALETTE — Trust Blue / No Purple
@@ -82,9 +83,7 @@ class _TransactionReportPageState extends State<TransactionReportPage> {
               builder: (context, snapshot) {
                 // ── Loading ──
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: _C.primary),
-                  );
+                  return SkeletonLoader.list();
                 }
 
                 // ── Error ──

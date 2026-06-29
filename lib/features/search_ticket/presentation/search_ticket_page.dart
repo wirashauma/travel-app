@@ -13,6 +13,7 @@ import '../../../core/services/firestore_dijkstra_service.dart';
 import '../../../core/services/city_coordinates_seeder.dart';
 import '../../../core/widgets/custom_route_map.dart';
 import '../../seat_selection/presentation/seat_selection_page.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLOR PALETTE — Trust Blue
@@ -687,26 +688,7 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
   }
 
   Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(
-            color: _C.primary,
-            strokeWidth: 3,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Mencari rute terbaik...',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: _C.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
+    return SkeletonLoader.list(itemCount: 4);
   }
 
   // ─────────────────────────────────────────────────
@@ -1031,27 +1013,7 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
       builder: (context, snapshot) {
         // Loading
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 40),
-            child: Center(
-              child: Column(
-                children: [
-                  const CircularProgressIndicator(
-                    color: _C.primary,
-                    strokeWidth: 2.5,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Memuat armada...',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: _C.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+          return SkeletonLoader.list(itemCount: 3);
         }
 
         // Error

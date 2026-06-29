@@ -95,11 +95,15 @@ class _DriverTripPageState extends State<DriverTripPage> {
     final canvas = Canvas(recorder);
     final paint = Paint()..color = _C.primary;
     canvas.drawCircle(Offset(size / 2, size / 2), size / 2, paint);
-    canvas.drawCircle(Offset(size / 2, size / 2), size / 2 - 3, Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5);
-    final img = await recorder.endRecording().toImage(size.toInt(), size.toInt());
+    canvas.drawCircle(
+        Offset(size / 2, size / 2),
+        size / 2 - 3,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5);
+    final img =
+        await recorder.endRecording().toImage(size.toInt(), size.toInt());
     final data = await img.toByteData(format: ui.ImageByteFormat.png);
     return data!.buffer.asUint8List();
   }
@@ -144,7 +148,8 @@ class _DriverTripPageState extends State<DriverTripPage> {
           _startTime ??= DateTime.now();
         }
         _elapsedTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
-          if (mounted) setState(() => _elapsed = DateTime.now().difference(_startTime!));
+          if (mounted)
+            setState(() => _elapsed = DateTime.now().difference(_startTime!));
         });
       }
     });
@@ -168,7 +173,8 @@ class _DriverTripPageState extends State<DriverTripPage> {
   Future<void> _loadRoute() async {
     try {
       final originCoords = CityCoordinatesSeeder.getCoordinates(widget.origin);
-      final destCoords = CityCoordinatesSeeder.getCoordinates(widget.destination);
+      final destCoords =
+          CityCoordinatesSeeder.getCoordinates(widget.destination);
       if (originCoords == null || destCoords == null) return;
       final pts = [
         LngLat(originCoords['lng']!, originCoords['lat']!),
@@ -184,7 +190,8 @@ class _DriverTripPageState extends State<DriverTripPage> {
     final pos = _driverPos!;
     try {
       if (_driverAnnotation != null) {
-        _driverAnnotation!.geometry = Point(coordinates: Position(pos.lng, pos.lat));
+        _driverAnnotation!.geometry =
+            Point(coordinates: Position(pos.lng, pos.lat));
         await _pointManager!.update(_driverAnnotation!);
       } else {
         _driverAnnotation = await _pointManager!.create(PointAnnotationOptions(
@@ -211,21 +218,23 @@ class _DriverTripPageState extends State<DriverTripPage> {
       final snap = await FirebaseFirestore.instance
           .collection('bookings')
           .where('fleetId', isEqualTo: widget.fleetId)
-          .where('status', whereIn: ['paid', 'validated', 'used', 'no_show'])
-          .get();
+          .where('status',
+              whereIn: ['paid', 'validated', 'used', 'no_show']).get();
 
       final filteredBookings = snap.docs
           .map((d) => BookingModel.fromFirestore(d))
-          .where((b) => b.origin == widget.origin &&
-                        b.destination == widget.destination &&
-                        b.departureDate == todayStr)
+          .where((b) =>
+              b.origin == widget.origin &&
+              b.destination == widget.destination &&
+              b.departureDate == todayStr)
           .toList();
 
-      final pendingPickups = filteredBookings.where((b) => 
-        b.status != BookingStatus.used && 
-        b.status != BookingStatus.validated &&
-        b.status != BookingStatus.noShow
-      ).toList();
+      final pendingPickups = filteredBookings
+          .where((b) =>
+              b.status != BookingStatus.used &&
+              b.status != BookingStatus.validated &&
+              b.status != BookingStatus.noShow)
+          .toList();
 
       if (pendingPickups.isNotEmpty) {
         if (mounted) {
@@ -310,14 +319,17 @@ class _DriverTripPageState extends State<DriverTripPage> {
       if (mounted) {
         _startTime ??= DateTime.now();
         _elapsedTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
-          if (mounted) setState(() => _elapsed = DateTime.now().difference(_startTime!));
+          if (mounted)
+            setState(() => _elapsed = DateTime.now().difference(_startTime!));
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Perjalanan dimulai!', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            content: Text('Perjalanan dimulai!',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
             backgroundColor: _C.success,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -331,7 +343,8 @@ class _DriverTripPageState extends State<DriverTripPage> {
             ),
             backgroundColor: _C.danger,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -347,14 +360,25 @@ class _DriverTripPageState extends State<DriverTripPage> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Akhiri Perjalanan?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF0F172A))),
-        content: Text('Pastikan semua penumpang sudah turun.', style: GoogleFonts.inter(fontSize: 13.5)),
+        title: Text('Akhiri Perjalanan?',
+            style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700, color: const Color(0xFF0F172A))),
+        content: Text('Pastikan semua penumpang sudah turun.',
+            style: GoogleFonts.inter(fontSize: 13.5)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Batal', style: GoogleFonts.inter(color: _C.textTertiary))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('Batal',
+                  style: GoogleFonts.inter(color: _C.textTertiary))),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: _C.danger, foregroundColor: _C.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: Text('Akhiri', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: _C.danger,
+                foregroundColor: _C.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+            child: Text('Akhiri',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -371,10 +395,12 @@ class _DriverTripPageState extends State<DriverTripPage> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Perjalanan selesai', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            content: Text('Perjalanan selesai',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
             backgroundColor: _C.success,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -389,7 +415,8 @@ class _DriverTripPageState extends State<DriverTripPage> {
             ),
             backgroundColor: _C.danger,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -427,8 +454,7 @@ class _DriverTripPageState extends State<DriverTripPage> {
                           const SizedBox(height: 16),
 
                           // ── Map ──
-                          if (_routePoints.isNotEmpty)
-                            _buildMap(isActive),
+                          if (_routePoints.isNotEmpty) _buildMap(isActive),
 
                           if (!isDone) ...[
                             const SizedBox(height: 16),
@@ -441,7 +467,10 @@ class _DriverTripPageState extends State<DriverTripPage> {
                               Text(
                                 'Lokasi Anda diperbarui setiap 5 detik\ndan bisa dilihat oleh penumpang.',
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(fontSize: 11, color: _C.textTertiary, height: 1.5),
+                                style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: _C.textTertiary,
+                                    height: 1.5),
                               ),
                             ],
                           ],
@@ -485,11 +514,19 @@ class _DriverTripPageState extends State<DriverTripPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            isDone ? 'Perjalanan Selesai' : isActive ? 'Dalam Perjalanan' : 'Belum Berangkat',
+            isDone
+                ? 'Perjalanan Selesai'
+                : isActive
+                    ? 'Dalam Perjalanan'
+                    : 'Belum Berangkat',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: isDone ? _C.textTertiary : isActive ? _C.success : _C.textTertiary,
+              color: isDone
+                  ? _C.textTertiary
+                  : isActive
+                      ? _C.success
+                      : _C.textTertiary,
             ),
           ),
           const SizedBox(height: 8),
@@ -509,7 +546,8 @@ class _DriverTripPageState extends State<DriverTripPage> {
           ),
           if (widget.vehicleType.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(widget.vehicleType, style: GoogleFonts.inter(fontSize: 12, color: _C.textTertiary)),
+            Text(widget.vehicleType,
+                style: GoogleFonts.inter(fontSize: 12, color: _C.textTertiary)),
           ],
         ],
       ),
@@ -559,7 +597,11 @@ class _DriverTripPageState extends State<DriverTripPage> {
                   children: [
                     const Icon(Iconsax.location, size: 12, color: _C.success),
                     const SizedBox(width: 4),
-                    Text('LIVE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: _C.success)),
+                    Text('LIVE',
+                        style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: _C.success)),
                   ],
                 ),
               ),
@@ -577,7 +619,9 @@ class _DriverTripPageState extends State<DriverTripPage> {
 
   Future<void> _drawRoute(List<LngLat> pts) async {
     if (_polylineManager == null || _pointManager == null) return;
-    if (_driverIconBytes == null || _originIconBytes == null || _destIconBytes == null) return;
+    if (_driverIconBytes == null ||
+        _originIconBytes == null ||
+        _destIconBytes == null) return;
 
     // Route line
     await _polylineManager!.create(PolylineAnnotationOptions(
@@ -607,7 +651,8 @@ class _DriverTripPageState extends State<DriverTripPage> {
     // Driver marker if position exists
     if (_driverPos != null) {
       _driverAnnotation = await _pointManager!.create(PointAnnotationOptions(
-        geometry: Point(coordinates: Position(_driverPos!.lng, _driverPos!.lat)),
+        geometry:
+            Point(coordinates: Position(_driverPos!.lng, _driverPos!.lat)),
         image: _driverIconBytes,
         iconSize: 0.4,
       ));
@@ -622,17 +667,23 @@ class _DriverTripPageState extends State<DriverTripPage> {
         child: ElevatedButton.icon(
           onPressed: _isEnding ? null : _endTrip,
           icon: _isEnding
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2.5, color: Colors.white))
               : const Icon(Iconsax.close_circle, size: 20),
           label: Text(
             _isEnding ? 'Mengakhiri...' : 'Akhiri Perjalanan',
-            style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700),
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 15, fontWeight: FontWeight.w700),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: _C.danger,
             foregroundColor: _C.white,
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
       );
@@ -643,17 +694,23 @@ class _DriverTripPageState extends State<DriverTripPage> {
       child: ElevatedButton.icon(
         onPressed: _isLoading ? null : _startTrip,
         icon: _isLoading
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2.5, color: Colors.white))
             : const Icon(Iconsax.routing_2, size: 20),
         label: Text(
           _isLoading ? 'Memulai...' : 'Mulai Perjalanan',
-          style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700),
+          style: GoogleFonts.plusJakartaSans(
+              fontSize: 15, fontWeight: FontWeight.w700),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: _C.primary,
           foregroundColor: _C.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
     );
@@ -662,7 +719,8 @@ class _DriverTripPageState extends State<DriverTripPage> {
   LngLat _calcCenter() {
     final originCoords = CityCoordinatesSeeder.getCoordinates(widget.origin);
     final destCoords = CityCoordinatesSeeder.getCoordinates(widget.destination);
-    if (originCoords == null || destCoords == null) return const LngLat(100.35, -0.9);
+    if (originCoords == null || destCoords == null)
+      return const LngLat(100.35, -0.9);
     return LngLat(
       (originCoords['lng']! + destCoords['lng']!) / 2,
       (originCoords['lat']! + destCoords['lat']!) / 2,
@@ -698,7 +756,9 @@ class _AppBar extends StatelessWidget {
             child: Text(
               fleetName,
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 16, fontWeight: FontWeight.w800, color: _C.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: _C.textPrimary,
               ),
             ),
           ),

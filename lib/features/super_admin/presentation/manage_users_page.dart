@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLOR PALETTE
@@ -169,9 +170,7 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
         builder: (context, snapshot) {
           // ── Loading ──
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: _C.primary),
-            );
+            return SkeletonLoader.list();
           }
 
           // ── Error ──
