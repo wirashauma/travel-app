@@ -499,9 +499,6 @@ class _PackageCard extends StatelessWidget {
     if (shipment.receiverPhone != null) {
       children.add(_infoRow(Iconsax.call, 'No. HP', shipment.receiverPhone!));
     }
-    if (shipment.receiverAddress != null && shipment.receiverAddress!.isNotEmpty) {
-      children.add(_addressRow(shipment.receiverAddress!));
-    }
     return _infoGroup('Penerima', children);
   }
 
@@ -576,21 +573,6 @@ class _PackageCard extends StatelessWidget {
             style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: valueColor ?? _C.textPrimary),
             overflow: TextOverflow.ellipsis,
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _addressRow(String address) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(width: 18, child: Icon(Iconsax.location, size: 14, color: _C.textTertiary)),
-        const SizedBox(width: 8),
-        Text('Alamat: ', style: GoogleFonts.inter(fontSize: 13, color: _C.textSecondary)),
-        Expanded(
-          child: Text(address,
-              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: _C.textPrimary)),
         ),
       ],
     );

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,6 +12,7 @@ import '../../../core/services/firestore_dijkstra_service.dart';
 import '../../../core/services/shipment_service.dart';
 import 'shipment_payment_page.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
+import 'package_tracking_page.dart';
 
 class _C {
   static const Color primary = Color(0xFF0F4C81);
@@ -120,7 +122,6 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
   // Receiver
   final _receiverNameCtrl = TextEditingController();
   final _receiverPhoneCtrl = TextEditingController();
-  final _receiverAddressCtrl = TextEditingController();
 
   // Package
   String? _selectedPackageSize; // kecil | sedang | besar
@@ -131,6 +132,7 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
   List<Map<String, dynamic>> _matchingFleets = [];
   String? _selectedFleetId;
   bool _loadingFleets = false;
+  Map<String, int> _fleetCapacityPoints = {};
 
   static const _packageOptions = [
     ('kecil', 'Paket Kecil', 15000, Iconsax.box_2),
@@ -174,7 +176,6 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
     _senderPhoneCtrl.dispose();
     _receiverNameCtrl.dispose();
     _receiverPhoneCtrl.dispose();
-    _receiverAddressCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
   }
@@ -206,12 +207,46 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
 
   Future<void> _loadMatchingFleets() async {
     if (_selectedOrigin == null || _selectedDestination == null) return;
-    setState(() => _loadingFleets = true);
+    setState(() {
+      _loadingFleets = true;
+      _fleetCapacityPoints = {};
+    });
     try {
       final fleets = await ShipmentService.getMatchingFleets(_selectedOrigin!, _selectedDestination!);
-      if (mounted) setState(() => _matchingFleets = fleets);
+      
+      final Map<String, int> capacityPoints = {};
+      await Future.wait(fleets.map((fleet) async {
+        final id = fleet['id'] as String? ?? '';
+        if (id.isEmpty) return;
+        final snap = await FirebaseFirestore.instance
+            .collection('shipments')
+            .where('fleetId', isEqualTo: id)
+            .where('status', whereIn: ['pending', 'picked_up', 'in_transit'])
+            .get();
+        
+        int points = 0;
+        for (final doc in snap.docs) {
+          final size = doc.data()['packageSize'] as String? ?? 'kecil';
+          if (size == 'kecil') points += 1;
+          else if (size == 'sedang') points += 2;
+          else if (size == 'besar') points += 4;
+        }
+        capacityPoints[id] = points;
+      }));
+
+      if (mounted) {
+        setState(() {
+          _matchingFleets = fleets;
+          _fleetCapacityPoints = capacityPoints;
+        });
+      }
     } catch (_) {
-      if (mounted) setState(() => _matchingFleets = []);
+      if (mounted) {
+        setState(() {
+          _matchingFleets = [];
+          _fleetCapacityPoints = {};
+        });
+      }
     } finally {
       if (mounted) setState(() => _loadingFleets = false);
     }
@@ -225,7 +260,6 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
         _senderPhoneCtrl.text.trim().isEmpty ||
         _receiverNameCtrl.text.trim().isEmpty ||
         _receiverPhoneCtrl.text.trim().isEmpty ||
-        _receiverAddressCtrl.text.trim().isEmpty ||
         _selectedPackageSize == null ||
         _descCtrl.text.trim().isEmpty) {
       _showSnack('Harap isi semua field');
@@ -257,7 +291,7 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
         senderPhone: _senderPhoneCtrl.text.trim(),
         receiverName: _receiverNameCtrl.text.trim(),
         receiverPhone: _receiverPhoneCtrl.text.trim(),
-        receiverAddress: _receiverAddressCtrl.text.trim(),
+        receiverAddress: null,
         packageSize: _selectedPackageSize,
         packagePrice: _totalPrice,
         paymentMethod: _paymentMethod,
@@ -294,10 +328,17 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
         _senderPhoneCtrl.text = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
         _receiverNameCtrl.clear();
         _receiverPhoneCtrl.clear();
-        _receiverAddressCtrl.clear();
         _descCtrl.clear();
       });
       _showSnack('Paket berhasil didaftarkan');
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PackageTrackingPage(shipment: shipment),
+          ),
+        );
+      }
     } catch (e) {
       _showSnack('Gagal mendaftarkan paket');
     } finally {
@@ -349,7 +390,7 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
                     const SizedBox(height: 12),
                     _input(_senderNameCtrl, 'Nama Pengirim', Iconsax.user),
                     const SizedBox(height: 12),
-                    _input(_senderPhoneCtrl, 'No HP Pengirim', Iconsax.call, keyboardType: TextInputType.phone),
+                    _input(_senderPhoneCtrl, 'No HP Pengirim', Iconsax.call, keyboardType: TextInputType.phone, maxLength: 12),
 
                     const SizedBox(height: 20),
 
@@ -358,84 +399,7 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
                     const SizedBox(height: 12),
                     _input(_receiverNameCtrl, 'Nama Penerima', Iconsax.user),
                     const SizedBox(height: 12),
-                    _input(_receiverPhoneCtrl, 'No HP Penerima', Iconsax.call, keyboardType: TextInputType.phone),
-                    const SizedBox(height: 12),
-                    _input(_receiverAddressCtrl, 'Alamat Penerima', Iconsax.location, maxLines: 3),
-
-                    const SizedBox(height: 20),
-
-                    // ── Package Size ──
-                    _sectionHeader(Iconsax.box_2, 'Ukuran Paket'),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: _packageOptions.map((option) {
-                        final (key, label, price, icon) = option;
-                        final isSelected = _selectedPackageSize == key;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              setSheetState(() {
-                                _selectedPackageSize = key;
-                              });
-                              setState(() {}); // sync with parent
-                            },
-                            child: Container(
-                              margin: EdgeInsets.only(
-                                left: option.$1 == 'kecil' ? 0 : 6,
-                                right: option.$1 == 'besar' ? 0 : 6,
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                              decoration: BoxDecoration(
-                                color: isSelected ? _C.primary.withValues(alpha: 0.06) : _C.inputFill,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isSelected ? _C.primary : _C.border,
-                                  width: isSelected ? 1.5 : 1,
-                                ),
-                              ),
-                              child: Stack(
-                                children: [
-                                  Center(
-                                    child: Column(
-                                      children: [
-                                        Icon(icon, size: 24, color: isSelected ? _C.primary : _C.textTertiary),
-                                        const SizedBox(height: 6),
-                                        Text(label,
-                                            style: GoogleFonts.inter(
-                                                fontSize: 10, fontWeight: FontWeight.w700, color: isSelected ? _C.primary : _C.textPrimary)),
-                                        const SizedBox(height: 2),
-                                        Text('Rp${NumberFormat('#,###', 'id_ID').format(price)}',
-                                            style: GoogleFonts.inter(fontSize: 9, color: _C.textTertiary)),
-                                      ],
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(2),
-                                        decoration: const BoxDecoration(
-                                          color: _C.primary,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(Iconsax.tick_circle5, size: 12, color: Colors.white),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ── Description ──
-                    _sectionHeader(Iconsax.note_text, 'Deskripsi Paket'),
-                    const SizedBox(height: 12),
-                    _input(_descCtrl, 'Contoh: Baju, Sepatu, Dokumen Penting...', Iconsax.document_text),
+                    _input(_receiverPhoneCtrl, 'No HP Penerima', Iconsax.call, keyboardType: TextInputType.phone, maxLength: 12),
 
                     const SizedBox(height: 20),
 
@@ -732,6 +696,89 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
     );
   }
 
+  Widget _buildPackageSizeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader(Iconsax.box_2, 'Ukuran Paket'),
+        const SizedBox(height: 12),
+        Row(
+          children: _packageOptions.map((option) {
+            final (key, label, price, icon) = option;
+            final isSelected = _selectedPackageSize == key;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedPackageSize = key;
+                    _selectedFleetId = null;
+                  });
+                },
+                child: Container(
+                  margin: EdgeInsets.only(
+                    left: option.$1 == 'kecil' ? 0 : 6,
+                    right: option.$1 == 'besar' ? 0 : 6,
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? _C.primary.withValues(alpha: 0.06) : _C.inputFill,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? _C.primary : _C.border,
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Column(
+                          children: [
+                            Icon(icon, size: 24, color: isSelected ? _C.primary : _C.textTertiary),
+                            const SizedBox(height: 6),
+                            Text(label,
+                                style: GoogleFonts.inter(
+                                    fontSize: 10, fontWeight: FontWeight.w700, color: isSelected ? _C.primary : _C.textPrimary)),
+                            const SizedBox(height: 2),
+                            Text('Rp${NumberFormat('#,###', 'id_ID').format(price)}',
+                                style: GoogleFonts.inter(fontSize: 9, color: _C.textTertiary)),
+                          ],
+                        ),
+                      ),
+                      if (isSelected)
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: _C.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Iconsax.tick_circle5, size: 12, color: Colors.white),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPackageDescInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader(Iconsax.note_text, 'Deskripsi Paket'),
+        const SizedBox(height: 12),
+        _input(_descCtrl, 'Contoh: Baju, Sepatu, Dokumen Penting...', Iconsax.document_text),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -761,6 +808,16 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
               _sectionHeader(Iconsax.map_1, 'Lokasi'),
               const SizedBox(height: 12),
               _buildRouteSection(),
+
+              const SizedBox(height: 20),
+
+              // ── Package Size ──
+              _buildPackageSizeSelector(),
+
+              const SizedBox(height: 20),
+
+              // ── Description ──
+              _buildPackageDescInput(),
 
               const SizedBox(height: 20),
 
@@ -826,24 +883,69 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
             Icon(icon, size: 20, color: isSelected ? color : _C.textTertiary),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(label,
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected ? color : _C.textPrimary)),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(label,
+                    style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? color : _C.textPrimary)),
+              ),
             ),
-            if (isSelected)
+            if (isSelected) ...[
+              const SizedBox(width: 4),
               Icon(Iconsax.tick_circle5, size: 18, color: color),
+            ],
           ],
         ),
       ),
     );
   }
 
+  bool _isLargeVehicle(String vehicleType) {
+    final vt = vehicleType.toLowerCase();
+    return vt.contains('hiace') ||
+        vt.contains('elf') ||
+        vt.contains('bus') ||
+        vt.contains('cargo') ||
+        vt.contains('box') ||
+        vt.contains('van') ||
+        vt.contains('blind') ||
+        vt.contains('pickup') ||
+        vt.contains('truck') ||
+        vt.contains('tronton') ||
+        vt.contains('fuso') ||
+        vt.contains('l300');
+  }
+
   Widget _buildFleetSelector() {
     if (_selectedOrigin == null || _selectedDestination == null) {
       return const SizedBox.shrink();
     }
+    if (_selectedPackageSize == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(Iconsax.car, 'Pilih Armada'),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _C.warningBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _C.warning.withValues(alpha: 0.2)),
+            ),
+            child: Text(
+              'Silakan pilih ukuran paket terlebih dahulu untuk melihat armada yang tersedia.',
+              style: GoogleFonts.inter(fontSize: 12, color: _C.warning, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -874,17 +976,31 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
             final fOrigin = fleet['origin'] as String? ?? '';
             final fDest = fleet['destination'] as String? ?? '';
             final isSelected = _selectedFleetId == id;
+
+            final isLarge = _isLargeVehicle(vehicleType);
+            final maxPoints = isLarge ? 10 : 4;
+            final occupiedPoints = _fleetCapacityPoints[id] ?? 0;
+            final packagePoints = _selectedPackageSize == 'kecil' ? 1 : (_selectedPackageSize == 'sedang' ? 2 : 4);
+            
+            final sizeSupported = _selectedPackageSize != 'besar' || isLarge;
+            final hasCapacity = occupiedPoints + packagePoints <= maxPoints;
+            final isSelectable = sizeSupported && hasCapacity;
+
             return Padding(
               padding: EdgeInsets.only(bottom: i < _matchingFleets.length - 1 ? 8 : 0),
               child: GestureDetector(
-                onTap: () => setState(() => _selectedFleetId = id),
+                onTap: isSelectable ? () => setState(() => _selectedFleetId = id) : null,
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isSelected ? _C.primary.withValues(alpha: 0.06) : _C.inputFill,
+                    color: !isSelectable
+                        ? const Color(0xFFF8FAFC)
+                        : (isSelected ? _C.primary.withValues(alpha: 0.06) : _C.inputFill),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected ? _C.primary : _C.border,
+                      color: !isSelectable
+                          ? const Color(0xFFE2E8F0)
+                          : (isSelected ? _C.primary : _C.border),
                       width: isSelected ? 1.5 : 1,
                     ),
                   ),
@@ -893,29 +1009,84 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isSelected ? _C.primary.withValues(alpha: 0.1) : _C.borderLight,
+                          color: !isSelectable
+                              ? const Color(0xFFE2E8F0)
+                              : (isSelected ? _C.primary.withValues(alpha: 0.1) : _C.borderLight),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Iconsax.car, size: 18, color: isSelected ? _C.primary : _C.textTertiary),
+                        child: Icon(
+                          Iconsax.car,
+                          size: 18,
+                          color: !isSelectable
+                              ? _C.textTertiary
+                              : (isSelected ? _C.primary : _C.textSecondary),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(name,
-                                style: GoogleFonts.inter(
-                                    fontSize: 13, fontWeight: FontWeight.w600, color: _C.textPrimary)),
+                            Text(
+                              name,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isSelectable ? _C.textPrimary : _C.textTertiary,
+                              ),
+                            ),
                             const SizedBox(height: 2),
                             Text(
                               '$vehicleType • $fOrigin → $fDest',
-                              style: GoogleFonts.inter(fontSize: 11, color: _C.textTertiary),
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: _C.textTertiary,
+                              ),
                               overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            // Capacity Point indicator
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: isSelectable
+                                    ? const Color(0xFFECFDF5)
+                                    : const Color(0xFFFEF2F2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Kargo Terisi: $occupiedPoints/$maxPoints Poin',
+                                style: GoogleFonts.inter(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: isSelectable
+                                      ? const Color(0xFF059669)
+                                      : const Color(0xFFDC2626),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      if (isSelected)
+                      const SizedBox(width: 8),
+                      if (!isSelectable)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFFCA5A5)),
+                          ),
+                          child: Text(
+                            !sizeSupported ? 'Ukuran Besar Tidak Didukung' : 'Kapasitas Kargo Penuh',
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFDC2626),
+                            ),
+                          ),
+                        )
+                      else if (isSelected)
                         const Icon(Iconsax.tick_circle5, size: 18, color: _C.primary),
                     ],
                   ),
@@ -941,11 +1112,12 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
 
 
   Widget _input(TextEditingController ctrl, String hint, IconData icon,
-      {TextInputType? keyboardType, int maxLines = 1}) {
+      {TextInputType? keyboardType, int maxLines = 1, int? maxLength}) {
     return TextField(
       controller: ctrl,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      maxLength: maxLength,
       style: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w500,
@@ -982,6 +1154,7 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
           borderSide: const BorderSide(color: _C.primary, width: 1.5),
         ),
         isDense: true,
+        counterText: '',
       ),
     );
   }

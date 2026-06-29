@@ -31,6 +31,7 @@ class ShipmentModel {
   final int? packagePrice;
   final String? paymentMethod; // cod | midtrans
   final String? paymentStatus; // unpaid | paid
+  final String? packageCode; // Unique receipt number assigned on admin approval
 
   const ShipmentModel({
     this.id,
@@ -61,6 +62,7 @@ class ShipmentModel {
     this.packagePrice,
     this.paymentMethod,
     this.paymentStatus,
+    this.packageCode,
   });
 
   factory ShipmentModel.fromFirestore(DocumentSnapshot doc) {
@@ -94,6 +96,7 @@ class ShipmentModel {
       packagePrice: (d['packagePrice'] as num?)?.toInt(),
       paymentMethod: d['paymentMethod'] as String?,
       paymentStatus: d['paymentStatus'] as String?,
+      packageCode: d['packageCode'] as String?,
     );
   }
 
@@ -125,6 +128,7 @@ class ShipmentModel {
     'packagePrice': packagePrice,
     'paymentMethod': paymentMethod,
     'paymentStatus': paymentStatus,
+    'packageCode': packageCode,
   };
 
   ShipmentModel copyWith({
@@ -156,6 +160,7 @@ class ShipmentModel {
     int? packagePrice,
     String? paymentMethod,
     String? paymentStatus,
+    String? packageCode,
   }) =>
       ShipmentModel(
         id: id ?? this.id,
@@ -186,5 +191,6 @@ class ShipmentModel {
         packagePrice: packagePrice ?? this.packagePrice,
         paymentMethod: paymentMethod ?? this.paymentMethod,
         paymentStatus: paymentStatus ?? this.paymentStatus,
+        packageCode: packageCode ?? this.packageCode,
       );
 }

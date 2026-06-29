@@ -108,7 +108,7 @@ class _FleetManifestPageState extends State<FleetManifestPage>
         stream: FirebaseFirestore.instance
             .collection('bookings')
             .where('fleetId', isEqualTo: widget.fleetId)
-            .where('status', whereIn: ['paid', 'validated', 'used', 'no_show'])
+            .where('status', whereIn: ['paid', 'validated', 'used', 'completed', 'no_show'])
             .snapshots(),
         builder: (context, snapshot) {
           final bookingDocs = snapshot.data?.docs ?? [];
@@ -123,7 +123,7 @@ class _FleetManifestPageState extends State<FleetManifestPage>
 
           final paidCount      = bookings.where((b) => b.status == BookingStatus.paid).length;
           final validatedCount = bookings.where((b) => b.status == BookingStatus.validated).length;
-          final completedCount = bookings.where((b) => b.status == BookingStatus.used).length;
+          final completedCount = bookings.where((b) => b.status == BookingStatus.used || b.status == BookingStatus.completed).length;
 
           return Stack(
             children: [

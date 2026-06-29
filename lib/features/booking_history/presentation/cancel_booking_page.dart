@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -53,6 +54,40 @@ class _CancelBookingPageState extends State<CancelBookingPage> {
     setState(() => _isProcessing = true);
 
     try {
+      // ── Check if vehicle has already departed ──
+      final fleetDoc = await FirebaseFirestore.instance
+          .collection('fleets')
+          .doc(widget.booking.fleetId)
+          .get();
+      if (fleetDoc.exists) {
+        final tripStatus = fleetDoc.data()?['tripStatus'] as String? ?? 'menunggu';
+        if (tripStatus == 'berangkat' || tripStatus == 'selesai') {
+          if (!mounted) return;
+          setState(() => _isProcessing = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Iconsax.close_circle, color: Colors.white, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Mobil sudah berangkat. Tiket tidak dapat dibatalkan.',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.white, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: _C.danger,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+          return;
+        }
+      }
+
       await BookingService.cancelBooking(widget.booking.id!);
 
       if (!mounted) return;

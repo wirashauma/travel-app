@@ -15,6 +15,7 @@ import 'manage_promo_page.dart';
 import 'manage_routes_page.dart';
 import 'manage_users_page.dart';
 import 'transaction_report_page.dart';
+import 'manage_packages_page.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLOR PALETTE — Trust Blue (shared with Super Admin)
@@ -47,6 +48,7 @@ enum SuperAdminMenu {
   promo,
   users,
   report,
+  packages,
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -163,6 +165,14 @@ class SuperAdminDrawer extends StatelessWidget {
                   onTap: () => _handleTap(context, SuperAdminMenu.report),
                   index: 6,
                 ),
+                _DrawerMenuItem(
+                  icon: Iconsax.box,
+                  activeIcon: Iconsax.box,
+                  label: 'Manajemen Paket',
+                  isSelected: currentMenu == SuperAdminMenu.packages,
+                  onTap: () => _handleTap(context, SuperAdminMenu.packages),
+                  index: 7,
+                ),
               ],
             ),
           ),
@@ -242,8 +252,10 @@ class SuperAdminDrawer extends StatelessWidget {
         page = const ManagePromoPage();
       case SuperAdminMenu.users:
         page = const ManageUsersPage();
-      case SuperAdminMenu.report:
+       case SuperAdminMenu.report:
         page = const TransactionReportPage();
+      case SuperAdminMenu.packages:
+        page = const ManagePackagesPage();
     }
     Navigator.push(context, MaterialPageRoute(builder: (_) => page!));
   }

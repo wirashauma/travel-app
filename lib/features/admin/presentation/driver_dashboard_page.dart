@@ -66,6 +66,7 @@ class DriverDashboardPage extends StatefulWidget {
 class _DriverDashboardPageState extends State<DriverDashboardPage> {
   String _driverName = 'Sopir';
   bool _profileLoaded = false;
+  String _activeFilter = 'Semua';
 
   @override
   void initState() {
@@ -140,6 +141,9 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
               ? '${assignment.data['origin'] ?? ''} → ${assignment.data['destination'] ?? ''}'
               : '';
 
+          final showPackage = _activeFilter == 'Semua' || _activeFilter == 'Paket';
+          final showPassenger = _activeFilter == 'Semua' || _activeFilter == 'Penumpang';
+
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
@@ -149,33 +153,43 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
               // ── SECTION TITLE ──
               SliverToBoxAdapter(child: _buildSectionTitle(tripAssignments.length)),
 
-              // ── PAKET BUTTON ──
-              SliverToBoxAdapter(child: _buildPackageCard(route)),
+              // ── FILTER TABS ──
+              SliverToBoxAdapter(child: _buildFilterTabs()),
 
-              // ── EMPTY STATE ──
-              if (tripAssignments.isEmpty)
-                SliverFillRemaining(child: _buildEmptyState())
-              // ── FLEET LIST ──
-              else
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20, 4, 20, bottomPad + 24),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final assignment = tripAssignments[index];
-                      return _FleetCard(
-                        fleetId: assignment.fleetId,
-                        data: assignment.data,
-                        departureTime: null,
-                        index: index,
-                        onTap: () => _navigateToManifest(
+              // ── PAKET BUTTON ──
+              if (showPackage)
+                SliverToBoxAdapter(child: _buildPackageCard(route)),
+
+              // ── EMPTY STATE OR FLEET LIST ──
+              if (showPassenger) ...[
+                if (tripAssignments.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _buildEmptyState(),
+                  )
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(20, 4, 20, bottomPad + 24),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final assignment = tripAssignments[index];
+                        return _FleetCard(
                           fleetId: assignment.fleetId,
                           data: assignment.data,
                           departureTime: null,
-                        ),
-                      );
-                    }, childCount: tripAssignments.length),
+                          index: index,
+                          onTap: () => _navigateToManifest(
+                            fleetId: assignment.fleetId,
+                            data: assignment.data,
+                            departureTime: null,
+                          ),
+                        );
+                      }, childCount: tripAssignments.length),
+                    ),
                   ),
-                ),
+              ] else if (_activeFilter == 'Paket' && !showPassenger) ...[
+                SliverToBoxAdapter(child: SizedBox(height: bottomPad + 40)),
+              ],
             ],
           );
         },
@@ -399,13 +413,13 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: _C.teal.withValues(alpha: 0.1),
+                        color: _C.warning.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Iconsax.box_2,
                         size: 22,
-                        color: _C.teal,
+                        color: _C.warning,
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -440,10 +454,10 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: _C.teal.withValues(alpha: 0.12),
+                        color: _C.warning.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: _C.teal.withValues(alpha: 0.25),
+                          color: _C.warning.withValues(alpha: 0.25),
                           width: 1,
                         ),
                       ),
@@ -453,7 +467,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
                           const Icon(
                             Iconsax.box_tick,
                             size: 12,
-                            color: _C.teal,
+                            color: _C.warning,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -461,7 +475,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: _C.teal,
+                              color: _C.warning,
                             ),
                           ),
                         ],
@@ -599,6 +613,77 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
         ],
       ),
     ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
+  }
+
+  // ─────────────────────────────────────────────────────
+  //  FILTER TABS — Choice Chips
+  // ─────────────────────────────────────────────────────
+  Widget _buildFilterTabs() {
+    final filters = [
+      ('Semua', Iconsax.category),
+      ('Penumpang', Iconsax.people),
+      ('Paket', Iconsax.box),
+    ];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: filters.map((item) {
+          final filterName = item.$1;
+          final icon = item.$2;
+          final isSelected = _activeFilter == filterName;
+          final isLast = item == filters.last;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _activeFilter = filterName;
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: EdgeInsets.only(right: isLast ? 0 : 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? _C.primary : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected ? _C.primary : const Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: _C.primary.withValues(alpha: 0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        )
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: isSelected ? Colors.white : _C.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    filterName,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : _C.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    ).animate().fadeIn(delay: 250.ms, duration: 400.ms);
   }
 
   // ─────────────────────────────────────────────────────
@@ -899,7 +984,7 @@ class _FleetCard extends StatelessWidget {
                               .where('fleetId', isEqualTo: fleetId)
                               .where(
                                 'status',
-                                whereIn: ['paid', 'validated', 'used'],
+                                whereIn: ['paid', 'validated', 'used', 'completed'],
                               )
                               .snapshots(),
                           builder: (context, snap) {

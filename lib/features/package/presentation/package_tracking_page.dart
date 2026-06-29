@@ -399,10 +399,7 @@ class _PackageTrackingPageState extends State<PackageTrackingPage> {
             const SizedBox(height: 10),
             _infoRow(Iconsax.call, 'No HP Penerima', _shipment.receiverPhone!),
           ],
-          if (_shipment.receiverAddress != null) ...[
-            const SizedBox(height: 10),
-            _infoRow(Iconsax.location, 'Alamat', _shipment.receiverAddress!, maxLines: 3),
-          ],
+
           if (_shipment.paymentMethod != null) ...[
             const SizedBox(height: 10),
             _infoRow(

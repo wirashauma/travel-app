@@ -12,6 +12,7 @@ import 'manage_routes_page.dart';
 import 'manage_promo_page.dart';
 import 'manage_users_page.dart';
 import 'transaction_report_page.dart';
+import 'manage_packages_page.dart';
 import 'super_admin_drawer.dart';
 import 'widgets/menu_card_widget.dart';
 import 'widgets/stat_card_widget.dart';
@@ -438,6 +439,16 @@ class SuperAdminDashboard extends StatelessWidget {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const ManagePromoPage()),
+        ),
+      ),
+      MenuCardData(
+        icon: Iconsax.box,
+        label: 'Manajemen\nPaket',
+        color: _C.primary,
+        bgColor: _C.primary.withValues(alpha: 0.08),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ManagePackagesPage()),
         ),
       ),
     ];
