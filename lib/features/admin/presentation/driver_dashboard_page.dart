@@ -175,9 +175,6 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
               // ── SEARCH BAR ──
               SliverToBoxAdapter(child: _buildSearchBar()),
 
-              // ── SECTION TITLE ──
-              SliverToBoxAdapter(child: _buildSectionTitle(filteredTrips.length)),
-
               // ── FILTER TABS ──
               SliverToBoxAdapter(child: _buildFilterTabs()),
 
@@ -666,42 +663,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
     );
   }
 
-  // ─────────────────────────────────────────────────────
-  //  SECTION TITLE
-  // ─────────────────────────────────────────────────────
-  Widget _buildSectionTitle(int count) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-      child: Row(
-        children: [
-          Text(
-            'Armada Anda',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: _C.textPrimary,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: _C.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '$count armada',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: _C.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   // ─────────────────────────────────────────────────────
   //  FILTER TABS — Choice Chips
