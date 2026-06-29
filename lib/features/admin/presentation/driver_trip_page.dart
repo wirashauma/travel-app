@@ -8,7 +8,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:intl/intl.dart';
 
+import '../../../core/models/booking_model.dart';
 import '../../../core/models/lng_lat.dart';
 import '../../../core/services/city_coordinates_seeder.dart';
 import '../../../core/services/driver_tracking_service.dart';
@@ -205,6 +207,101 @@ class _DriverTripPageState extends State<DriverTripPage> {
   Future<void> _startTrip() async {
     setState(() => _isLoading = true);
     try {
+      final todayStr = DateFormat('dd MMM yyyy').format(DateTime.now());
+      final snap = await FirebaseFirestore.instance
+          .collection('bookings')
+          .where('fleetId', isEqualTo: widget.fleetId)
+          .where('status', whereIn: ['paid', 'validated', 'used'])
+          .get();
+
+      final filteredBookings = snap.docs
+          .map((d) => BookingModel.fromFirestore(d))
+          .where((b) => b.origin == widget.origin &&
+                        b.destination == widget.destination &&
+                        b.departureDate == todayStr)
+          .toList();
+
+      final pendingPickups = filteredBookings.where((b) => b.status != BookingStatus.used && b.status != BookingStatus.validated).toList();
+
+      if (pendingPickups.isNotEmpty) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: Color(0xFFF1F5F9), width: 1.5),
+              ),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Iconsax.warning_2,
+                      color: Color(0xFFD97706),
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Jemputan Belum Selesai',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: Text(
+                'Ada ${pendingPickups.length} penumpang yang belum selesai dijemput. Silakan selesaikan semua penjemputan di manifest terlebih dahulu sebelum memulai perjalanan.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF475569),
+                  height: 1.5,
+                ),
+              ),
+              actions: [
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F4C81),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Mengerti',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+
       await DriverTrackingService.startTracking(fleetId: widget.fleetId);
       if (mounted) {
         _startTime ??= DateTime.now();

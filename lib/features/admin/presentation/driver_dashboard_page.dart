@@ -12,7 +12,6 @@ import '../../../core/models/booking_model.dart';
 import '../../../core/utils/logout_dialog.dart';
 import '../../edit_profile/presentation/edit_profile_page.dart';
 import '../../package/presentation/driver_package_confirmation_page.dart';
-import 'driver_trip_page.dart';
 import 'fleet_manifest_page.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -46,12 +45,10 @@ class _C {
 class DriverTripAssignment {
   final String fleetId;
   final Map<String, dynamic> data;
-  final String departureTime;
 
   DriverTripAssignment({
     required this.fleetId,
     required this.data,
-    required this.departureTime,
   });
 }
 
@@ -121,14 +118,10 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
           final List<DriverTripAssignment> tripAssignments = [];
           for (final doc in fleetDocs) {
             final data = doc.data() as Map<String, dynamic>;
-            final times = List<String>.from(data['departureTimes'] ?? ['10:00 WIB', '14:00 WIB', '20:00 WIB']);
-            for (final time in times) {
-              tripAssignments.add(DriverTripAssignment(
-                fleetId: doc.id,
-                data: data,
-                departureTime: time,
-              ));
-            }
+            tripAssignments.add(DriverTripAssignment(
+              fleetId: doc.id,
+              data: data,
+            ));
           }
 
           return CustomScrollView(
@@ -156,12 +149,12 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
                       return _FleetCard(
                         fleetId: assignment.fleetId,
                         data: assignment.data,
-                        departureTime: assignment.departureTime,
+                        departureTime: null,
                         index: index,
                         onTap: () => _navigateToManifest(
                           fleetId: assignment.fleetId,
                           data: assignment.data,
-                          departureTime: assignment.departureTime,
+                          departureTime: null,
                         ),
                       );
                     }, childCount: tripAssignments.length),
@@ -180,7 +173,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
   void _navigateToManifest({
     required String fleetId,
     required Map<String, dynamic> data,
-    required String departureTime,
+    String? departureTime,
   }) {
     Navigator.push(
       context,
@@ -495,14 +488,14 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
 class _FleetCard extends StatelessWidget {
   final String fleetId;
   final Map<String, dynamic> data;
-  final String departureTime;
+  final String? departureTime;
   final int index;
   final VoidCallback onTap;
 
   const _FleetCard({
     required this.fleetId,
     required this.data,
-    required this.departureTime,
+    this.departureTime,
     required this.index,
     required this.onTap,
   });
@@ -539,17 +532,20 @@ class _FleetCard extends StatelessWidget {
     }
 
     // Custom time slot styling
-    final String timeLabel;
-    final Color timeBadgeColor;
+    final String? timeLabel;
+    final Color? timeBadgeColor;
     if (departureTime == '10:00 WIB') {
       timeLabel = 'Pagi (10:00)';
       timeBadgeColor = const Color(0xFFD97706); // Amber
     } else if (departureTime == '14:00 WIB') {
       timeLabel = 'Siang (14:00)';
       timeBadgeColor = const Color(0xFF0D9488); // Teal
-    } else {
+    } else if (departureTime == '20:00 WIB') {
       timeLabel = 'Malam (20:00)';
       timeBadgeColor = const Color(0xFF0F4C81); // Indigo
+    } else {
+      timeLabel = null;
+      timeBadgeColor = null;
     }
 
     return GestureDetector(
@@ -614,26 +610,28 @@ class _FleetCard extends StatelessWidget {
                                 ),
                               ),
                             ],
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: timeBadgeColor.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: timeBadgeColor.withValues(alpha: 0.15),
-                                  width: 1,
+                            if (timeLabel != null && timeBadgeColor != null) ...[
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: timeBadgeColor.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: timeBadgeColor.withValues(alpha: 0.15),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  timeLabel,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: timeBadgeColor,
+                                  ),
                                 ),
                               ),
-                              child: Text(
-                                timeLabel,
-                                style: GoogleFonts.inter(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: timeBadgeColor,
-                                ),
-                              ),
-                            ),
+                            ],
                           ],
                         ),
                       ),
@@ -737,7 +735,7 @@ class _FleetCard extends StatelessWidget {
                                 .where((b) => b.origin == origin &&
                                               b.destination == destination &&
                                               b.departureDate == todayStr &&
-                                              b.departureTime == departureTime) // Filter by specific departureTime
+                                              (departureTime == null || departureTime!.isEmpty || b.departureTime == departureTime))
                                 .toList();
                             final ticketCount = filteredBookings.length;
 
@@ -799,7 +797,7 @@ class _FleetCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Lihat Manifest',
+                            'Lihat Detail',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -815,45 +813,6 @@ class _FleetCard extends StatelessWidget {
                         ],
                       ),
                     ],
-                  ),
-
-                  // ── Mulai Perjalanan ──
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => DriverTripPage(
-                              fleetId: fleetId,
-                              fleetName: fleetName,
-                              origin: origin,
-                              destination: destination,
-                              vehicleType: vehicleType,
-                            ),
-                          ),
-                        );
-                      },
-                      icon: Icon(isTripDone ? Iconsax.tick_circle : Iconsax.routing_2, size: 18),
-                      label: Text(
-                        isTripDone ? 'Perjalanan Selesai' : 'Atur Perjalanan',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isTripDone ? _C.border : _C.primary,
-                        foregroundColor: isTripDone ? _C.textSecondary : _C.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),

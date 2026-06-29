@@ -1,51 +1,54 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-// ignore_for_file: unused_field
+// ignore_for_file: deprecated_member_use
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 import '../../../core/models/booking_model.dart';
+import '../../../core/models/lng_lat.dart';
+import '../../../core/services/city_coordinates_seeder.dart';
+import '../../../core/services/mapbox_directions_service.dart';
 import 'ticket_scanner_page.dart';
+import 'driver_trip_page.dart';
+import 'passenger_detail_page.dart';
 
 // ─────────────────────────────────────────────────────────
-//  COLOR PALETTE — Trust Blue / Enterprise
+//  COLOR PALETTE
 // ─────────────────────────────────────────────────────────
 class _C {
-  static const Color primary = Color(0xFF0F4C81);
-  static const Color primaryLight = Color(0xFF1A6BB5);
-  static const Color teal = Color(0xFF0D9488);
-  static const Color bg = Color(0xFFFAFBFD);
-  static const Color white = Color(0xFFFFFFFF);
-  static const Color card = Color(0xFFFFFFFF);
-  static const Color border = Color(0xFFE2E8F0);
-  static const Color borderLight = Color(0xFFF1F5F9);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF475569);
-  static const Color textTertiary = Color(0xFF94A3B8);
-  static const Color textHint = Color(0xFFCBD5E1);
-  static const Color success = Color(0xFF059669);
-  static const Color successBg = Color(0xFFECFDF5);
-  static const Color warning = Color(0xFFD97706);
-  static const Color warningBg = Color(0xFFFFFBEB);
-  static const Color info = Color(0xFF0284C7);
-  static const Color infoBg = Color(0xFFF0F9FF);
-  static const Color error = Color(0xFFDC2626);
+  static const Color primary    = Color(0xFF0F4C81);
+  static const Color teal       = Color(0xFF0D9488);
+  static const Color bg         = Color(0xFFF1F5F9);
+  static const Color card       = Color(0xFFFFFFFF);
+  static const Color border     = Color(0xFFE2E8F0);
+  static const Color textPrimary    = Color(0xFF0F172A);
+  static const Color textSecondary  = Color(0xFF475569);
+  static const Color textTertiary   = Color(0xFF94A3B8);
+  static const Color success    = Color(0xFF059669);
+  static const Color successBg  = Color(0xFFECFDF5);
+  static const Color warning    = Color(0xFFD97706);
+  static const Color warningBg  = Color(0xFFFFFBEB);
+  static const Color info       = Color(0xFF0284C7);
+  static const Color infoBg     = Color(0xFFF0F9FF);
+  static const Color error      = Color(0xFFDC2626);
 }
 
 // ═══════════════════════════════════════════════════════════
-//  FLEET MANIFEST PAGE — Passenger Manifest for a Specific Fleet
+//  FLEET MANIFEST PAGE — REDESIGNED
 //
-//  StreamBuilder: bookings where fleetId == X
-//    AND status IN ['paid', 'validated', 'used']
-//
-//  Features:
-//  • Real-time passenger list with 3-state visual
-//  • Stats row: total, paid, validated, boarded
-//  • Floating "Scan QR Tiket" button → TicketScannerPage
+//  Sections:
+//  1. Gradient header + AppBar
+//  2. Stats row (Total, Lunas, Tervalidasi, Sudah Naik)
+//  3. Surat Jalan card
+//  4. Detail Kendaraan card
+//  5. Peta / Navigasi card
+//  6. Daftar Penumpang (compact cards) → tap → PassengerDetailPage
 // ═══════════════════════════════════════════════════════════
 class FleetManifestPage extends StatefulWidget {
   final String fleetId;
@@ -69,95 +72,31 @@ class FleetManifestPage extends StatefulWidget {
   State<FleetManifestPage> createState() => _FleetManifestPageState();
 }
 
-class _FleetManifestPageState extends State<FleetManifestPage> {
-  late String _selectedTime;
+class _FleetManifestPageState extends State<FleetManifestPage>
+    with SingleTickerProviderStateMixin {
+
+  late final AnimationController _headerAnim;
 
   @override
   void initState() {
     super.initState();
-    _selectedTime = widget.departureTime ?? '10:00 WIB';
+    _headerAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..forward();
   }
 
-  String _fmtPrice(int price) {
-    return NumberFormat.currency(
-      locale: 'id',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    ).format(price);
-  }
-
-  Widget _buildTimeFilterSelector() {
-    final times = [
-      ('10:00 WIB', 'Pagi', Iconsax.sun_1),
-      ('14:00 WIB', 'Siang', Iconsax.sun_fog),
-      ('20:00 WIB', 'Malam', Iconsax.moon),
-    ];
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: _C.borderLight,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: times.map((t) {
-          final isSelected = _selectedTime == t.$1;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedTime = t.$1;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected ? _C.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(11),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: _C.primary.withValues(alpha: 0.15),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          )
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      t.$3,
-                      size: 14,
-                      color: isSelected ? Colors.white : _C.textSecondary,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      t.$2,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: isSelected ? Colors.white : _C.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
+  @override
+  void dispose() {
+    _headerAnim.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final topPad = MediaQuery.of(context).padding.top;
+    final topPad    = MediaQuery.of(context).padding.top;
     final bottomPad = MediaQuery.of(context).padding.bottom;
-    final isSmall = MediaQuery.of(context).size.width < 360;
+    final isSmall   = MediaQuery.of(context).size.width < 360;
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -169,39 +108,28 @@ class _FleetManifestPageState extends State<FleetManifestPage> {
             .snapshots(),
         builder: (context, snapshot) {
           final bookingDocs = snapshot.data?.docs ?? [];
-          final todayStr = DateFormat('dd MMM yyyy').format(DateTime.now());
-          final bookings = bookingDocs
+          final todayStr    = DateFormat('dd MMM yyyy').format(DateTime.now());
+          final bookings    = bookingDocs
               .map((d) => BookingModel.fromFirestore(d))
-              .where((b) => b.origin == widget.origin &&
-                            b.destination == widget.destination &&
-                            b.departureDate == todayStr &&
-                            b.departureTime == _selectedTime)
+              .where((b) =>
+                  b.origin == widget.origin &&
+                  b.destination == widget.destination &&
+                  b.departureDate == todayStr)
               .toList();
 
-          final paidCount = bookings
-              .where((b) => b.status == BookingStatus.paid)
-              .length;
-          final validatedCount = bookings
-              .where((b) => b.status == BookingStatus.validated)
-              .length;
-          final completedCount = bookings
-              .where((b) => b.status == BookingStatus.used)
-              .length;
+          final paidCount      = bookings.where((b) => b.status == BookingStatus.paid).length;
+          final validatedCount = bookings.where((b) => b.status == BookingStatus.validated).length;
+          final completedCount = bookings.where((b) => b.status == BookingStatus.used).length;
 
           return Stack(
             children: [
               CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  // ── APP BAR ──
-                  SliverToBoxAdapter(child: _buildAppBar(context, topPad)),
-
-                  // ── FLEET INFO CARD ──
-                  SliverToBoxAdapter(child: _buildFleetInfo()),
-
-                  // ── TIME FILTER SELECTOR ──
-                  if (widget.departureTime == null)
-                    SliverToBoxAdapter(child: _buildTimeFilterSelector()),
+                  // ── HEADER ──
+                  SliverToBoxAdapter(
+                    child: _buildHeader(context, topPad, bookings.length),
+                  ),
 
                   // ── STATS ROW ──
                   SliverToBoxAdapter(
@@ -214,12 +142,36 @@ class _FleetManifestPageState extends State<FleetManifestPage> {
                     ),
                   ),
 
-                  // ── SECTION LABEL ──
+                  // ── SURAT JALAN ──
                   SliverToBoxAdapter(
-                    child: _buildSectionLabel(bookings.length),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                      child: _buildSuratJalanCard(context, bookings),
+                    ),
                   ),
 
-                  // ── LOADING ──
+                  // ── DETAIL KENDARAAN ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: _buildVehicleCard(context),
+                    ),
+                  ),
+
+                  // ── PETA / NAVIGASI ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: _buildMapCard(context),
+                    ),
+                  ),
+
+                  // ── PASSENGER SECTION HEADER ──
+                  SliverToBoxAdapter(
+                    child: _buildPassengerHeader(bookings.length),
+                  ),
+
+                  // ── PASSENGER LIST ──
                   if (snapshot.connectionState == ConnectionState.waiting &&
                       bookings.isEmpty)
                     const SliverFillRemaining(
@@ -227,53 +179,36 @@ class _FleetManifestPageState extends State<FleetManifestPage> {
                         child: CircularProgressIndicator(color: _C.primary),
                       ),
                     )
-                  // ── ERROR ──
-                  else if (snapshot.hasError)
-                    SliverFillRemaining(
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Iconsax.warning_2, size: 48, color: _C.error),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Gagal memuat data',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: _C.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  // ── EMPTY ──
                   else if (bookings.isEmpty)
-                    SliverFillRemaining(child: _buildEmptyPassenger())
-                  // ── PASSENGER LIST ──
+                    SliverToBoxAdapter(child: _buildEmptyState())
                   else
                     SliverPadding(
-                      padding: EdgeInsets.fromLTRB(20, 4, 20, bottomPad + 90),
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 100),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final booking = bookings[index];
-                          return _PassengerCard(
-                            booking: booking,
-                            index: index,
-                            fmtPrice: _fmtPrice,
-                          );
-                        }, childCount: bookings.length),
+                        delegate: SliverChildBuilderDelegate(
+                          (ctx, i) => _CompactPassengerCard(
+                            booking: bookings[i],
+                            index: i,
+                            onTap: () => Navigator.push(
+                              context,
+                              _pageRoute(
+                                PassengerDetailPage(booking: bookings[i]),
+                              ),
+                            ),
+                          ),
+                          childCount: bookings.length,
+                        ),
                       ),
                     ),
                 ],
               ),
 
-              // ── FLOATING SCAN BUTTON ──
+              // ── BOTTOM ACTION BAR ──
               Positioned(
-                bottom: bottomPad + 20,
-                left: 20,
-                right: 20,
-                child: _buildScanButton(context),
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: _buildBottomBar(context, bottomPad),
               ),
             ],
           );
@@ -283,166 +218,154 @@ class _FleetManifestPageState extends State<FleetManifestPage> {
   }
 
   // ─────────────────────────────────────────────────────
-  //  APP BAR
+  //  HEADER
   // ─────────────────────────────────────────────────────
-  Widget _buildAppBar(BuildContext context, double topPad) {
+  Widget _buildHeader(BuildContext context, double topPad, int passengerCount) {
     return Container(
-      padding: EdgeInsets.fromLTRB(8, topPad + 8, 20, 16),
+      padding: EdgeInsets.fromLTRB(8, topPad + 10, 20, 20),
       decoration: const BoxDecoration(
-        color: _C.white,
-        border: Border(bottom: BorderSide(color: _C.borderLight, width: 1)),
+        gradient: LinearGradient(
+          colors: [Color(0xFF0A3660), Color(0xFF0F4C81), Color(0xFF1565A8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Iconsax.arrow_left, size: 22),
-            color: _C.textPrimary,
-            splashRadius: 22,
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+          // Back row
+          Row(
+            children: [
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Iconsax.arrow_left, size: 22, color: Colors.white),
+                splashRadius: 22,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
                   'Manifest Penumpang',
                   style: GoogleFonts.plusJakartaSans(
-                     fontSize: 17,
+                    fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: _C.textPrimary,
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  widget.fleetName,
-                  style: GoogleFonts.inter(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: _C.textTertiary,
+              ),
+              // Passenger count badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Iconsax.people, size: 13, color: Colors.white),
+                    const SizedBox(width: 5),
+                    Text(
+                      '$passengerCount orang',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Route pill
+          Container(
+            margin: const EdgeInsets.only(left: 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            ),
+            child: Row(
+              children: [
+                _headerInfoCol(
+                  label: 'Dari',
+                  value: widget.origin.isEmpty ? '-' : widget.origin,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Iconsax.arrow_right_3,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.departureTime ?? '-',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 10,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                ),
+                _headerInfoCol(
+                  label: 'Tujuan',
+                  value: widget.destination.isEmpty ? '-' : widget.destination,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                 ),
               ],
             ),
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 350.ms);
+    ).animate().fadeIn(duration: 400.ms);
   }
 
-  // ─────────────────────────────────────────────────────
-  //  FLEET INFO CARD
-  // ─────────────────────────────────────────────────────
-  Widget _buildFleetInfo() {
-    final route = (widget.origin.isNotEmpty && widget.destination.isNotEmpty)
-        ? '${widget.origin} → ${widget.destination}'
-        : '';
-
-    return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: _C.successBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _C.success.withValues(alpha: 0.25)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: _C.success.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Iconsax.car, size: 22, color: _C.success),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.fleetName,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: _C.success,
-                        ),
-                      ),
-                      if (widget.vehicleType.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.vehicleType,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: _C.textTertiary,
-                          ),
-                        ),
-                      ],
-                      if (route.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          route,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _C.primary,
-                          ),
-                        ),
-                      ],
-                      if (widget.departureTime != null) ...[
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Iconsax.clock, size: 13, color: _C.warning),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Jadwal: ${widget.departureTime}',
-                              style: GoogleFonts.inter(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                color: _C.warning,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _C.success,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Aktif',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
+  Widget _headerInfoCol({
+    required String label,
+    required String value,
+    required CrossAxisAlignment crossAxisAlignment,
+  }) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              color: Colors.white.withValues(alpha: 0.6),
             ),
           ),
-        )
-        .animate()
-        .fadeIn(delay: 150.ms, duration: 400.ms)
-        .slideY(begin: 0.08, delay: 150.ms, duration: 400.ms);
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+            overflow: TextOverflow.ellipsis,
+            textAlign: crossAxisAlignment == CrossAxisAlignment.end
+                ? TextAlign.end
+                : TextAlign.start,
+          ),
+        ],
+      ),
+    );
   }
 
   // ─────────────────────────────────────────────────────
-  //  STATS ROW (Unified Single Card with Dividers)
+  //  STATS ROW
   // ─────────────────────────────────────────────────────
   Widget _buildStatsRow(
     bool isSmall, {
@@ -452,57 +375,33 @@ class _FleetManifestPageState extends State<FleetManifestPage> {
     required int completed,
   }) {
     final stats = [
-      _StatItem(
-        icon: Iconsax.people,
-        label: 'Total',
-        value: '$total',
-        color: _C.primary,
-        bgColor: _C.primary.withValues(alpha: 0.08),
-      ),
-      _StatItem(
-        icon: Iconsax.ticket_2,
-        label: 'Paid',
-        value: '$paid',
-        color: _C.warning,
-        bgColor: _C.warningBg,
-      ),
-      _StatItem(
-        icon: Iconsax.shield_tick,
-        label: 'Validated',
-        value: '$validated',
-        color: _C.info,
-        bgColor: _C.infoBg,
-      ),
-      _StatItem(
-        icon: Iconsax.tick_circle,
-        label: 'Boarded',
-        value: '$completed',
-        color: _C.success,
-        bgColor: _C.successBg,
-      ),
+      _StatItem(icon: Iconsax.people,      label: 'Total',      value: '$total',     color: _C.primary, bg: _C.primary.withValues(alpha: 0.1)),
+      _StatItem(icon: Iconsax.ticket_2,    label: 'Lunas',      value: '$paid',      color: _C.warning, bg: _C.warningBg),
+      _StatItem(icon: Iconsax.shield_tick, label: 'Validasi',   value: '$validated', color: _C.info,    bg: _C.infoBg),
+      _StatItem(icon: Iconsax.tick_circle, label: 'Sudah Naik', value: '$completed', color: _C.success, bg: _C.successBg),
     ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: _C.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: _C.border.withValues(alpha: 0.8)),
           boxShadow: [
             BoxShadow(
-              color: _C.primary.withValues(alpha: 0.03),
-              blurRadius: 14,
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: IntrinsicHeight(
           child: Row(
-            children: stats.asMap().entries.map((entry) {
-              final i = entry.key;
-              final stat = entry.value;
+            children: stats.asMap().entries.map((e) {
+              final i    = e.key;
+              final stat = e.value;
               return Expanded(
                 child: Row(
                   children: [
@@ -511,17 +410,17 @@ class _FleetManifestPageState extends State<FleetManifestPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            width: 36,
-                            height: 36,
+                            width: 34,
+                            height: 34,
                             decoration: BoxDecoration(
-                              color: stat.bgColor,
+                              color: stat.bg,
                               shape: BoxShape.circle,
                             ),
                             child: Center(
-                              child: Icon(stat.icon, size: 16, color: stat.color),
+                              child: Icon(stat.icon, size: 15, color: stat.color),
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           Text(
                             stat.value,
                             style: GoogleFonts.plusJakartaSans(
@@ -530,12 +429,12 @@ class _FleetManifestPageState extends State<FleetManifestPage> {
                               color: _C.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Text(
                             stat.label,
                             style: GoogleFonts.inter(
-                              fontSize: isSmall ? 10.5 : 12,
-                              fontWeight: FontWeight.w600,
+                              fontSize: isSmall ? 9.5 : 11,
+                              fontWeight: FontWeight.w500,
                               color: _C.textTertiary,
                             ),
                             textAlign: TextAlign.center,
@@ -546,7 +445,7 @@ class _FleetManifestPageState extends State<FleetManifestPage> {
                     if (i < stats.length - 1)
                       Container(
                         width: 1,
-                        height: 36,
+                        height: 32,
                         color: _C.border.withValues(alpha: 0.6),
                       ),
                   ],
@@ -556,26 +455,325 @@ class _FleetManifestPageState extends State<FleetManifestPage> {
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06, duration: 400.ms);
+    ).animate().fadeIn(delay: 150.ms, duration: 400.ms).slideY(begin: 0.06, delay: 150.ms);
   }
 
   // ─────────────────────────────────────────────────────
-  //  SECTION LABEL
+  //  SURAT JALAN CARD
   // ─────────────────────────────────────────────────────
-  Widget _buildSectionLabel(int count) {
+  Widget _buildSuratJalanCard(
+    BuildContext context,
+    List<BookingModel> bookings,
+  ) {
+    final todayStr  = DateFormat('dd MMMM yyyy', 'id').format(DateTime.now());
+    final dayOfWeek = DateFormat('EEEE', 'id').format(DateTime.now());
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('fleets')
+          .doc(widget.fleetId)
+          .snapshots(),
+      builder: (context, fleetSnap) {
+        final fleetData  = fleetSnap.data?.data() as Map<String, dynamic>?;
+        final tripStatus = fleetData?['tripStatus'] as String? ?? 'menunggu';
+
+        Color statusColor;
+        IconData statusIcon;
+        String statusLabel;
+        Color statusBg;
+
+        switch (tripStatus) {
+          case 'berjalan':
+            statusColor = _C.success;
+            statusIcon  = Iconsax.routing_2;
+            statusLabel = 'Sedang Berjalan';
+            statusBg    = _C.successBg;
+            break;
+          case 'selesai':
+            statusColor = _C.textTertiary;
+            statusIcon  = Iconsax.tick_circle;
+            statusLabel = 'Selesai';
+            statusBg    = const Color(0xFFF1F5F9);
+            break;
+          default:
+            statusColor = _C.warning;
+            statusIcon  = Iconsax.clock;
+            statusLabel = 'Menunggu';
+            statusBg    = _C.warningBg;
+        }
+
+        return _ManifestSectionCard(
+          title: 'Surat Jalan',
+          icon: Iconsax.document_text,
+          delay: 200,
+          child: Column(
+            children: [
+              // Status baris atas
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 13, color: statusColor),
+                        const SizedBox(width: 5),
+                        Text(
+                          statusLabel,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Hari ini',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: _C.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Divider(color: Color(0xFFF1F5F9), height: 1),
+              const SizedBox(height: 14),
+
+              // Info rows
+              _JalanInfoRow(
+                icon: Iconsax.calendar_1,
+                iconColor: _C.warning,
+                label: 'Tanggal Keberangkatan',
+                value: '$dayOfWeek, $todayStr',
+              ),
+              const SizedBox(height: 12),
+              _JalanInfoRow(
+                icon: Iconsax.clock,
+                iconColor: _C.info,
+                label: 'Jam Keberangkatan',
+                value: widget.departureTime?.isNotEmpty == true
+                    ? widget.departureTime!
+                    : '-',
+              ),
+              const SizedBox(height: 12),
+              _JalanInfoRow(
+                icon: Iconsax.routing_2,
+                iconColor: _C.primary,
+                label: 'Rute Perjalanan',
+                value: '${widget.origin} → ${widget.destination}',
+              ),
+              const SizedBox(height: 12),
+              _JalanInfoRow(
+                icon: Iconsax.people,
+                iconColor: _C.teal,
+                label: 'Total Penumpang',
+                value: '${bookings.length} orang',
+              ),
+
+              // Driver name if available
+              if (fleetData?['driverName'] != null &&
+                  (fleetData!['driverName'] as String).isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _JalanInfoRow(
+                  icon: Iconsax.driving,
+                  iconColor: _C.primary,
+                  label: 'Pengemudi',
+                  value: fleetData['driverName'] as String,
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ─────────────────────────────────────────────────────
+  //  DETAIL KENDARAAN CARD
+  // ─────────────────────────────────────────────────────
+  Widget _buildVehicleCard(BuildContext context) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('fleets')
+          .doc(widget.fleetId)
+          .snapshots(),
+      builder: (context, snap) {
+        final data        = snap.data?.data() as Map<String, dynamic>?;
+        final imageUrl    = data?['imageUrl'] as String?;
+        final totalSeats  = (data?['totalSeats'] as num?)?.toInt() ?? 0;
+        final availSeats  = (data?['availableSeats'] as num?)?.toInt() ?? 0;
+        final bookedSeats = totalSeats - availSeats;
+
+        return _ManifestSectionCard(
+          title: 'Detail Kendaraan',
+          icon: Iconsax.car,
+          delay: 300,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Vehicle image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: imageUrl != null && imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        width: 100,
+                        height: 76,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _vehiclePlaceholder(),
+                      )
+                    : _vehiclePlaceholder(),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.fleetName,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: _C.textPrimary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (widget.vehicleType.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.vehicleType,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: _C.textSecondary,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    // Seat capacity bar
+                    _SeatCapacityBar(
+                      booked: bookedSeats,
+                      total: totalSeats,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _vehiclePlaceholder() {
+    return Container(
+      width: 100,
+      height: 76,
+      decoration: BoxDecoration(
+        color: _C.bg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _C.border),
+      ),
+      child: const Icon(Iconsax.car, size: 32, color: _C.textTertiary),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────
+  //  PETA / NAVIGASI CARD  — Real Mapbox Route Map
+  // ─────────────────────────────────────────────────────
+  Widget _buildMapCard(BuildContext context) {
+    return _ManifestSectionCard(
+      title: 'Peta & Navigasi',
+      icon: Iconsax.map_1,
+      delay: 400,
+      child: Column(
+        children: [
+          // ── Real Mapbox embedded map ──
+          _EmbeddedRouteMap(
+            fleetId: widget.fleetId,
+            origin: widget.origin,
+            destination: widget.destination,
+            onFullMapTap: () => _openDriverTripPage(context),
+          ),
+          const SizedBox(height: 12),
+
+          // ── Quick action buttons ──
+          Row(
+            children: [
+              Expanded(
+                child: _MapActionBtn(
+                  icon: Iconsax.routing_2,
+                  label: 'Peta Lengkap',
+                  color: _C.primary,
+                  onTap: () => _openDriverTripPage(context),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MapActionBtn(
+                  icon: Iconsax.location_tick,
+                  label: 'Lacak Pengemudi',
+                  color: _C.teal,
+                  onTap: () => _openDriverTripPage(context),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openDriverTripPage(BuildContext context) {
+    Navigator.push(
+      context,
+      _pageRoute(
+        DriverTripPage(
+          fleetId: widget.fleetId,
+          fleetName: widget.fleetName,
+          origin: widget.origin,
+          destination: widget.destination,
+          vehicleType: widget.vehicleType,
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────
+  //  PASSENGER SECTION HEADER
+  // ─────────────────────────────────────────────────────
+  Widget _buildPassengerHeader(int count) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
       child: Row(
         children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: _C.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Iconsax.people, size: 16, color: _C.primary),
+          ),
+          const SizedBox(width: 10),
           Text(
             'Daftar Penumpang',
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 17,
+              fontSize: 16,
               fontWeight: FontWeight.w800,
               color: _C.textPrimary,
             ),
           ),
-          const SizedBox(width: 8),
+          const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
@@ -586,700 +784,1054 @@ class _FleetManifestPageState extends State<FleetManifestPage> {
               '$count tiket',
               style: GoogleFonts.inter(
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: _C.primary,
               ),
             ),
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 300.ms, duration: 400.ms);
+    ).animate().fadeIn(delay: 500.ms, duration: 400.ms);
   }
 
   // ─────────────────────────────────────────────────────
-  //  EMPTY PASSENGER STATE
+  //  EMPTY STATE
   // ─────────────────────────────────────────────────────
-  Widget _buildEmptyPassenger() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Iconsax.people, size: 56, color: _C.textHint),
-          const SizedBox(height: 16),
-          Text(
-            'Belum ada penumpang',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: _C.textTertiary,
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: _C.card,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _C.border),
+        ),
+        child: Column(
+          children: [
+            const Icon(Iconsax.people, size: 48, color: Color(0xFFCBD5E1)),
+            const SizedBox(height: 12),
+            Text(
+              'Belum Ada Penumpang',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: _C.textSecondary,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Tiket yang sudah dibayar akan muncul di sini',
-            style: GoogleFonts.inter(fontSize: 13, color: _C.textHint),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              'Tiket yang sudah dibayar\nakan muncul di sini',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: _C.textTertiary,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   // ─────────────────────────────────────────────────────
-  //  FLOATING SCAN BUTTON
+  //  BOTTOM BAR
   // ─────────────────────────────────────────────────────
-  Widget _buildScanButton(BuildContext context) {
-    return SizedBox(
-          height: 54,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TicketScannerPage()),
-              );
-            },
-            icon: const Icon(Iconsax.scan_barcode, size: 20),
-            label: Text(
-              'Scan QR Tiket',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
+  Widget _buildBottomBar(BuildContext context, double bottomPad) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('fleets')
+          .doc(widget.fleetId)
+          .snapshots(),
+      builder: (context, snap) {
+        final data       = snap.data?.data() as Map<String, dynamic>?;
+        final tripStatus = data?['tripStatus'] as String? ?? 'menunggu';
+        final isDone     = tripStatus == 'selesai';
+
+        return Container(
+          padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPad + 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.07),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _C.teal,
-              foregroundColor: Colors.white,
-              elevation: 6,
-              shadowColor: _C.teal.withValues(alpha: 0.4),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+            ],
           ),
-        )
-        .animate()
-        .fadeIn(delay: 500.ms, duration: 400.ms)
-        .slideY(begin: 0.3, delay: 500.ms, duration: 400.ms);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  PASSENGER CARD — Real-Time Manifest Item
-//
-//  3-State Visual:
-//  • paid      → white bg, yellow clock, "Belum Check-in"
-//  • validated → blue bg, shield icon, "Tervalidasi"
-//  • used      → green bg, check icon, "Sudah Naik"
-// ═══════════════════════════════════════════════════════════
-class _PassengerCard extends StatelessWidget {
-  final BookingModel booking;
-  final int index;
-  final String Function(int) fmtPrice;
-
-  const _PassengerCard({
-    required this.booking,
-    required this.index,
-    required this.fmtPrice,
-  });
-
-  Future<void> _openGoogleMaps(BuildContext context, BookingModel booking) async {
-    final lat = booking.pickupLatitude;
-    final lng = booking.pickupLongitude;
-    final addr = booking.pickupAddress;
-
-    if ((lat == null || lng == null) && (addr == null || addr.isEmpty)) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color(0xFFF1F5F9), width: 1.5),
-          ),
-          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          title: Row(
+          child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7), // Amber 100
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Iconsax.warning_2,
-                  color: Color(0xFFD97706), // Amber 700
-                  size: 22,
+              // Scan ticket
+              Expanded(
+                child: SizedBox(
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      _pageRoute(const TicketScannerPage()),
+                    ),
+                    icon: const Icon(Iconsax.scan_barcode, size: 18, color: Colors.white),
+                    label: Text(
+                      'Scan Tiket',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _C.teal,
+                      elevation: 3,
+                      shadowColor: _C.teal.withValues(alpha: 0.3),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
+              // Atur perjalanan
               Expanded(
-                child: Text(
-                  'Lokasi Tidak Tersedia',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    color: const Color(0xFF0F172A), // Slate 900
+                child: SizedBox(
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openDriverTripPage(context),
+                    icon: Icon(
+                      isDone ? Iconsax.tick_circle : Iconsax.routing_2,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      isDone ? 'Selesai' : 'Atur Perjalanan',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDone
+                          ? const Color(0xFF94A3B8)
+                          : _C.primary,
+                      elevation: isDone ? 0 : 3,
+                      shadowColor: _C.primary.withValues(alpha: 0.3),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ],
           ),
-          content: Text(
-            'Penumpang ini belum menentukan alamat penjemputan mereka. Silakan hubungi penumpang secara langsung untuk koordinasi lokasi.',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: const Color(0xFF475569), // Slate 600
-              height: 1.5,
-            ),
-          ),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F4C81),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'Mengerti',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-      return;
+        );
+      },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────
+//  PAGE ROUTE HELPER
+// ─────────────────────────────────────────────────────
+PageRoute<T> _pageRoute<T>(Widget page) {
+  return MaterialPageRoute<T>(builder: (_) => page);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EMBEDDED ROUTE MAP — Real Mapbox with Directions API Route
+//
+//  Features:
+//  • Fetches real driving route via Mapbox Directions API
+//  • Draws polyline with gradient color on the map
+//  • Shows origin pin (green) + destination pin (red)
+//  • Live driver marker from Firestore driver_locations
+//  • LIVE badge when driver is active
+//  • Expand button → DriverTripPage
+//  • Loading shimmer & error fallback
+// ═══════════════════════════════════════════════════════════
+class _EmbeddedRouteMap extends StatefulWidget {
+  final String fleetId;
+  final String origin;
+  final String destination;
+  final VoidCallback onFullMapTap;
+
+  const _EmbeddedRouteMap({
+    required this.fleetId,
+    required this.origin,
+    required this.destination,
+    required this.onFullMapTap,
+  });
+
+  @override
+  State<_EmbeddedRouteMap> createState() => _EmbeddedRouteMapState();
+}
+
+class _EmbeddedRouteMapState extends State<_EmbeddedRouteMap> {
+  // Map controllers
+  MapboxMap? _mapboxMap;
+  PointAnnotationManager? _pointMgr;
+  PolylineAnnotationManager? _polyMgr;
+
+  // Route state
+  List<LngLat> _routePoints = [];
+  bool _routeLoaded = false;
+  bool _routeError  = false;
+  bool _mapReady    = false;
+
+  // Driver tracking
+  LngLat? _driverPos;
+  PointAnnotation? _driverAnnotation;
+  bool _isDriverActive = false;
+
+  // Pre-rendered icon bytes
+  Uint8List? _originIconBytes;
+  Uint8List? _destIconBytes;
+  Uint8List? _driverIconBytes;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRoute();
+    _renderIcons();
+    _listenDriverLocation();
+  }
+
+  // ── Load route from Mapbox Directions API ──
+  Future<void> _loadRoute() async {
+    try {
+      final oCoords = CityCoordinatesSeeder.getCoordinates(widget.origin);
+      final dCoords = CityCoordinatesSeeder.getCoordinates(widget.destination);
+      if (oCoords == null || dCoords == null) {
+        if (mounted) setState(() => _routeError = true);
+        return;
+      }
+      final waypoints = [
+        LngLat(oCoords['lng']!, oCoords['lat']!),
+        LngLat(dCoords['lng']!, dCoords['lat']!),
+      ];
+      final route = await MapboxDirectionsService.instance.getRoute(waypoints);
+      if (!mounted) return;
+      setState(() {
+        _routePoints = route.isNotEmpty ? route : waypoints;
+        _routeLoaded = true;
+      });
+      if (_mapReady) _drawRoute();
+    } catch (_) {
+      if (mounted) setState(() => _routeError = true);
+    }
+  }
+
+  // ── Pre-render custom marker icons ──
+  Future<void> _renderIcons() async {
+    _originIconBytes = await _renderPin(const Color(0xFF059669));
+    _destIconBytes   = await _renderPin(const Color(0xFFEF4444));
+    _driverIconBytes = await _renderDriverIcon();
+    if (mounted) setState(() {});
+  }
+
+  Future<Uint8List> _renderPin(Color color, {double size = 64}) async {
+    final r = size * 0.38;
+    final cx = size / 2;
+    final cy = r;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    // Shadow
+    final shadow = Paint()
+      ..color = color.withOpacity(0.25)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    canvas.drawCircle(Offset(cx, cy + 2), r * 1.05, shadow);
+
+    // Pin circle
+    canvas.drawCircle(Offset(cx, cy), r, Paint()..color = color);
+
+    // Pin tail
+    final path = Path()
+      ..moveTo(cx, size * 0.82)
+      ..lineTo(cx - r * 0.42, cy + r * 0.72)
+      ..lineTo(cx + r * 0.42, cy + r * 0.72)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
+
+    // White inner dot
+    canvas.drawCircle(Offset(cx, cy), r * 0.38, Paint()..color = Colors.white);
+
+    final img  = await recorder.endRecording().toImage(size.toInt(), size.toInt());
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    return data!.buffer.asUint8List();
+  }
+
+  Future<Uint8List> _renderDriverIcon({double size = 52}) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final cx = size / 2;
+    final cy = size / 2;
+
+    // Outer pulse ring
+    canvas.drawCircle(
+      Offset(cx, cy),
+      size / 2,
+      Paint()..color = const Color(0xFF0F4C81).withOpacity(0.18),
+    );
+    // Main circle
+    canvas.drawCircle(
+      Offset(cx, cy),
+      size * 0.38,
+      Paint()..color = const Color(0xFF0F4C81),
+    );
+    // Border
+    canvas.drawCircle(
+      Offset(cx, cy),
+      size * 0.38,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5,
+    );
+
+    final img  = await recorder.endRecording().toImage(size.toInt(), size.toInt());
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    return data!.buffer.asUint8List();
+  }
+
+  // ── Listen to driver location from Firestore ──
+  void _listenDriverLocation() {
+    FirebaseFirestore.instance
+        .collection('driver_locations')
+        .doc(widget.fleetId)
+        .snapshots()
+        .listen((doc) {
+      if (!mounted) return;
+      final d   = doc.data();
+      if (d == null) return;
+      final lat = (d['latitude']  as num?)?.toDouble();
+      final lng = (d['longitude'] as num?)?.toDouble();
+      if (lat == null || lng == null) return;
+      setState(() {
+        _driverPos      = LngLat(lng, lat);
+        _isDriverActive = true;
+      });
+      _updateDriverMarker();
+    });
+  }
+
+  // ── Map callbacks ──
+  void _onMapCreated(MapboxMap map) async {
+    _mapboxMap = map;
+    // Disable gestures — read-only preview
+    await map.gestures.updateSettings(GesturesSettings(
+      scrollEnabled: false,
+      rotateEnabled: false,
+      pinchToZoomEnabled: false,
+      pitchEnabled: false,
+      doubleTapToZoomInEnabled: false,
+      doubleTouchToZoomOutEnabled: false,
+    ));
+
+    _pointMgr = await map.annotations.createPointAnnotationManager();
+    _polyMgr  = await map.annotations.createPolylineAnnotationManager();
+    _mapReady  = true;
+    if (_routeLoaded) _drawRoute();
+  }
+
+  // ── Draw route polyline + pins ──
+  Future<void> _drawRoute() async {
+    if (_polyMgr == null || _pointMgr == null) return;
+    if (_routePoints.isEmpty) return;
+    if (_originIconBytes == null || _destIconBytes == null) return;
+
+    // Casing outline (drawn first = behind)
+    await _polyMgr!.create(PolylineAnnotationOptions(
+      lineColor: const Color(0xFF1A6BB5).withOpacity(0.25).toARGB32(),
+      lineWidth: 9.0,
+      geometry: LineString(
+        coordinates: _routePoints
+            .map((p) => Position(p.lng, p.lat))
+            .toList(),
+      ),
+    ));
+
+    // Main blue route polyline
+    await _polyMgr!.create(PolylineAnnotationOptions(
+      lineColor: const Color(0xFF0F4C81).toARGB32(),
+      lineWidth: 4.5,
+      geometry: LineString(
+        coordinates: _routePoints
+            .map((p) => Position(p.lng, p.lat))
+            .toList(),
+      ),
+    ));
+
+    // Origin marker (green pin)
+    final origin = _routePoints.first;
+    await _pointMgr!.create(PointAnnotationOptions(
+      geometry: Point(coordinates: Position(origin.lng, origin.lat)),
+      image: _originIconBytes,
+      iconSize: 0.45,
+    ));
+
+    // Destination marker (red pin)
+    final dest = _routePoints.last;
+    await _pointMgr!.create(PointAnnotationOptions(
+      geometry: Point(coordinates: Position(dest.lng, dest.lat)),
+      image: _destIconBytes,
+      iconSize: 0.45,
+    ));
+
+    // Driver marker
+    if (_driverPos != null && _driverIconBytes != null) {
+      _driverAnnotation = await _pointMgr!.create(PointAnnotationOptions(
+        geometry: Point(coordinates: Position(_driverPos!.lng, _driverPos!.lat)),
+        image: _driverIconBytes,
+        iconSize: 0.5,
+      ));
     }
 
-    Uri url;
-    if (lat != null && lng != null) {
-      url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
-    } else {
-      url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(addr!)}');
+    // ━━ Fit camera so BOTH endpoints are always visible ━━
+    await _fitCameraToBounds();
+  }
+
+  // ── Camera fit — guarantees both pins are visible with padding ──
+  Future<void> _fitCameraToBounds() async {
+    if (_mapboxMap == null || _routePoints.isEmpty) return;
+
+    // Compute bounding box from ALL route points
+    double minLng = _routePoints.first.lng;
+    double maxLng = _routePoints.first.lng;
+    double minLat = _routePoints.first.lat;
+    double maxLat = _routePoints.first.lat;
+
+    for (final p in _routePoints) {
+      if (p.lng < minLng) minLng = p.lng;
+      if (p.lng > maxLng) maxLng = p.lng;
+      if (p.lat < minLat) minLat = p.lat;
+      if (p.lat > maxLat) maxLat = p.lat;
     }
+
+    // Expand bbox by ~10% so pins don't sit on the edge
+    final lngPad = (maxLng - minLng) * 0.18;
+    final latPad = (maxLat - minLat) * 0.22;
+
+    final centerLng = (minLng + maxLng) / 2;
+    final centerLat = (minLat + maxLat) / 2;
+
+    // Calculate zoom from bbox size
+    final lngSpan = (maxLng - minLng) + lngPad * 2;
+    final latSpan = (maxLat - minLat) + latPad * 2;
+    final maxSpan = lngSpan > latSpan ? lngSpan : latSpan;
+
+    final zoom = _zoomForSpan(maxSpan);
 
     try {
-      // Modern launch pattern: directly trigger external launch to bypass package visibility queries checks
-      final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
-      if (!launched) {
-        // Fallback to defaults (system browser / maps application)
-        await launchUrl(url, mode: LaunchMode.platformDefault);
+      await _mapboxMap!.flyTo(
+        CameraOptions(
+          center: Point(coordinates: Position(centerLng, centerLat)),
+          zoom: zoom,
+          bearing: 0,
+          pitch: 0,
+        ),
+        MapAnimationOptions(duration: 600, startDelay: 0),
+      );
+    } catch (_) {}
+  }
+
+  double _zoomForSpan(double span) {
+    if (span < 0.08) { return 13.0; }
+    if (span < 0.20) { return 11.5; }
+    if (span < 0.50) { return 10.5; }
+    if (span < 1.00) { return 9.5; }
+    if (span < 2.00) { return 8.5; }
+    if (span < 4.00) { return 7.8; }
+    if (span < 8.00) { return 7.0; }
+    return 6.0;
+  }
+
+  // ── Update driver marker live ──
+  Future<void> _updateDriverMarker() async {
+    if (_driverPos == null || _pointMgr == null || !_mapReady) return;
+    final pos = _driverPos!;
+    try {
+      if (_driverAnnotation != null) {
+        _driverAnnotation!.geometry =
+            Point(coordinates: Position(pos.lng, pos.lat));
+        await _pointMgr!.update(_driverAnnotation!);
+      } else if (_driverIconBytes != null) {
+        _driverAnnotation = await _pointMgr!.create(PointAnnotationOptions(
+          geometry: Point(coordinates: Position(pos.lng, pos.lat)),
+          image: _driverIconBytes,
+          iconSize: 0.5,
+        ));
       }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Tidak dapat membuka peta: $e'),
-            backgroundColor: _C.error,
-          ),
-        );
-      }
+    } catch (_) {}
+  }
+
+  // ── Initial camera center (before flyTo) ──
+  Position get _initialCenter {
+    final oC = CityCoordinatesSeeder.getCoordinates(widget.origin);
+    final dC = CityCoordinatesSeeder.getCoordinates(widget.destination);
+    if (oC != null && dC != null) {
+      return Position(
+        (oC['lng']! + dC['lng']!) / 2,
+        (oC['lat']! + dC['lat']!) / 2,
+      );
     }
+    return Position(100.35, -0.9);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isUsed = booking.status == BookingStatus.used;
-    final isValidated = booking.status == BookingStatus.validated;
-
-    final String statusLabel;
-    final Color statusColor;
-    final Color statusBg;
-    final IconData statusIcon;
-    final Color cardBg;
-    final Color borderColor;
-    final Color nameColor;
-    final TextDecoration nameDecoration;
-
-    if (isUsed) {
-      statusLabel = 'Sudah Naik';
-      statusColor = _C.success;
-      statusBg = _C.successBg;
-      statusIcon = Iconsax.tick_circle;
-      cardBg = const Color(0xFFF0FDF4);
-      borderColor = _C.success.withValues(alpha: 0.35);
-      nameColor = _C.success;
-      nameDecoration = TextDecoration.lineThrough;
-    } else if (isValidated) {
-      statusLabel = 'Tervalidasi';
-      statusColor = _C.info;
-      statusBg = _C.infoBg;
-      statusIcon = Iconsax.shield_tick;
-      cardBg = const Color(0xFFF0F9FF);
-      borderColor = _C.info.withValues(alpha: 0.35);
-      nameColor = _C.info;
-      nameDecoration = TextDecoration.none;
-    } else {
-      statusLabel = 'Belum Check-in';
-      statusColor = _C.warning;
-      statusBg = _C.warningBg;
-      statusIcon = Iconsax.clock;
-      cardBg = _C.card;
-      borderColor = _C.border.withValues(alpha: 0.6);
-      nameColor = _C.textPrimary;
-      nameDecoration = TextDecoration.none;
-    }
-
-    final seatLabel = booking.seatNumbers.isNotEmpty
-        ? booking.seatNumbers.map((s) => 'No. $s').join(', ')
-        : '${booking.seatsBooked} kursi';
-
-    return AnimatedContainer(
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOut,
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: cardBg,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: borderColor,
-              width: (isUsed || isValidated) ? 1.5 : 1.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isUsed
-                    ? _C.success.withValues(alpha: 0.08)
-                    : isValidated
-                    ? _C.info.withValues(alpha: 0.08)
-                    : _C.primary.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        height: 220,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _C.border),
+        ),
+        child: Stack(
+          children: [
+            // ── Mapbox Map ──
+            MapWidget(
+              key: ValueKey('manifest_map_${widget.fleetId}'),
+              mapOptions: MapOptions(
+                pixelRatio: MediaQuery.of(context).devicePixelRatio,
+                constrainMode: ConstrainMode.HEIGHT_ONLY,
+                orientation: NorthOrientation.UPWARDS,
               ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Top: Name + Status badge ──
-                Row(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 350),
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: isUsed
-                            ? _C.success.withValues(alpha: 0.12)
-                            : isValidated
-                            ? _C.info.withValues(alpha: 0.12)
-                            : _C.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: isUsed
-                            ? const Icon(
-                                Iconsax.tick_circle,
-                                size: 20,
-                                color: _C.success,
-                              )
-                            : isValidated
-                            ? Icon(
-                                Iconsax.shield_tick,
-                                size: 20,
-                                color: _C.info,
-                              )
-                            : Text(
-                                booking.userName.isNotEmpty
-                                    ? booking.userName[0].toUpperCase()
-                                    : '?',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: _C.primary,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            booking.userName,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: nameColor,
-                              decoration: nameDecoration,
-                              decorationColor: _C.success.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            'Kode: ${booking.bookingCode}',
-                            style: GoogleFonts.jetBrainsMono(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: _C.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 350),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusBg,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(statusIcon, size: 12, color: statusColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            statusLabel,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: statusColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
+              viewport: CameraViewportState(
+                center: Point(coordinates: _initialCenter),
+                zoom: 7.5,
+              ),
+              styleUri: 'mapbox://styles/mapbox/streets-v12',
+              onMapCreated: _onMapCreated,
+              onStyleLoadedListener: (_) {
+                if (_routeLoaded) _drawRoute();
+              },
+            ),
 
-                // ── Route row (Premium boarding pass style with High Contrast Connector) ──
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            // ── Loading overlay ──
+            if (!_routeLoaded && !_routeError)
+              Container(
+                color: Colors.white.withOpacity(0.75),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Color(0xFF0F4C81),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Memuat rute...',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _C.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // ── Error fallback ──
+            if (_routeError)
+              Container(
+                color: _C.bg,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Iconsax.map,
+                        size: 36,
+                        color: Color(0xFFCBD5E1),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Rute tidak ditemukan',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: _C.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // ── Route label overlay (top-left) ──
+            if (_routeLoaded)
+              Positioned(
+                top: 10,
+                left: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                   decoration: BoxDecoration(
-                    color: isUsed
-                        ? _C.success.withValues(alpha: 0.04)
-                        : isValidated
-                        ? _C.info.withValues(alpha: 0.04)
-                        : _C.bg,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: _C.border.withValues(alpha: 0.4)),
+                    color: Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 6,
+                      ),
+                    ],
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'ASAL',
-                              style: GoogleFonts.inter(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: _C.textSecondary,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              booking.origin,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w800,
-                                color: isUsed ? _C.textSecondary : _C.textPrimary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Neutral High Contrast gray arrow connector
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 5,
-                              height: 5,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _C.textTertiary,
-                              ),
-                            ),
-                            Container(
-                              width: 20,
-                              height: 1,
-                              color: _C.border,
-                            ),
-                            const Icon(
-                              Iconsax.arrow_right_1,
-                              size: 14,
-                              color: _C.textSecondary,
-                            ),
-                            Container(
-                              width: 20,
-                              height: 1,
-                              color: _C.border,
-                            ),
-                            Container(
-                              width: 5,
-                              height: 5,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _C.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'TUJUAN',
-                              style: GoogleFonts.inter(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: _C.textSecondary,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              booking.destination,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w800,
-                                color: isUsed ? _C.textSecondary : _C.textPrimary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.end,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // ── Bottom: Seat + Date + Price ──
-                Row(
-                  children: [
-                    _InfoChip(
-                      icon: Iconsax.ticket,
-                      label: seatLabel,
-                      color: isUsed
-                          ? _C.success
-                          : isValidated
-                          ? _C.info
-                          : _C.primary,
-                    ),
-                    if (isUsed || isValidated) ...[
-                      const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isUsed
-                              ? _C.success.withValues(alpha: 0.12)
-                              : _C.info.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: isUsed
-                                ? _C.success.withValues(alpha: 0.25)
-                                : _C.info.withValues(alpha: 0.25),
-                            width: 1,
-                          ),
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF059669),
+                          shape: BoxShape.circle,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Iconsax.verify,
-                              size: 10,
-                              color: isUsed ? _C.success : _C.info,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Terisi',
-                              style: GoogleFonts.inter(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: isUsed ? _C.success : _C.info,
-                              ),
-                            ),
-                          ],
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        widget.origin,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: _C.textPrimary,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: Icon(Icons.arrow_forward_rounded, size: 10, color: Color(0xFF94A3B8)),
+                      ),
+                      Text(
+                        widget.destination,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: _C.textPrimary,
                         ),
                       ),
                     ],
-                    const SizedBox(width: 10),
-                    _InfoChip(
-                      icon: Iconsax.calendar_1,
-                      label: booking.departureDate,
-                      color: _C.textSecondary,
-                    ),
-                    const Spacer(),
-                    Text(
-                      fmtPrice(booking.totalPrice),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                        color: isUsed
-                            ? _C.success
-                            : isValidated
-                            ? _C.info
-                            : _C.primary,
-                      ),
-                    ),
-                  ],
-                ),
-
-                // ── Pickup Address Card (Clean, Premium, High Contrast Alert Box) ──
-                if (booking.pickupAddress != null && booking.pickupAddress!.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _C.bg,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _C.border.withValues(alpha: 0.8)),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEF2F2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Iconsax.location, size: 16, color: Color(0xFFEF4444)),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'ALAMAT PENJEMPUTAN',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: _C.textPrimary,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                booking.pickupAddress!,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12.5,
-                                  color: _C.textSecondary,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                ],
+                ),
+              ),
 
-                // ── Google Maps Directions Button ──
-                const Divider(height: 24, color: _C.borderLight),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _C.primary.withValues(alpha: 0.12),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton.icon(
-                          onPressed: () => _openGoogleMaps(context, booking),
-                          icon: const Icon(Iconsax.map_1, size: 16, color: Colors.white),
-                          label: Text(
-                            'Buka Rute Navigasi (Google Maps)',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _C.primary,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
+            // ── LIVE badge (top-right) ──
+            if (_isDriverActive)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF059669),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF059669).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 5),
+                      Text(
+                        'LIVE',
+                        style: GoogleFonts.inter(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
+
+            // ── Expand button (bottom-right) ──
+            Positioned(
+              bottom: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: widget.onFullMapTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(9),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Iconsax.maximize_3,
+                        size: 13,
+                        color: Color(0xFF0F4C81),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Peta Penuh',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0F4C81),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        )
-        .animate()
-        .fadeIn(delay: (80 + index * 60).ms, duration: 400.ms)
-        .slideY(
-          begin: 0.05,
-          delay: (80 + index * 60).ms,
-          duration: 400.ms,
-          curve: Curves.easeOutCubic,
-        );
+
+            // ── Tap-to-expand overlay (invisible, entire map tappable) ──
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: widget.onFullMapTap,
+                behavior: HitTestBehavior.translucent,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(delay: 400.ms, duration: 500.ms);
   }
 }
 
-// ── Info Chip ──
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
+// ═══════════════════════════════════════════════════════════
+//  COMPACT PASSENGER CARD
+// ═══════════════════════════════════════════════════════════
+class _CompactPassengerCard extends StatelessWidget {
+  final BookingModel booking;
+  final int index;
+  final VoidCallback onTap;
 
-  const _InfoChip({
+  const _CompactPassengerCard({
+    required this.booking,
+    required this.index,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isUsed      = booking.status == BookingStatus.used;
+    final isValidated = booking.status == BookingStatus.validated;
+
+    final Color statusColor;
+    final IconData statusIcon;
+    final String statusLabel;
+
+    if (isUsed) {
+      statusColor = _C.success;
+      statusIcon  = Iconsax.tick_circle;
+      statusLabel = 'Sudah Naik';
+    } else if (isValidated) {
+      statusColor = _C.info;
+      statusIcon  = Iconsax.shield_tick;
+      statusLabel = 'Tervalidasi';
+    } else {
+      statusColor = _C.warning;
+      statusIcon  = Iconsax.clock;
+      statusLabel = 'Belum Check-in';
+    }
+
+    final seatLabel = booking.seatNumbers.isNotEmpty
+        ? booking.seatNumbers.map((s) => '$s').join(', ')
+        : '-';
+
+    final initial = booking.userName.isNotEmpty
+        ? booking.userName[0].toUpperCase()
+        : '?';
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: _C.card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isUsed
+                ? _C.success.withValues(alpha: 0.25)
+                : isValidated
+                    ? _C.info.withValues(alpha: 0.25)
+                    : _C.border,
+            width: (isUsed || isValidated) ? 1.5 : 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.025),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // ── Avatar ──
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isUsed
+                    ? _C.success.withValues(alpha: 0.12)
+                    : isValidated
+                        ? _C.info.withValues(alpha: 0.12)
+                        : _C.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: isUsed
+                    ? const Icon(Iconsax.tick_circle, size: 18, color: _C.success)
+                    : isValidated
+                        ? const Icon(Iconsax.shield_tick, size: 18, color: _C.info)
+                        : Text(
+                            initial,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: _C.primary,
+                            ),
+                          ),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // ── Name & Code ──
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    booking.userName,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: _C.textPrimary,
+                      decoration: isUsed ? TextDecoration.lineThrough : null,
+                      decorationColor: _C.success.withValues(alpha: 0.5),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Iconsax.ticket, size: 11, color: _C.textTertiary),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Kursi $seatLabel',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: _C.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Status + Chevron ──
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(statusIcon, size: 10, color: statusColor),
+                      const SizedBox(width: 3),
+                      Text(
+                        statusLabel,
+                        style: GoogleFonts.inter(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: statusColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Icon(
+                  Iconsax.arrow_right_3,
+                  size: 14,
+                  color: _C.textTertiary,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(delay: (80 + index * 50).ms, duration: 350.ms)
+        .slideX(begin: 0.03, delay: (80 + index * 50).ms, duration: 350.ms);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  REUSABLE SECTION CARD
+// ═══════════════════════════════════════════════════════════
+class _ManifestSectionCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Widget child;
+  final int delay;
+  final Widget? trailing;
+
+  const _ManifestSectionCard({
+    required this.title,
     required this.icon,
+    required this.child,
+    this.delay = 0,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _C.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _C.border.withValues(alpha: 0.7)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: _C.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 14, color: _C.primary),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: _C.textPrimary,
+                  ),
+                ),
+                if (trailing != null) ...[
+                  const Spacer(),
+                  trailing!,
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Divider(color: Color(0xFFF1F5F9), height: 1),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: child,
+          ),
+        ],
+      ),
+    )
+        .animate()
+        .fadeIn(delay: delay.ms, duration: 400.ms)
+        .slideY(begin: 0.06, delay: delay.ms, duration: 400.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────
+//  SURAT JALAN INFO ROW
+// ─────────────────────────────────────────────────────
+class _JalanInfoRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+
+  const _JalanInfoRow({
+    required this.icon,
+    required this.iconColor,
     required this.label,
-    required this.color,
+    required this.value,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: color,
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 13, color: iconColor),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  color: _C.textTertiary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _C.textPrimary,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -1287,19 +1839,121 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-// ── Stat Item ──
+// ─────────────────────────────────────────────────────
+//  SEAT CAPACITY BAR
+// ─────────────────────────────────────────────────────
+class _SeatCapacityBar extends StatelessWidget {
+  final int booked;
+  final int total;
+
+  const _SeatCapacityBar({required this.booked, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = total > 0 ? (booked / total).clamp(0.0, 1.0) : 0.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Kapasitas',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                color: _C.textTertiary,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '$booked / $total kursi',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: _C.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: pct,
+            minHeight: 6,
+            backgroundColor: _C.bg,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              pct >= 0.9 ? _C.error : pct >= 0.7 ? _C.warning : _C.success,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────
+//  MAP ACTION BUTTON
+// ─────────────────────────────────────────────────────
+class _MapActionBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _MapActionBtn({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 15, color: color),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────
+//  STAT ITEM DATA
+// ─────────────────────────────────────────────────────
 class _StatItem {
   final IconData icon;
   final String label;
   final String value;
   final Color color;
-  final Color bgColor;
+  final Color bg;
 
   const _StatItem({
     required this.icon,
     required this.label,
     required this.value,
     required this.color,
-    required this.bgColor,
+    required this.bg,
   });
 }
