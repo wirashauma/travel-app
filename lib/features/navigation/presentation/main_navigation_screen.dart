@@ -413,6 +413,7 @@ class _UserNavShellState extends State<_UserNavShell> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: _C.white,
+        surfaceTintColor: Colors.transparent,
         title: Row(
           children: [
             Container(
@@ -698,15 +699,14 @@ class _AdminNavShellState extends State<_AdminNavShell> {
   int _currentIndex = 0;
 
   static const List<Widget> _pages = [
-    DriverHomeScreen(),
     DriverDashboardPage(),
     ProfileDashboardPage(),
   ];
 
   void setTab(int index) {
-    if (index >= 0 && index <= 3) {
-      if (index == 2) {
-        _onTabTap(2);
+    if (index >= 0 && index <= 2) {
+      if (index == 1) {
+        _onTabTap(1);
       } else {
         setState(() => _currentIndex = index);
       }
@@ -725,7 +725,7 @@ class _AdminNavShellState extends State<_AdminNavShell> {
   }
 
   void _onTabTap(int index) {
-    if (index == 2) {
+    if (index == 1) {
       Navigator.of(context).push(
         PageRouteBuilder(
           pageBuilder: (_, __, ___) => const TicketScannerPage(),
@@ -759,6 +759,7 @@ class _AdminNavShellState extends State<_AdminNavShell> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: _C.white,
+        surfaceTintColor: Colors.transparent,
         title: Row(
           children: [
             Container(
@@ -845,7 +846,7 @@ class _AdminNavShellState extends State<_AdminNavShell> {
             return true;
           },
           child: IndexedStack(
-            index: _currentIndex == 3 ? 2 : _currentIndex,
+            index: _currentIndex == 2 ? 1 : _currentIndex,
             children: _pages,
           ),
         ),
@@ -877,21 +878,10 @@ class _AdminNavShellState extends State<_AdminNavShell> {
                     ),
                   ),
 
-                  // ── Manifest ──
-                  Expanded(
-                    child: _AdminNavTab(
-                      icon: Iconsax.clipboard_text,
-                      activeIcon: Iconsax.clipboard_text5,
-                      label: 'Manifest',
-                      isActive: _currentIndex == 1,
-                      onTap: () => _onTabTap(1),
-                    ),
-                  ),
-
                   // ── SCAN (elevated) ──
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => _onTabTap(2),
+                      onTap: () => _onTabTap(1),
                       child: Transform.translate(
                         offset: const Offset(0, -12),
                         child: Column(
@@ -937,8 +927,8 @@ class _AdminNavShellState extends State<_AdminNavShell> {
                       icon: Iconsax.profile_circle,
                       activeIcon: Iconsax.profile_circle5,
                       label: 'Profil',
-                      isActive: _currentIndex == 3,
-                      onTap: () => _onTabTap(3),
+                      isActive: _currentIndex == 2,
+                      onTap: () => _onTabTap(2),
                     ),
                   ),
                 ],

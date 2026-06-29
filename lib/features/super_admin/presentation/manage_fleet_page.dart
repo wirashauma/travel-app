@@ -306,95 +306,23 @@ class ManageFleetPage extends StatelessWidget {
                             final citiesList = snapshot.data ?? [];
                             final isLoading = snapshot.connectionState ==
                                 ConnectionState.waiting;
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Rute Asal',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: _C.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                DropdownButtonFormField<String>(
-                                  value: (selectedOrigin != null &&
-                                          citiesList.contains(selectedOrigin))
-                                      ? selectedOrigin
-                                      : null,
-                                  isExpanded: true,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    color: _C.textPrimary,
-                                  ),
-                                  dropdownColor: _C.card,
-                                  decoration: InputDecoration(
-                                    hintText: isLoading
-                                        ? 'Memuat kota...'
-                                        : 'Pilih kota asal',
-                                    hintStyle: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      color: _C.textSecondary,
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Iconsax.location,
-                                      size: 20,
-                                      color: _C.textTertiary,
-                                    ),
-                                    filled: true,
-                                    fillColor: _C.bg,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: _C.border,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: _C.border,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: _C.primary,
-                                        width: 1.8,
-                                      ),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 14,
-                                    ),
-                                  ),
-                                  items: citiesList
-                                      .map(
-                                        (c) => DropdownMenuItem(
-                                          value: c,
-                                          child: Text(
-                                            c,
-                                            style:
-                                                GoogleFonts.inter(fontSize: 13),
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: isLoading
-                                      ? null
-                                      : (val) {
-                                          selectedOrigin = val;
-                                        },
-                                  onSaved: (val) {
-                                    selectedOrigin = val;
-                                  },
-                                  validator: (v) => v == null
-                                      ? 'Wajib pilih kota asal'
-                                      : null,
-                                ),
-                              ],
+                            return _SearchableDropdownField(
+                              label: 'Rute Asal',
+                              hint: isLoading ? 'Memuat kota...' : 'Pilih rute asal',
+                              initialValue: selectedOrigin,
+                              icon: Iconsax.location,
+                              items: citiesList,
+                              onChanged: (val) {
+                                setSheetState(() {
+                                  selectedOrigin = val;
+                                });
+                              },
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) {
+                                  return 'Wajib pilih rute asal';
+                                }
+                                return null;
+                              },
                             );
                           },
                         ),
@@ -407,101 +335,26 @@ class ManageFleetPage extends StatelessWidget {
                             final citiesList = snapshot.data ?? [];
                             final isLoading = snapshot.connectionState ==
                                 ConnectionState.waiting;
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Rute Tujuan',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: _C.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                DropdownButtonFormField<String>(
-                                  value: (selectedDestination != null &&
-                                          citiesList
-                                              .contains(selectedDestination))
-                                      ? selectedDestination
-                                      : null,
-                                  isExpanded: true,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    color: _C.textPrimary,
-                                  ),
-                                  dropdownColor: _C.card,
-                                  decoration: InputDecoration(
-                                    hintText: isLoading
-                                        ? 'Memuat kota...'
-                                        : 'Pilih kota tujuan',
-                                    hintStyle: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      color: _C.textSecondary,
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Iconsax.location_tick,
-                                      size: 20,
-                                      color: _C.textTertiary,
-                                    ),
-                                    filled: true,
-                                    fillColor: _C.bg,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: _C.border,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: _C.border,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: _C.primary,
-                                        width: 1.8,
-                                      ),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 14,
-                                    ),
-                                  ),
-                                  items: citiesList
-                                      .map(
-                                        (c) => DropdownMenuItem(
-                                          value: c,
-                                          child: Text(
-                                            c,
-                                            style:
-                                                GoogleFonts.inter(fontSize: 13),
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: isLoading
-                                      ? null
-                                      : (val) {
-                                          selectedDestination = val;
-                                        },
-                                  onSaved: (val) {
-                                    selectedDestination = val;
-                                  },
-                                  validator: (v) {
-                                    if (v == null)
-                                      return 'Wajib pilih kota tujuan';
-                                    if (v == selectedOrigin) {
-                                      return 'Tidak boleh sama dengan kota asal';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ],
+                            return _SearchableDropdownField(
+                              label: 'Rute Tujuan',
+                              hint: isLoading ? 'Memuat kota...' : 'Pilih rute tujuan',
+                              initialValue: selectedDestination,
+                              icon: Iconsax.location_tick,
+                              items: citiesList,
+                              onChanged: (val) {
+                                setSheetState(() {
+                                  selectedDestination = val;
+                                });
+                              },
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) {
+                                  return 'Wajib pilih rute tujuan';
+                                }
+                                if (v == selectedOrigin) {
+                                  return 'Tidak boleh sama dengan kota asal';
+                                }
+                                return null;
+                              },
                             );
                           },
                         ),
@@ -1000,6 +853,8 @@ class ManageFleetPage extends StatelessWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Hapus Armada?',
@@ -1474,6 +1329,203 @@ class _EmptyState extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── SEARCHABLE DROPDOWN FIELD ──
+class _SearchableDropdownField extends StatefulWidget {
+  final String label;
+  final String hint;
+  final String? initialValue;
+  final IconData icon;
+  final List<String> items;
+  final ValueChanged<String?> onChanged;
+  final FormFieldValidator<String>? validator;
+
+  const _SearchableDropdownField({
+    required this.label,
+    required this.hint,
+    this.initialValue,
+    required this.icon,
+    required this.items,
+    required this.onChanged,
+    this.validator,
+  });
+
+  @override
+  State<_SearchableDropdownField> createState() => _SearchableDropdownFieldState();
+}
+
+class _SearchableDropdownFieldState extends State<_SearchableDropdownField> {
+  late final TextEditingController _controller;
+  final _focusNode = FocusNode();
+  bool _showDropdown = false;
+  List<String> _filteredItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+    _filteredItems = List.from(widget.items)..sort();
+    
+    _focusNode.addListener(() {
+      setState(() {
+        _showDropdown = _focusNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _SearchableDropdownField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != oldWidget.initialValue) {
+      _controller.text = widget.initialValue ?? '';
+    }
+    // Update filtered items if items list changes (e.g. FutureBuilder resolves)
+    if (widget.items != oldWidget.items) {
+      setState(() {
+        _filteredItems = List.from(widget.items)..sort();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onSearch(String query) {
+    setState(() {
+      _filteredItems = widget.items
+          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+          .toList()
+        ..sort();
+      _showDropdown = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: _C.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _controller,
+          focusNode: _focusNode,
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: _C.textPrimary,
+          ),
+          decoration: InputDecoration(
+            hintText: widget.hint,
+            hintStyle: GoogleFonts.inter(
+              fontSize: 14,
+              color: _C.textTertiary,
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 14, right: 10),
+              child: Icon(
+                widget.icon,
+                size: 20,
+                color: _C.textTertiary,
+              ),
+            ),
+            prefixIconConstraints: const BoxConstraints(minWidth: 44),
+            suffixIcon: IconButton(
+              icon: const Icon(Iconsax.search_normal_1, size: 18, color: _C.textTertiary),
+              onPressed: () {
+                _focusNode.requestFocus();
+                setState(() {
+                  _showDropdown = !_showDropdown;
+                });
+              },
+            ),
+            filled: true,
+            fillColor: _C.bg,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _C.border, width: 1.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _C.border, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _C.primary, width: 1.8),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          ),
+          onChanged: _onSearch,
+          validator: widget.validator,
+        ),
+        if (_showDropdown && _filteredItems.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(maxHeight: 120), // Exactly 3 items tall
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _C.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Scrollbar(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: _filteredItems.length,
+                itemBuilder: (context, idx) {
+                  final item = _filteredItems[idx];
+                  return InkWell(
+                    onTap: () {
+                      _controller.text = item;
+                      widget.onChanged(item);
+                      setState(() {
+                        _showDropdown = false;
+                        _focusNode.unfocus();
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                      decoration: BoxDecoration(
+                        border: idx < _filteredItems.length - 1
+                            ? const Border(bottom: BorderSide(color: Color(0xFFF1F5F9)))
+                            : null,
+                      ),
+                      child: Text(
+                        item,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: _C.textPrimary,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

@@ -396,6 +396,8 @@ class _TicketScannerPageState extends State<TicketScannerPage>
           });
         }
         return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),

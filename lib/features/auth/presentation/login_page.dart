@@ -34,11 +34,11 @@ class _LoginPageState extends State<LoginPage> {
     if (!kIsWeb) {
       _googleSignIn = GoogleSignIn();
     }
-    // Light status bar for white background
+    // Light status bar icons for blue background header
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
         systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
@@ -87,14 +87,11 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // All roles go through the centralized navigation wrapper
-      // MainNavigationScreen reads the role from Firestore and renders
-      // the appropriate shell (user BottomNav / admin FAB / super admin dashboard)
       const destination = MainNavigationScreen();
 
       setState(() => _isLoading = false);
 
-      // Restore dark status bar for main app
+      // Restore status bar settings
       SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -104,6 +101,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
 
+      if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(
           pageBuilder: (_, __, ___) => destination,
@@ -161,9 +159,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // ─────────────────────────────────────────────────────
-  //  GOOGLE SIGN-IN
-  // ─────────────────────────────────────────────────────
   bool _isGoogleLoading = false;
 
   Future<void> _handleGoogleSignIn() async {
@@ -175,25 +170,20 @@ class _LoginPageState extends State<LoginPage> {
 
       if (kIsWeb) {
         final provider = GoogleAuthProvider()..addScope('email');
-
         userCredential = await FirebaseAuth.instance.signInWithPopup(provider);
       } else {
-        // 1. Trigger the Google Sign-In flow
         final googleUser = await _googleSignIn!.signIn();
         if (googleUser == null) {
-          // User cancelled
           if (mounted) setState(() => _isGoogleLoading = false);
           return;
         }
 
-        // 2. Obtain auth details from the request
         final googleAuth = await googleUser.authentication;
         final credential = GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
 
-        // 3. Sign in to Firebase with Google credential
         userCredential = await FirebaseAuth.instance.signInWithCredential(
           credential,
         );
@@ -205,12 +195,10 @@ class _LoginPageState extends State<LoginPage> {
         throw Exception('Login gagal — user null');
       }
 
-      // 4. Check / create Firestore user document
       final db = FirebaseFirestore.instance;
       final userDoc = await db.collection('users').doc(user.uid).get();
 
       if (!userDoc.exists) {
-        // First-time Google login → create Firestore profile with role 'user'
         await db.collection('users').doc(user.uid).set({
           'uid': user.uid,
           'email': user.email ?? '',
@@ -221,7 +209,6 @@ class _LoginPageState extends State<LoginPage> {
           'createdAt': FieldValue.serverTimestamp(),
         });
       } else {
-        // Existing user → check if suspended
         final data = userDoc.data()!;
         if (data['isSuspended'] == true) {
           if (mounted) {
@@ -250,7 +237,6 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
       setState(() => _isGoogleLoading = false);
 
-      // 5. Navigate to main app
       SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -260,6 +246,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
 
+      if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(
           pageBuilder: (_, __, ___) => const MainNavigationScreen(),
@@ -283,7 +270,7 @@ class _LoginPageState extends State<LoginPage> {
           err.contains('network-request-failed')) {
         message = 'Tidak ada koneksi internet';
       } else if (err.contains('sign_in_cancelled')) {
-        return; // user cancelled, no error message
+        return;
       } else if (err.contains('origin_mismatch') ||
           err.contains('unauthorized_domain')) {
         message =
@@ -318,16 +305,15 @@ class _LoginPageState extends State<LoginPage> {
           return FadeTransition(
             opacity: CurveTween(curve: Curves.easeOut).animate(animation),
             child: SlideTransition(
-              position:
-                  Tween<Offset>(
-                    begin: const Offset(0.04, 0),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    ),
-                  ),
+              position: Tween<Offset>(
+                begin: const Offset(0.04, 0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                ),
+              ),
               child: child,
             ),
           );
@@ -345,16 +331,15 @@ class _LoginPageState extends State<LoginPage> {
           return FadeTransition(
             opacity: CurveTween(curve: Curves.easeOut).animate(animation),
             child: SlideTransition(
-              position:
-                  Tween<Offset>(
-                    begin: const Offset(0, 0.04),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    ),
-                  ),
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.04),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                ),
+              ),
               child: child,
             ),
           );
@@ -370,7 +355,7 @@ class _LoginPageState extends State<LoginPage> {
     required Color color,
   }) {
     return SizedBox(
-      height: 30,
+      height: 32,
       child: OutlinedButton(
         onPressed: _isLoading || _isGoogleLoading
             ? null
@@ -384,7 +369,7 @@ class _LoginPageState extends State<LoginPage> {
           side: BorderSide(color: color.withValues(alpha: 0.35), width: 1.2),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
         child: Text(
@@ -400,229 +385,316 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return AuthScaffold(
-      child: SafeArea(
+    return Scaffold(
+      backgroundColor: AuthColors.primary,
+      body: Container(
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AuthColors.primary, AuthColors.primaryDark],
+          ),
+        ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight:
-                  screenHeight -
-                  MediaQuery.of(context).padding.top -
-                  bottomPadding,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
-              child: Form(
-                key: _formKey,
+          child: Column(
+            children: [
+              // ── Upper section: Blue Header + Logo + Text ────────────────────────
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.fromLTRB(28, MediaQuery.of(context).padding.top + 32, 28, 40),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: screenHeight * 0.08),
-
-                    // ── Header ────────────────────────────
-                    const AuthHeader(
-                      title: 'Selamat Datang\nKembali!',
-                      subtitle:
-                          'Masuk ke akun Anda untuk memesan\nperjalanan nyaman ke seluruh Sumatera Barat.',
-                    ),
-
-                    SizedBox(height: screenHeight * 0.045),
-
-                    // ── Email Field ───────────────────────
-                    AuthTextField(
-                          controller: _emailController,
-                          hintText: 'contoh@email.com',
-                          labelText: 'Alamat Email',
-                          prefixIcon: Iconsax.sms,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Email tidak boleh kosong';
-                            }
-                            if (!RegExp(
-                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                            ).hasMatch(value.trim())) {
-                              return 'Format email tidak valid';
-                            }
-                            return null;
-                          },
-                        )
-                        .animate()
-                        .fadeIn(delay: 400.ms, duration: 450.ms)
-                        .slideY(
-                          begin: 0.1,
-                          delay: 400.ms,
-                          duration: 450.ms,
-                          curve: Curves.easeOutCubic,
-                        ),
-
-                    const SizedBox(height: 20),
-
-                    // ── Password Field ────────────────────
-                    AuthTextField(
-                          controller: _passwordController,
-                          hintText: 'Masukkan password',
-                          labelText: 'Password',
-                          prefixIcon: Iconsax.lock,
-                          obscureText: _obscurePassword,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _handleLogin(),
-                          suffixIcon: GestureDetector(
-                            onTap: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 14),
-                              child: Icon(
-                                _obscurePassword
-                                    ? Iconsax.eye_slash
-                                    : Iconsax.eye,
-                                color: AuthColors.textTertiary,
-                                size: 20,
-                              ),
-                            ),
+                    // Circular App Logo
+                    Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Password tidak boleh kosong';
-                            }
-                            if (value.length < 6) {
-                              return 'Password minimal 6 karakter';
-                            }
-                            return null;
-                          },
-                        )
-                        .animate()
-                        .fadeIn(delay: 550.ms, duration: 450.ms)
-                        .slideY(
-                          begin: 0.1,
-                          delay: 550.ms,
-                          duration: 450.ms,
-                          curve: Curves.easeOutCubic,
-                        ),
-
-                    const SizedBox(height: 14),
-
-                    // ── Forgot Password Link ──────────────
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: _navigateToForgotPassword,
-                        child: Text(
-                          'Lupa Password?',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AuthColors.primary,
-                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/logo.jpg',
+                          fit: BoxFit.cover,
                         ),
                       ),
-                    ).animate().fadeIn(delay: 700.ms, duration: 450.ms),
-
-                    const SizedBox(height: 32),
-
-                    // ── Login Button ──────────────────────
-                    AuthPrimaryButton(
-                          text: 'Login',
-                          isLoading: _isLoading,
-                          onTap: _handleLogin,
-                        )
-                        .animate()
-                        .fadeIn(delay: 800.ms, duration: 450.ms)
-                        .slideY(
-                          begin: 0.1,
-                          delay: 800.ms,
-                          duration: 450.ms,
-                          curve: Curves.easeOutCubic,
-                        ),
-
-                    const SizedBox(height: 28),
-
-                    // ── Divider ───────────────────────────
-                    const AuthDivider(
-                      text: 'atau masuk dengan',
-                    ).animate().fadeIn(delay: 950.ms, duration: 450.ms),
-
-                    const SizedBox(height: 20),
-
-                    // ── Google Button ─────────────────────
-                    GoogleLoginButton(onTap: _handleGoogleSignIn)
-                        .animate()
-                        .fadeIn(delay: 1050.ms, duration: 450.ms)
-                        .slideY(
-                          begin: 0.08,
-                          delay: 1050.ms,
-                          duration: 450.ms,
-                          curve: Curves.easeOutCubic,
-                        ),
-
-                    const SizedBox(height: 24),
-
-                    // ── Quick Login Buttons ─────────────────
-                    Center(
-                      child: Text(
-                        'Quick Login (Demo)',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AuthColors.textTertiary,
-                          letterSpacing: 0.5,
-                        ),
+                    ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack).fadeIn(duration: 350.ms),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Selamat Datang',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
                       ),
-                    ).animate().fadeIn(delay: 1150.ms, duration: 400.ms),
-
-                    const SizedBox(height: 10),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _quickLoginButton(
-                          label: 'Super Admin',
-                          email: 'superadmin@gmail.com',
-                          color: const Color(0xFFDC2626), // Premium red
-                        ),
-                        _quickLoginButton(
-                          label: 'Sopir',
-                          email: 'supir@gmail.com',
-                          color: const Color(0xFFD97706), // Premium amber
-                        ),
-                        _quickLoginButton(
-                          label: 'User',
-                          email: 'user@gmail.com',
-                          color: const Color(0xFF0D9488), // Premium teal
-                        ),
-                      ],
-                    )
-                        .animate()
-                        .fadeIn(delay: 1200.ms, duration: 450.ms)
-                        .slideY(
-                          begin: 0.06,
-                          delay: 1200.ms,
-                          duration: 450.ms,
-                          curve: Curves.easeOutCubic,
-                        ),
-
-                    const SizedBox(height: 28),
-
-                    // ── Register link ─────────────────────
-                    Center(
-                      child: AuthLinkText(
-                        prefix: 'Belum punya akun?',
-                        actionText: 'Daftar',
-                        onTap: _navigateToRegister,
+                    ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.15, curve: Curves.easeOutCubic),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Masuk ke akun Anda',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
-                    ).animate().fadeIn(delay: 1200.ms, duration: 450.ms),
-
-                    const SizedBox(height: 24),
+                    ).animate().fadeIn(delay: 350.ms, duration: 400.ms).slideY(begin: 0.15, curve: Curves.easeOutCubic),
                   ],
                 ),
               ),
-            ),
+
+              // ── Lower section: White Form Card ──────────────────────────────────
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                ),
+                padding: const EdgeInsets.fromLTRB(28, 36, 28, 40),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Login Akun',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          color: AuthColors.textPrimary,
+                        ),
+                      ).animate().fadeIn(duration: 350.ms),
+                      const SizedBox(height: 24),
+
+                      // Email Field
+                      AuthTextField(
+                        controller: _emailController,
+                        hintText: 'Masukkan no. hp atau email',
+                        labelText: 'No. HP / Email',
+                        prefixIcon: Iconsax.user,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'No. HP / Email tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ).animate().fadeIn(delay: 150.ms, duration: 450.ms).slideY(begin: 0.1, curve: Curves.easeOutCubic),
+
+                      const SizedBox(height: 20),
+
+                      // Password Field
+                      AuthTextField(
+                        controller: _passwordController,
+                        hintText: 'Masukkan password',
+                        labelText: 'Password',
+                        prefixIcon: Iconsax.lock,
+                        obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _handleLogin(),
+                        suffixIcon: GestureDetector(
+                          onTap: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 14),
+                            child: Icon(
+                              _obscurePassword ? Iconsax.eye_slash : Iconsax.eye,
+                              color: AuthColors.textTertiary,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Password tidak boleh kosong';
+                          }
+                          if (value.length < 6) {
+                            return 'Password minimal 6 karakter';
+                          }
+                          return null;
+                        },
+                      ).animate().fadeIn(delay: 250.ms, duration: 450.ms).slideY(begin: 0.1, curve: Curves.easeOutCubic),
+
+                      const SizedBox(height: 12),
+
+                      // Forgot Password Link
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: _navigateToForgotPassword,
+                          child: Text(
+                            'Lupa Password?',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AuthColors.primary,
+                            ),
+                          ),
+                        ),
+                      ).animate().fadeIn(delay: 350.ms, duration: 450.ms),
+
+                      const SizedBox(height: 28),
+
+                      // Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AuthColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  'Masuk',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                        ),
+                      ).animate().fadeIn(delay: 450.ms, duration: 450.ms).slideY(begin: 0.1, curve: Curves.easeOutCubic),
+
+                      const SizedBox(height: 24),
+
+                      // Divider
+                      const AuthDivider(
+                        text: 'atau masuk dengan',
+                      ).animate().fadeIn(delay: 550.ms, duration: 450.ms),
+
+                      const SizedBox(height: 20),
+
+                      // Google Sign-In Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: OutlinedButton(
+                          onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AuthColors.border),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            backgroundColor: Colors.white,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.network(
+                                'https://developers.google.com/identity/images/g-logo.png',
+                                width: 20,
+                                height: 20,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    width: 20,
+                                    height: 20,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.redAccent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      'G',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Lanjutkan dengan Google',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AuthColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ).animate().fadeIn(delay: 650.ms, duration: 450.ms).slideY(begin: 0.08, curve: Curves.easeOutCubic),
+
+                      const SizedBox(height: 28),
+
+                      // Quick Login Section
+                      Center(
+                        child: Text(
+                          'Quick Login (Demo)',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AuthColors.textTertiary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ).animate().fadeIn(delay: 750.ms, duration: 400.ms),
+
+                      const SizedBox(height: 12),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _quickLoginButton(
+                            label: 'Super Admin',
+                            email: 'superadmin@gmail.com',
+                            color: const Color(0xFFDC2626),
+                          ),
+                          _quickLoginButton(
+                            label: 'Sopir',
+                            email: 'supir@gmail.com',
+                            color: const Color(0xFFD97706),
+                          ),
+                          _quickLoginButton(
+                            label: 'User',
+                            email: 'user@gmail.com',
+                            color: const Color(0xFF0D9488),
+                          ),
+                        ],
+                      ).animate().fadeIn(delay: 800.ms, duration: 450.ms).slideY(begin: 0.06, curve: Curves.easeOutCubic),
+
+                      const SizedBox(height: 36),
+
+                      // Footer Link: Register Account
+                      Center(
+                        child: AuthLinkText(
+                          prefix: 'Belum punya akun?',
+                          actionText: 'Daftar Sekarang',
+                          onTap: _navigateToRegister,
+                        ),
+                      ).animate().fadeIn(delay: 900.ms, duration: 450.ms),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

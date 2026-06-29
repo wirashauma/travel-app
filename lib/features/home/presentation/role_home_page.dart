@@ -78,12 +78,7 @@ class PassengerHomeScreen extends StatelessWidget {
                   // ── HEADER BLOCK ──
                   _buildHeader(context, name),
 
-                  const SizedBox(height: 24),
-
-                  // ── SERVICE GRID ──
-                  _buildServiceGrid(context),
-
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 56),
 
                   // ── UPCOMING TRIP SECTION ──
                   _buildUpcomingTripSection(context, user.uid),
@@ -110,184 +105,95 @@ class PassengerHomeScreen extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, String name) {
     final top = MediaQuery.of(context).padding.top;
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: _C.primary,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-      ),
-      child: Stack(
-        children: [
-          // Background subtle design circle
-          Positioned(
-            right: -50,
-            top: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
-                shape: BoxShape.circle,
-              ),
-            ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // 1. Blue Container containing header text and background circle
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(24, top + 16, 24, 76),
+          decoration: const BoxDecoration(
+            color: _C.primary,
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
           ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(24, top + 16, 24, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Halo, $name 👋',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$_greeting, mau bepergian ke mana hari ini?',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: Colors.white.withValues(alpha: 0.7),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => _navigateToTab(context, 4), // Profil
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white24, width: 2),
-                        ),
-                        child: CircleAvatar(
-                          radius: 22,
-                          backgroundColor: Colors.white12,
-                          child: Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 28),
-                // WALLET FLOATING CARD
-                _buildWalletCard(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.05, curve: Curves.easeOutCubic);
-  }
-
-  Widget _buildWalletCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Stack(
             children: [
+              // Background subtle design circle
+              Positioned(
+                right: -50,
+                top: -50,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.04),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: _C.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Halo, $name 👋',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$_greeting, mau bepergian ke mana hari ini?',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: const Icon(Iconsax.wallet_3, size: 18, color: _C.primary),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'MinangPay Saldo',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _C.textSecondary,
+                  GestureDetector(
+                    onTap: () => _navigateToTab(context, 4), // Profil
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white24, width: 2),
+                      ),
+                      child: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Colors.white12,
+                        child: Text(
+                          name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-              Text(
-                '420 Points',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: _C.success,
-                ),
-              ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Rp 128.500',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: _C.textPrimary,
-                ),
-              ),
-              // Topup button
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: _C.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Iconsax.add_circle, size: 14, color: Colors.white),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Top Up',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+        ),
+        // 2. Floating card positioned at the bottom boundary
+        Positioned(
+          left: 32,
+          right: 32,
+          bottom: -32,
+          child: _buildLayananUtamaCard(context),
+        ),
+      ],
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.05, curve: Curves.easeOutCubic);
   }
 
-  Widget _buildServiceGrid(BuildContext context) {
+  Widget _buildLayananUtamaCard(BuildContext context) {
     final services = [
       ('Pesan Tiket', Iconsax.ticket, _C.primary, 2),
       ('Kirim Paket', Iconsax.box_2, _C.success, 1),
@@ -295,73 +201,72 @@ class PassengerHomeScreen extends StatelessWidget {
       ('Bantuan CS', Iconsax.message_question, Colors.purple, -1),
     ];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Layanan Utama',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: _C.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: services.map((s) {
-              final (label, icon, color, tabIdx) = s;
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    if (tabIdx >= 0) {
-                      _navigateToTab(context, tabIdx);
-                    } else {
-                      // Navigate to Bantuan / CS
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Layanan Pelanggan WhatsApp: +62 812-3456-7890',
-                              style: GoogleFonts.inter(fontSize: 13)),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          margin: const EdgeInsets.all(16),
-                        ),
-                      );
-                    }
-                  },
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: color.withValues(alpha: 0.15)),
-                        ),
-                        child: Icon(icon, size: 24, color: color),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        label,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: _C.textPrimary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 150.ms, duration: 400.ms);
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: services.map((s) {
+          final (label, icon, color, tabIdx) = s;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (tabIdx >= 0) {
+                  _navigateToTab(context, tabIdx);
+                } else {
+                  // Navigate to Bantuan / CS
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Layanan Pelanggan WhatsApp: +62 812-3456-7890',
+                          style: GoogleFonts.inter(fontSize: 13)),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      margin: const EdgeInsets.all(16),
+                    ),
+                  );
+                }
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: color.withValues(alpha: 0.15)),
+                    ),
+                    child: Icon(icon, size: 18, color: color),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: _C.textPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 
   Widget _buildUpcomingTripSection(BuildContext context, String userId) {

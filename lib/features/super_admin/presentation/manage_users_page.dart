@@ -388,6 +388,8 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -556,6 +558,8 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         icon: Container(
           padding: const EdgeInsets.all(14),

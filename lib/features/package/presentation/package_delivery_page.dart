@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 import '../../../core/models/shipment_model.dart';
 import '../../../core/services/firestore_dijkstra_service.dart';
 import '../../../core/services/shipment_service.dart';
-import 'package_history_page.dart';
 import 'shipment_payment_page.dart';
 
 class _C {
@@ -44,11 +43,12 @@ class PackageDeliveryPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: _C.bg,
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
           _Header(),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
               child: _AddPackageCard(userId: user.uid, userName: user.displayName ?? 'Pengguna'),
             ),
           ),
@@ -76,36 +76,9 @@ class _Header extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Pengiriman Paket',
-                  style: GoogleFonts.plusJakartaSans(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white),
-                ),
-                GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PackageHistoryPage()),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Iconsax.clock, size: 14, color: Colors.white),
-                        const SizedBox(width: 4),
-                        Text('Riwayat',
-                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              'Pengiriman Paket',
+              style: GoogleFonts.plusJakartaSans(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white),
             ),
             const SizedBox(height: 4),
             Text(
@@ -243,7 +216,7 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
     }
   }
 
-  Future<void> _submit() async {
+  Future<void> _submitFromSheet(BuildContext sheetCtx) async {
     if (_selectedOrigin == null ||
         _selectedDestination == null ||
         _selectedFleetId == null ||
@@ -293,16 +266,20 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
       ));
 
       if (_paymentMethod == 'midtrans') {
-        if (!mounted) return;
+        if (!sheetCtx.mounted) return;
         // Navigate to payment page
         final paid = await Navigator.push<bool>(
-          context,
+          sheetCtx,
           MaterialPageRoute(
             builder: (_) => ShipmentPaymentPage(shipment: shipment),
           ),
         );
         if (paid != true) return; // Payment not completed — keep form
       }
+
+      if (!sheetCtx.mounted) return;
+      // Close bottom sheet
+      Navigator.pop(sheetCtx);
 
       // Reset form
       setState(() {
@@ -325,6 +302,227 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _showPackageDetailsFormSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Detail Pengiriman',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: _C.textPrimary,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Iconsax.close_circle, color: _C.textTertiary),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 24, color: _C.borderLight),
+
+                    // ── Sender ──
+                    _sectionHeader(Iconsax.profile_circle, 'Data Pengirim'),
+                    const SizedBox(height: 12),
+                    _input(_senderNameCtrl, 'Nama Pengirim', Iconsax.user),
+                    const SizedBox(height: 12),
+                    _input(_senderPhoneCtrl, 'No HP Pengirim', Iconsax.call, keyboardType: TextInputType.phone),
+
+                    const SizedBox(height: 20),
+
+                    // ── Receiver ──
+                    _sectionHeader(Iconsax.directbox_notif, 'Data Penerima'),
+                    const SizedBox(height: 12),
+                    _input(_receiverNameCtrl, 'Nama Penerima', Iconsax.user),
+                    const SizedBox(height: 12),
+                    _input(_receiverPhoneCtrl, 'No HP Penerima', Iconsax.call, keyboardType: TextInputType.phone),
+                    const SizedBox(height: 12),
+                    _input(_receiverAddressCtrl, 'Alamat Penerima', Iconsax.location, maxLines: 3),
+
+                    const SizedBox(height: 20),
+
+                    // ── Package Size ──
+                    _sectionHeader(Iconsax.box_2, 'Ukuran Paket'),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: _packageOptions.map((option) {
+                        final (key, label, price, icon) = option;
+                        final isSelected = _selectedPackageSize == key;
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setSheetState(() {
+                                _selectedPackageSize = key;
+                              });
+                              setState(() {}); // sync with parent
+                            },
+                            child: Container(
+                              margin: EdgeInsets.only(
+                                left: option.$1 == 'kecil' ? 0 : 6,
+                                right: option.$1 == 'besar' ? 0 : 6,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected ? _C.primary.withValues(alpha: 0.06) : _C.inputFill,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected ? _C.primary : _C.border,
+                                  width: isSelected ? 1.5 : 1,
+                                ),
+                              ),
+                              child: Stack(
+                                children: [
+                                  Center(
+                                    child: Column(
+                                      children: [
+                                        Icon(icon, size: 24, color: isSelected ? _C.primary : _C.textTertiary),
+                                        const SizedBox(height: 6),
+                                        Text(label,
+                                            style: GoogleFonts.inter(
+                                                fontSize: 10, fontWeight: FontWeight.w700, color: isSelected ? _C.primary : _C.textPrimary)),
+                                        const SizedBox(height: 2),
+                                        Text('Rp${NumberFormat('#,###', 'id_ID').format(price)}',
+                                            style: GoogleFonts.inter(fontSize: 9, color: _C.textTertiary)),
+                                      ],
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                          color: _C.primary,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Iconsax.tick_circle5, size: 12, color: Colors.white),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Description ──
+                    _sectionHeader(Iconsax.note_text, 'Deskripsi Paket'),
+                    const SizedBox(height: 12),
+                    _input(_descCtrl, 'Contoh: Baju, Sepatu, Dokumen Penting...', Iconsax.document_text),
+
+                    const SizedBox(height: 20),
+
+                    // ── Payment Method ──
+                    _sectionHeader(Iconsax.wallet, 'Metode Pembayaran'),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _paymentOption(
+                            'cod',
+                            'COD (Bayar di Tempat)',
+                            Iconsax.money,
+                            _C.warning,
+                            setSheetState,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _paymentOption(
+                            'midtrans',
+                            'Midtrans (Online)',
+                            Iconsax.card,
+                            _C.primary,
+                            setSheetState,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // ── Total + Submit ──
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _C.bg,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Total Biaya',
+                                    style: GoogleFonts.inter(fontSize: 11, color: _C.textTertiary)),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text('Rp${NumberFormat('#,###', 'id_ID').format(_totalPrice)}',
+                                      style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 22, fontWeight: FontWeight.w800, color: _C.primary)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton.icon(
+                            onPressed: _loading ? null : () => _submitFromSheet(context),
+                            icon: _loading
+                                ? const SizedBox(
+                                    width: 18, height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : const Icon(Iconsax.send_2, size: 18),
+                            label: Text(
+                              _loading ? 'MENGIRIM...' : 'Kirim Paket',
+                              style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _C.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showSnack(String msg) {
@@ -569,191 +767,30 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
               _buildFleetSelector(),
 
               if (_selectedFleetId != null) ...[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Divider(height: 1, color: _C.borderLight),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _showPackageDetailsFormSheet,
+                    icon: const Icon(Iconsax.document_text, size: 20),
+                    label: Text(
+                      'Lanjutkan Pengisian Detail Paket',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-
-                    // ── Sender ──
-                    _sectionHeader(Iconsax.profile_circle, 'Data Pengirim'),
-                    const SizedBox(height: 12),
-                    _input(_senderNameCtrl, 'Nama Pengirim', Iconsax.user),
-                    const SizedBox(height: 12),
-                    _input(_senderPhoneCtrl, 'No HP Pengirim', Iconsax.call, keyboardType: TextInputType.phone),
-
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Divider(height: 1, color: _C.borderLight),
-                    ),
-
-                    // ── Receiver ──
-                    _sectionHeader(Iconsax.directbox_notif, 'Data Penerima'),
-                    const SizedBox(height: 12),
-                    _input(_receiverNameCtrl, 'Nama Penerima', Iconsax.user),
-                    const SizedBox(height: 12),
-                    _input(_receiverPhoneCtrl, 'No HP Penerima', Iconsax.call, keyboardType: TextInputType.phone),
-                    const SizedBox(height: 12),
-                    _input(_receiverAddressCtrl, 'Alamat Penerima', Iconsax.location, maxLines: 3),
-
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Divider(height: 1, color: _C.borderLight),
-                    ),
-
-                    // ── Package Size ──
-                    _sectionHeader(Iconsax.box_2, 'Ukuran Paket'),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: _packageOptions.map((option) {
-                        final (key, label, price, icon) = option;
-                        final isSelected = _selectedPackageSize == key;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _selectedPackageSize = key),
-                            child: Container(
-                              margin: EdgeInsets.only(
-                                left: option.$1 == 'kecil' ? 0 : 6,
-                                right: option.$1 == 'besar' ? 0 : 6,
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                              decoration: BoxDecoration(
-                                color: isSelected ? _C.primary.withValues(alpha: 0.06) : _C.inputFill,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isSelected ? _C.primary : _C.border,
-                                  width: isSelected ? 1.5 : 1,
-                                ),
-                              ),
-                              child: Stack(
-                                children: [
-                                  Column(
-                                    children: [
-                                      Icon(icon, size: 28, color: isSelected ? _C.primary : _C.textTertiary),
-                                      const SizedBox(height: 8),
-                                      Text(label,
-                                          style: GoogleFonts.inter(
-                                              fontSize: 11, fontWeight: FontWeight.w700, color: isSelected ? _C.primary : _C.textPrimary)),
-                                      const SizedBox(height: 2),
-                                      Text('Rp${NumberFormat('#,###', 'id_ID').format(price)}',
-                                          style: GoogleFonts.inter(fontSize: 10, color: _C.textTertiary)),
-                                    ],
-                                  ),
-                                  if (isSelected)
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(2),
-                                        decoration: const BoxDecoration(
-                                          color: _C.primary,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(Iconsax.tick_circle5, size: 14, color: Colors.white),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Divider(height: 1, color: _C.borderLight),
-                    ),
-
-                    // ── Description ──
-                    _sectionHeader(Iconsax.note_text, 'Deskripsi Paket'),
-                    const SizedBox(height: 12),
-                    _input(_descCtrl, 'Contoh: Baju, Sepatu, Dokumen Penting...', Iconsax.document_text),
-
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Divider(height: 1, color: _C.borderLight),
-                    ),
-
-                    // ── Payment Method ──
-                    _sectionHeader(Iconsax.wallet, 'Metode Pembayaran'),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _paymentOption(
-                            'cod',
-                            'COD (Bayar di Tempat)',
-                            Iconsax.money,
-                            _C.warning,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _paymentOption(
-                            'midtrans',
-                            'Midtrans (Online)',
-                            Iconsax.card,
-                            _C.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ── Total + Submit ──
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: _C.bg,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _C.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Total Biaya',
-                                    style: GoogleFonts.inter(fontSize: 11, color: _C.textTertiary)),
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text('Rp${NumberFormat('#,###', 'id_ID').format(_totalPrice)}',
-                                      style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 22, fontWeight: FontWeight.w800, color: _C.primary)),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          ElevatedButton.icon(
-                            onPressed: _loading ? null : _submit,
-                            icon: _loading
-                                ? const SizedBox(
-                                    width: 18, height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                  )
-                                : const Icon(Iconsax.send_2, size: 18),
-                            label: Text(
-                              _loading ? 'MENGIRIM...' : 'Kirim Paket',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _C.primary,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            ),
-                          ),
-                        ],
-                      ),
+                      elevation: 0,
                     ),
-                  ],
-                ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic),
+                  ),
+                ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95)),
               ],
             ],
           ),
@@ -762,10 +799,17 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
     );
   }
 
-  Widget _paymentOption(String value, String label, IconData icon, Color color) {
+  Widget _paymentOption(String value, String label, IconData icon, Color color, [void Function(void Function())? setSheetState]) {
     final isSelected = _paymentMethod == value;
     return GestureDetector(
-      onTap: () => setState(() => _paymentMethod = value),
+      onTap: () {
+        if (setSheetState != null) {
+          setSheetState(() {
+            _paymentMethod = value;
+          });
+        }
+        setState(() => _paymentMethod = value);
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
         decoration: BoxDecoration(

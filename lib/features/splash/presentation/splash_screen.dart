@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,14 +6,7 @@ import '../../auth/presentation/login_page.dart';
 import '../../navigation/presentation/main_navigation_screen.dart';
 
 // ─────────────────────────────────────────────────────────
-//  SPLASH SCREEN — Responsive Trust Blue branded launch
-//
-//  Layout 100% responsif:
-//  • Background: LinearGradient memenuhi seluruh layar
-//  • Logo: max 40% lebar layar via MediaQuery (tidak overflow)
-//  • Animasi: FadeTransition + ScaleTransition via AnimationController
-//  • Footer: Align(bottomCenter) + SafeArea + CircularProgressIndicator
-//  • 2s delay → pushReplacement ke MainNav / Login
+//  SPLASH SCREEN — Modernized Premium Trust Blue branded launch
 // ─────────────────────────────────────────────────────────
 
 class SplashScreen extends StatefulWidget {
@@ -25,12 +17,9 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
-  // ── Animation controllers ──
-  late final AnimationController _particleCtrl;
+    with SingleTickerProviderStateMixin {
   late final AnimationController _contentCtrl;
 
-  // ── Staggered content animations ──
   late final Animation<double> _logoOpacity;
   late final Animation<double> _logoScale;
   late final Animation<double> _nameOpacity;
@@ -42,27 +31,18 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // ── Immersive system chrome ──
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFF081F36),
+      systemNavigationBarColor: Color(0xFF0F4C81),
       systemNavigationBarIconBrightness: Brightness.light,
     ));
 
-    // ── Particle animation (infinite loop) ──
-    _particleCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 12),
-    )..repeat();
-
-    // ── Content stagger (2.4s total) ──
     _contentCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
     );
 
-    // Logo: 0% → 45% (fade + scale)
     _logoOpacity = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _contentCtrl,
@@ -76,7 +56,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // App name: 20% → 55%
     _nameOpacity = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _contentCtrl,
@@ -93,7 +72,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Tagline: 40% → 70%
     _taglineOpacity = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _contentCtrl,
@@ -101,7 +79,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Bottom (spinner + version): 55% → 85%
     _bottomOpacity = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _contentCtrl,
@@ -137,8 +114,7 @@ class _SplashScreenState extends State<SplashScreen>
         pageBuilder: (_, __, ___) => destination,
         transitionsBuilder: (_, animation, __, child) {
           return FadeTransition(
-            opacity:
-                CurveTween(curve: Curves.easeInOut).animate(animation),
+            opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
             child: child,
           );
         },
@@ -149,12 +125,10 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _particleCtrl.dispose();
     _contentCtrl.dispose();
     super.dispose();
   }
 
-  // ─────────────── BUILD ───────────────
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
@@ -162,73 +136,16 @@ class _SplashScreenState extends State<SplashScreen>
     final h = size.height;
     final isSmall = w < 360;
 
-    // Responsive sizes — scales with screen
-    final logoSize = (w * 0.24).clamp(72.0, 110.0);
-    final logoRadius = (logoSize * 0.28).clamp(20.0, 32.0);
-    final iconSize = (logoSize * 0.44).clamp(30.0, 48.0);
+    final logoSize = (w * 0.32).clamp(100.0, 140.0);
     final titleSize = (w * 0.085).clamp(26.0, 40.0);
     final taglineSize = (w * 0.035).clamp(12.0, 16.0);
 
     return Scaffold(
+      backgroundColor: const Color(0xFF0F4C81),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── 1. Full-screen gradient ──
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0A2540),
-                  Color(0xFF0F4C81),
-                  Color(0xFF1565A8),
-                ],
-                stops: [0.0, 0.55, 1.0],
-              ),
-            ),
-          ),
-
-          // ── 2. Floating bokeh particles ──
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _particleCtrl,
-              builder: (context, _) => CustomPaint(
-                painter: _BokehParticlePainter(
-                  progress: _particleCtrl.value,
-                ),
-              ),
-            ),
-          ),
-
-          // ── 3. Subtle radial glow behind logo ──
-          Center(
-            child: AnimatedBuilder(
-              animation: _logoOpacity,
-              builder: (_, __) => Opacity(
-                opacity: _logoOpacity.value * 0.25,
-                child: Container(
-                  width: w * 0.55,
-                  height: w * 0.55,
-                  constraints: const BoxConstraints(
-                    maxWidth: 280,
-                    maxHeight: 280,
-                  ),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: 0.15),
-                        Colors.white.withValues(alpha: 0.0),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // ── 4. Main content — centered, flex layout ──
+          // ── Main content — centered ──
           SafeArea(
             child: Column(
               children: [
@@ -241,38 +158,49 @@ class _SplashScreenState extends State<SplashScreen>
                     opacity: _logoOpacity,
                     child: ScaleTransition(
                       scale: _logoScale,
-                      child: _buildLogo(
-                        logoSize: logoSize,
-                        logoRadius: logoRadius,
-                        iconSize: iconSize,
-                      ),
+                      child: _buildLogo(logoSize: logoSize),
                     ),
                   ),
                 ),
 
-                SizedBox(height: h * 0.028),
+                SizedBox(height: h * 0.035),
 
-                // ─── App Name ───
+                // ─── Branded Rich Text App Title ───
                 AnimatedBuilder(
                   animation: _contentCtrl,
                   builder: (_, __) => FadeTransition(
                     opacity: _nameOpacity,
                     child: SlideTransition(
                       position: _nameSlide,
-                      child: Text(
-                        'Minang Travel',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: titleSize,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 1.2,
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Minang',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: titleSize,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Travel',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: titleSize,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF38BDF8),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
 
-                SizedBox(height: h * 0.01),
+                SizedBox(height: h * 0.012),
 
                 // ─── Tagline ───
                 AnimatedBuilder(
@@ -302,7 +230,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
 
-          // ── 5. Footer: spinner + version (always at bottom) ──
+          // ── Footer: spinner + version (always at bottom) ──
           Align(
             alignment: Alignment.bottomCenter,
             child: SafeArea(
@@ -346,97 +274,36 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  // ─── Logo container — responsive ───
-  Widget _buildLogo({
-    required double logoSize,
-    required double logoRadius,
-    required double iconSize,
-  }) {
-    return SizedBox(
+  Widget _buildLogo({required double logoSize}) {
+    return Container(
       width: logoSize,
       height: logoSize,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(logoRadius),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.18),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0F4C81).withValues(alpha: 0.5),
-              blurRadius: 40,
-              spreadRadius: 2,
-            ),
-          ],
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(
+          color: Colors.white,
+          width: 3.5,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(logoRadius - 1.5),
-          child: Image.asset(
-            'assets/logo.jpg',
-            fit: BoxFit.cover,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
+          BoxShadow(
+            color: const Color(0xFF0F4C81).withValues(alpha: 0.4),
+            blurRadius: 40,
+            spreadRadius: 4,
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: Image.asset(
+          'assets/logo.jpg',
+          fit: BoxFit.cover,
         ),
       ),
     );
   }
-}
-
-// ─────────────────────────────────────────────────────────
-//  BOKEH PARTICLE PAINTER — Floating soft circles
-// ─────────────────────────────────────────────────────────
-class _BokehParticlePainter extends CustomPainter {
-  final double progress;
-
-  _BokehParticlePainter({required this.progress});
-
-  static final List<_Particle> _particles = List.generate(18, (i) {
-    final rng = Random(i * 42 + 7);
-    return _Particle(
-      baseX: rng.nextDouble(),
-      baseY: rng.nextDouble(),
-      radius: 2.0 + rng.nextDouble() * 6.0,
-      opacity: 0.04 + rng.nextDouble() * 0.10,
-      speedX: 0.3 + rng.nextDouble() * 0.5,
-      speedY: 0.2 + rng.nextDouble() * 0.4,
-      phase: rng.nextDouble() * 2 * pi,
-    );
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final p in _particles) {
-      final x = (p.baseX + sin(progress * 2 * pi * p.speedX + p.phase) * 0.06)
-              * size.width;
-      final y = (p.baseY + cos(progress * 2 * pi * p.speedY + p.phase) * 0.05)
-              * size.height;
-
-      canvas.drawCircle(
-        Offset(x, y),
-        p.radius,
-        Paint()
-          ..color = Colors.white.withValues(alpha: p.opacity)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, p.radius * 0.8),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _BokehParticlePainter old) =>
-      progress != old.progress;
-}
-
-class _Particle {
-  final double baseX, baseY, radius, opacity, speedX, speedY, phase;
-
-  const _Particle({
-    required this.baseX,
-    required this.baseY,
-    required this.radius,
-    required this.opacity,
-    required this.speedX,
-    required this.speedY,
-    required this.phase,
-  });
 }
