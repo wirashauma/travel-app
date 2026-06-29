@@ -31,7 +31,8 @@ class _C {
 enum _FilterOption { all, pending, inTransit, delivered, cancelled }
 
 class PackageHistoryPage extends StatefulWidget {
-  const PackageHistoryPage({super.key});
+  final bool showHeader;
+  const PackageHistoryPage({super.key, this.showHeader = true});
 
   @override
   State<PackageHistoryPage> createState() => _PackageHistoryPageState();
@@ -57,7 +58,7 @@ class _PackageHistoryPageState extends State<PackageHistoryPage> {
       backgroundColor: _C.bg,
       body: Column(
         children: [
-          _Header(),
+          if (widget.showHeader) _Header(),
           _FilterBar(
             selected: _selectedFilter,
             onChanged: (f) => setState(() => _selectedFilter = f),
@@ -190,34 +191,55 @@ class _FilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: _options.map((opt) {
-            final (value, label) = opt;
-            final isSelected = selected == value;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: GestureDetector(
-                onTap: () => onChanged(value),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? _C.primary : _C.borderLight,
-                    borderRadius: BorderRadius.circular(20),
+      color: _C.card,
+      child: Column(
+        children: [
+          SizedBox(
+            height: 44,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: _options.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final option = _options[index];
+                final isSelected = selected == option.$1;
+                return GestureDetector(
+                  onTap: () => onChanged(option.$1),
+                  child: AnimatedContainer(
+                    duration: 250.ms,
+                    curve: Curves.easeOutCubic,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? _C.primary
+                          : _C.primary.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected
+                            ? _C.primary
+                            : _C.primary.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        option.$2,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? Colors.white : _C.primary,
+                        ),
+                      ),
+                    ),
                   ),
-                  child: Text(label,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white : _C.textSecondary,
-                      )),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
+                );
+              },
+            ),
+          ),
+          Container(height: 1, color: _C.borderLight),
+        ],
       ),
     );
   }
@@ -286,12 +308,18 @@ class _PackageCard extends StatelessWidget {
     final dateStr = DateFormat('dd MMM yyyy, HH:mm').format(shipment.createdAt);
     return GestureDetector(
       onTap: onTap,
-      child: Card(
-        elevation: 0,
-        color: _C.card,
-        shape: RoundedRectangleBorder(
+      child: Container(
+        decoration: BoxDecoration(
+          color: _C.card,
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: _C.border),
+          border: Border.all(color: _C.borderLight),
+          boxShadow: [
+            BoxShadow(
+              color: _C.primary.withValues(alpha: 0.03),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),

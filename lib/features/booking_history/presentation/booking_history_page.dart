@@ -59,7 +59,8 @@ Future<void> _confirmCancelBooking(
 enum _FilterOption { all, pending, paid, completed, cancelled }
 
 class BookingHistoryPage extends StatefulWidget {
-  const BookingHistoryPage({super.key});
+  final bool showHeader;
+  const BookingHistoryPage({super.key, this.showHeader = true});
 
   @override
   State<BookingHistoryPage> createState() => _BookingHistoryPageState();
@@ -95,7 +96,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       body: Column(
         children: [
           // ═══ APP BAR ═══
-          _AppBar(topPadding: topPadding),
+          if (widget.showHeader) _AppBar(topPadding: topPadding),
 
           // ═══ FILTER CHIPS ═══
           _FilterBar(

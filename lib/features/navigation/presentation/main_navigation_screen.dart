@@ -9,9 +9,10 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../admin/presentation/driver_dashboard_page.dart';
 import '../../admin/presentation/ticket_scanner_page.dart';
-import '../../booking_history/presentation/booking_history_page.dart';
+import '../../booking_history/presentation/combined_history_page.dart';
 import '../../edit_profile/presentation/profile_dashboard_page.dart';
 import '../../home/presentation/home_search_page.dart';
+import '../../home/presentation/role_home_page.dart';
 import '../../package/presentation/package_delivery_page.dart';
 import '../../super_admin/presentation/super_admin_dashboard.dart';
 
@@ -374,11 +375,18 @@ class _UserNavShellState extends State<_UserNavShell> {
 
   // ── Pages - cached, not recreated on tab switch ──
   static const List<Widget> _pages = [
-    BookingHistoryPage(),
-    HomeSearchPage(),
+    PassengerHomeScreen(),
     PackageDeliveryPage(),
+    HomeSearchPage(),
+    CombinedHistoryPage(),
     ProfileDashboardPage(),
   ];
+
+  void setTab(int index) {
+    if (index >= 0 && index < _pages.length) {
+      setState(() => _currentIndex = index);
+    }
+  }
 
   @override
   void initState() {
@@ -483,9 +491,15 @@ class _UserNavShellState extends State<_UserNavShell> {
         }
       },
       child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _pages,
+        body: NotificationListener<TabSwitchNotification>(
+          onNotification: (notification) {
+            setTab(notification.tabIndex);
+            return true;
+          },
+          child: IndexedStack(
+            index: _currentIndex,
+            children: _pages,
+          ),
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
@@ -508,62 +522,90 @@ class _UserNavShellState extends State<_UserNavShell> {
             child: Padding(
               padding: const EdgeInsets.only(top: 4, bottom: 4),
               child: Row(
-                children: List.generate(4, (index) {
-                  final isActive = _currentIndex == index;
-                  return Expanded(
+                children: [
+                  // Tab 0: Beranda
+                  Expanded(
+                    child: _UserNavTab(
+                      icon: Iconsax.home,
+                      label: 'Beranda',
+                      isActive: _currentIndex == 0,
+                      onTap: () => setState(() => _currentIndex = 0),
+                    ),
+                  ),
+
+                  // Tab 1: Kirim Paket
+                  Expanded(
+                    child: _UserNavTab(
+                      icon: Iconsax.box_2,
+                      label: 'Kirim Paket',
+                      isActive: _currentIndex == 1,
+                      onTap: () => setState(() => _currentIndex = 1),
+                    ),
+                  ),
+
+                  // Tab 2: Pesan Tiket (Floating Blue Bubble)
+                  Expanded(
                     child: GestureDetector(
-                      onTap: () {
-                        if (index == _currentIndex) return;
-                        setState(() => _currentIndex = index);
-                      },
-                      child: AnimatedContainer(
-                        duration: 250.ms,
-                        curve: Curves.easeOutCubic,
-                        padding: const EdgeInsets.symmetric(vertical: 6),
+                      onTap: () => setState(() => _currentIndex = 2),
+                      child: Transform.translate(
+                        offset: const Offset(0, -12),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Active indicator dot (always takes space)
                             Container(
-                              height: 3,
-                              width: 20,
-                              margin: const EdgeInsets.only(bottom: 6),
+                              padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: isActive
-                                    ? _C.primary
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(2),
+                                color: _C.primary,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: _C.primary.withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Iconsax.search_normal_1,
+                                color: Colors.white,
+                                size: 26,
                               ),
                             ),
-                            // Icon
-                            Icon(
-                              _navIcons[index],
-                              size: 22,
-                              color: isActive
-                                  ? _C.primary
-                                  : _C.navInactive,
-                            ),
-                            const SizedBox(height: 4),
-                            // Label
+                            const SizedBox(height: 5),
                             Text(
-                              _navLabels[index],
+                              'Pesan Tiket',
                               style: GoogleFonts.inter(
                                 fontSize: 11,
-                                fontWeight: isActive
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: isActive
-                                    ? _C.primary
-                                    : _C.navInactive,
-                                letterSpacing: isActive ? 0.2 : 0,
+                                fontWeight: _currentIndex == 2 ? FontWeight.w700 : FontWeight.w500,
+                                color: _C.primary,
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  );
-                }),
+                  ),
+
+                  // Tab 3: Riwayat
+                  Expanded(
+                    child: _UserNavTab(
+                      icon: Iconsax.clock,
+                      label: 'Riwayat',
+                      isActive: _currentIndex == 3,
+                      onTap: () => setState(() => _currentIndex = 3),
+                    ),
+                  ),
+
+                  // Tab 4: Profil
+                  Expanded(
+                    child: _UserNavTab(
+                      icon: Iconsax.profile_circle,
+                      label: 'Profil',
+                      isActive: _currentIndex == 4,
+                      onTap: () => setState(() => _currentIndex = 4),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -571,20 +613,69 @@ class _UserNavShellState extends State<_UserNavShell> {
       ),
     );
   }
+}
 
-  static const _navLabels = [
-    'Tiket Saya',
-    'Pesan Tiket',
-    'Paket',
-    'Profil',
-  ];
+// ─────────────────────────────────────────────────────────
+//  USER NAV TAB — Single bottom bar item (user)
+// ─────────────────────────────────────────────────────────
+class _UserNavTab extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
 
-  static const _navIcons = <IconData>[
-    Iconsax.receipt_1,
-    Iconsax.search_normal_1,
-    Iconsax.box_2,
-    Iconsax.profile_circle,
-  ];
+  const _UserNavTab({
+    required this.icon,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Active indicator dot
+              AnimatedContainer(
+                duration: 250.ms,
+                curve: Curves.easeOutCubic,
+                width: isActive ? 20 : 0,
+                height: 3,
+                margin: const EdgeInsets.only(bottom: 4),
+                decoration: BoxDecoration(
+                  color: _C.primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Icon(
+                icon,
+                size: 22,
+                color: isActive ? _C.primary : _C.navInactive,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  color: isActive ? _C.primary : _C.navInactive,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -605,10 +696,20 @@ class _AdminNavShellState extends State<_AdminNavShell> {
   int _currentIndex = 0;
 
   static const List<Widget> _pages = [
+    DriverHomeScreen(),
     DriverDashboardPage(),
-    TicketScannerPage(),
     ProfileDashboardPage(),
   ];
+
+  void setTab(int index) {
+    if (index >= 0 && index <= 3) {
+      if (index == 2) {
+        _onTabTap(2);
+      } else {
+        setState(() => _currentIndex = index);
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -622,7 +723,7 @@ class _AdminNavShellState extends State<_AdminNavShell> {
   }
 
   void _onTabTap(int index) {
-    if (index == 1) {
+    if (index == 2) {
       Navigator.of(context).push(
         PageRouteBuilder(
           pageBuilder: (_, __, ___) => const TicketScannerPage(),
@@ -736,9 +837,15 @@ class _AdminNavShellState extends State<_AdminNavShell> {
         }
       },
       child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _pages,
+        body: NotificationListener<TabSwitchNotification>(
+          onNotification: (notification) {
+            setTab(notification.tabIndex);
+            return true;
+          },
+          child: IndexedStack(
+            index: _currentIndex == 3 ? 2 : _currentIndex,
+            children: _pages,
+          ),
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
@@ -757,21 +864,32 @@ class _AdminNavShellState extends State<_AdminNavShell> {
               padding: const EdgeInsets.only(top: 4, bottom: 4),
               child: Row(
                 children: [
+                  // ── Beranda ──
+                  Expanded(
+                    child: _AdminNavTab(
+                      icon: Iconsax.home,
+                      activeIcon: Iconsax.home,
+                      label: 'Beranda',
+                      isActive: _currentIndex == 0,
+                      onTap: () => _onTabTap(0),
+                    ),
+                  ),
+
                   // ── Manifest ──
                   Expanded(
                     child: _AdminNavTab(
                       icon: Iconsax.clipboard_text,
                       activeIcon: Iconsax.clipboard_text5,
                       label: 'Manifest',
-                      isActive: _currentIndex == 0,
-                      onTap: () => _onTabTap(0),
+                      isActive: _currentIndex == 1,
+                      onTap: () => _onTabTap(1),
                     ),
                   ),
 
                   // ── SCAN (elevated) ──
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => _onTabTap(1),
+                      onTap: () => _onTabTap(2),
                       child: Transform.translate(
                         offset: const Offset(0, -12),
                         child: Column(
@@ -817,8 +935,8 @@ class _AdminNavShellState extends State<_AdminNavShell> {
                       icon: Iconsax.profile_circle,
                       activeIcon: Iconsax.profile_circle5,
                       label: 'Profil',
-                      isActive: _currentIndex == 2,
-                      onTap: () => _onTabTap(2),
+                      isActive: _currentIndex == 3,
+                      onTap: () => _onTabTap(3),
                     ),
                   ),
                 ],

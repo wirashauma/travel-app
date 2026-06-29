@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -20,8 +21,12 @@ class _C {
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF475569);
   static const Color textTertiary = Color(0xFF94A3B8);
+  static const Color textHint = Color(0xFFCBD5E1);
+  static const Color inputFill = Color(0xFFF4F6F9);
   static const Color warning = Color(0xFFD97706);
   static const Color warningBg = Color(0xFFFFFBEB);
+  static const Color success = Color(0xFF059669);
+  static const Color danger = Color(0xFFDC2626);
 }
 
 class PackageDeliveryPage extends StatelessWidget {
@@ -124,11 +129,15 @@ class _AddPackageCard extends StatefulWidget {
   State<_AddPackageCard> createState() => _AddPackageCardState();
 }
 
-class _AddPackageCardState extends State<_AddPackageCard> {
+class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProviderStateMixin {
   // Location
   String? _selectedOrigin;
   String? _selectedDestination;
   List<String> _cities = [];
+
+  // Swap animation
+  late AnimationController _swapController;
+  late Animation<double> _swapRotation;
 
   // Sender
   final _senderNameCtrl = TextEditingController();
@@ -167,6 +176,14 @@ class _AddPackageCardState extends State<_AddPackageCard> {
   @override
   void initState() {
     super.initState();
+    _swapController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _swapRotation = Tween<double>(begin: 0, end: 0.5).animate(
+      CurvedAnimation(parent: _swapController, curve: Curves.easeInOutCubic),
+    );
+
     _loadCities();
     // Pre-fill sender from Firebase user
     final user = FirebaseAuth.instance.currentUser;
@@ -178,6 +195,7 @@ class _AddPackageCardState extends State<_AddPackageCard> {
 
   @override
   void dispose() {
+    _swapController.dispose();
     _senderNameCtrl.dispose();
     _senderPhoneCtrl.dispose();
     _receiverNameCtrl.dispose();
@@ -185,6 +203,19 @@ class _AddPackageCardState extends State<_AddPackageCard> {
     _receiverAddressCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
+  }
+
+  void _swapLocations() {
+    if (_selectedOrigin == null && _selectedDestination == null) return;
+    _swapController.forward(from: 0);
+    setState(() {
+      final temp = _selectedOrigin;
+      _selectedOrigin = _selectedDestination;
+      _selectedDestination = temp;
+      _selectedFleetId = null;
+      _matchingFleets = [];
+    });
+    _loadMatchingFleets();
   }
 
   Future<void> _loadCities() async {
@@ -333,14 +364,196 @@ class _AddPackageCardState extends State<_AddPackageCard> {
     );
   }
 
+  Widget _buildRouteSection() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Left: dot-connector line
+            SizedBox(
+              width: 16,
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+                  // Origin dot
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _C.success,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _C.success.withValues(alpha: 0.25),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Connector line
+                  Expanded(
+                    child: Container(
+                      width: 1.5,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            _C.success.withValues(alpha: 0.4),
+                            _C.danger.withValues(alpha: 0.4),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Destination dot
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _C.danger,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _C.danger.withValues(alpha: 0.25),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            // Right: location fields + swap button
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Origin
+                  _buildLocationTile(
+                    label: 'Kota Asal',
+                    value: _selectedOrigin,
+                    hint: 'Pilih Kota Asal',
+                    onTap: () => _pickCity(true),
+                  ),
+                  // Swap button
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: _swapLocations,
+                      child: RotationTransition(
+                        turns: _swapRotation,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          margin: const EdgeInsets.symmetric(vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _C.primary.withValues(alpha: 0.07),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Iconsax.arrow_swap_horizontal,
+                            size: 16,
+                            color: _C.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Destination
+                  _buildLocationTile(
+                    label: 'Kota Tujuan',
+                    value: _selectedDestination,
+                    hint: 'Pilih Kota Tujuan',
+                    onTap: () => _pickCity(false),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationTile({
+    required String label,
+    required String? value,
+    required String hint,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: _C.borderLight, width: 1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _C.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value ?? hint,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: value != null ? FontWeight.w700 : FontWeight.w400,
+                      color: value != null ? _C.textPrimary : _C.textHint,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Iconsax.arrow_down_1, size: 16, color: _C.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: _C.card,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: _C.border)),
+    return Container(
+      decoration: BoxDecoration(
+        color: _C.card,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: _C.primary.withValues(alpha: 0.06),
+            blurRadius: 32,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Form(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,196 +561,199 @@ class _AddPackageCardState extends State<_AddPackageCard> {
               // ── Location ──
               _sectionHeader(Iconsax.map_1, 'Lokasi'),
               const SizedBox(height: 12),
-              _cityPicker('Kota Asal', _selectedOrigin, Iconsax.location, () => _pickCity(true)),
-              const SizedBox(height: 12),
-              _cityPicker('Kota Tujuan', _selectedDestination, Iconsax.location_tick, () => _pickCity(false)),
+              _buildRouteSection(),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               // ── Fleet Selection ──
               _buildFleetSelector(),
 
               if (_selectedFleetId != null) ...[
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(height: 1, color: _C.borderLight),
-                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Divider(height: 1, color: _C.borderLight),
+                    ),
 
-                // ── Sender ──
-                _sectionHeader(Iconsax.profile_circle, 'Data Pengirim'),
-                const SizedBox(height: 12),
-                _input(_senderNameCtrl, 'Nama Pengirim', Iconsax.user),
-                const SizedBox(height: 12),
-                _input(_senderPhoneCtrl, 'No HP Pengirim', Iconsax.call, keyboardType: TextInputType.phone),
+                    // ── Sender ──
+                    _sectionHeader(Iconsax.profile_circle, 'Data Pengirim'),
+                    const SizedBox(height: 12),
+                    _input(_senderNameCtrl, 'Nama Pengirim', Iconsax.user),
+                    const SizedBox(height: 12),
+                    _input(_senderPhoneCtrl, 'No HP Pengirim', Iconsax.call, keyboardType: TextInputType.phone),
 
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(height: 1, color: _C.borderLight),
-                ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Divider(height: 1, color: _C.borderLight),
+                    ),
 
-                // ── Receiver ──
-                _sectionHeader(Iconsax.directbox_notif, 'Data Penerima'),
-                const SizedBox(height: 12),
-                _input(_receiverNameCtrl, 'Nama Penerima', Iconsax.user),
-                const SizedBox(height: 12),
-                _input(_receiverPhoneCtrl, 'No HP Penerima', Iconsax.call, keyboardType: TextInputType.phone),
-                const SizedBox(height: 12),
-                _input(_receiverAddressCtrl, 'Alamat Penerima', Iconsax.location, maxLines: 3),
+                    // ── Receiver ──
+                    _sectionHeader(Iconsax.directbox_notif, 'Data Penerima'),
+                    const SizedBox(height: 12),
+                    _input(_receiverNameCtrl, 'Nama Penerima', Iconsax.user),
+                    const SizedBox(height: 12),
+                    _input(_receiverPhoneCtrl, 'No HP Penerima', Iconsax.call, keyboardType: TextInputType.phone),
+                    const SizedBox(height: 12),
+                    _input(_receiverAddressCtrl, 'Alamat Penerima', Iconsax.location, maxLines: 3),
 
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(height: 1, color: _C.borderLight),
-                ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Divider(height: 1, color: _C.borderLight),
+                    ),
 
-                // ── Package Size ──
-                _sectionHeader(Iconsax.box_2, 'Ukuran Paket'),
-                const SizedBox(height: 12),
-                Row(
-                  children: _packageOptions.map((option) {
-                    final (key, label, price, icon) = option;
-                    final isSelected = _selectedPackageSize == key;
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedPackageSize = key),
-                        child: Container(
-                          margin: EdgeInsets.only(
-                            left: option.$1 == 'kecil' ? 0 : 6,
-                            right: option.$1 == 'besar' ? 0 : 6,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? _C.primary.withValues(alpha: 0.06) : _C.bg,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected ? _C.primary : _C.border,
-                              width: isSelected ? 1.5 : 1,
-                            ),
-                          ),
-                          child: Stack(
-                            children: [
-                              Column(
+                    // ── Package Size ──
+                    _sectionHeader(Iconsax.box_2, 'Ukuran Paket'),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: _packageOptions.map((option) {
+                        final (key, label, price, icon) = option;
+                        final isSelected = _selectedPackageSize == key;
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedPackageSize = key),
+                            child: Container(
+                              margin: EdgeInsets.only(
+                                left: option.$1 == 'kecil' ? 0 : 6,
+                                right: option.$1 == 'besar' ? 0 : 6,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected ? _C.primary.withValues(alpha: 0.06) : _C.inputFill,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected ? _C.primary : _C.border,
+                                  width: isSelected ? 1.5 : 1,
+                                ),
+                              ),
+                              child: Stack(
                                 children: [
-                                  Icon(icon, size: 28, color: isSelected ? _C.primary : _C.textTertiary),
-                                  const SizedBox(height: 8),
-                                  Text(label,
-                                      style: GoogleFonts.inter(
-                                          fontSize: 11, fontWeight: FontWeight.w700, color: isSelected ? _C.primary : _C.textPrimary)),
-                                  const SizedBox(height: 2),
-                                  Text('Rp${NumberFormat('#,###', 'id_ID').format(price)}',
-                                      style: GoogleFonts.inter(fontSize: 10, color: _C.textTertiary)),
+                                  Column(
+                                    children: [
+                                      Icon(icon, size: 28, color: isSelected ? _C.primary : _C.textTertiary),
+                                      const SizedBox(height: 8),
+                                      Text(label,
+                                          style: GoogleFonts.inter(
+                                              fontSize: 11, fontWeight: FontWeight.w700, color: isSelected ? _C.primary : _C.textPrimary)),
+                                      const SizedBox(height: 2),
+                                      Text('Rp${NumberFormat('#,###', 'id_ID').format(price)}',
+                                          style: GoogleFonts.inter(fontSize: 10, color: _C.textTertiary)),
+                                    ],
+                                  ),
+                                  if (isSelected)
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                          color: _C.primary,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Iconsax.tick_circle5, size: 14, color: Colors.white),
+                                      ),
+                                    ),
                                 ],
                               ),
-                              if (isSelected)
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(3),
-                                    decoration: const BoxDecoration(
-                                      color: _C.primary,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Iconsax.tick_circle, size: 14, color: Colors.white),
-                                  ),
-                                ),
-                            ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Divider(height: 1, color: _C.borderLight),
+                    ),
+
+                    // ── Description ──
+                    _sectionHeader(Iconsax.note_text, 'Deskripsi Paket'),
+                    const SizedBox(height: 12),
+                    _input(_descCtrl, 'Contoh: Baju, Sepatu, Dokumen Penting...', Iconsax.document_text),
+
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Divider(height: 1, color: _C.borderLight),
+                    ),
+
+                    // ── Payment Method ──
+                    _sectionHeader(Iconsax.wallet, 'Metode Pembayaran'),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _paymentOption(
+                            'cod',
+                            'COD (Bayar di Tempat)',
+                            Iconsax.money,
+                            _C.warning,
                           ),
                         ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(height: 1, color: _C.borderLight),
-                ),
-
-                // ── Description ──
-                _sectionHeader(Iconsax.note_text, 'Deskripsi Paket'),
-                const SizedBox(height: 12),
-                _input(_descCtrl, 'Contoh: Baju, Sepatu, Dokumen Penting...', Iconsax.document_text),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(height: 1, color: _C.borderLight),
-                ),
-
-                // ── Payment Method ──
-                _sectionHeader(Iconsax.wallet, 'Metode Pembayaran'),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _paymentOption(
-                        'cod',
-                        'COD (Bayar di Tempat)',
-                        Iconsax.money,
-                        _C.warning,
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _paymentOption(
+                            'midtrans',
+                            'Midtrans (Online)',
+                            Iconsax.card,
+                            _C.primary,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _paymentOption(
-                        'midtrans',
-                        'Midtrans (Online)',
-                        Iconsax.card,
-                        _C.primary,
+
+                    const SizedBox(height: 20),
+
+                    // ── Total + Submit ──
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _C.bg,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Total Biaya',
+                                    style: GoogleFonts.inter(fontSize: 11, color: _C.textTertiary)),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text('Rp${NumberFormat('#,###', 'id_ID').format(_totalPrice)}',
+                                      style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 22, fontWeight: FontWeight.w800, color: _C.primary)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton.icon(
+                            onPressed: _loading ? null : _submit,
+                            icon: _loading
+                                ? const SizedBox(
+                                    width: 18, height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : const Icon(Iconsax.send_2, size: 18),
+                            label: Text(
+                              _loading ? 'MENGIRIM...' : 'Kirim Paket',
+                              style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _C.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // ── Total + Submit ──
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: _C.bg,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Total Biaya',
-                                style: GoogleFonts.inter(fontSize: 11, color: _C.textTertiary)),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text('Rp${NumberFormat('#,###', 'id_ID').format(_totalPrice)}',
-                                  style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 22, fontWeight: FontWeight.w800, color: _C.primary)),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        onPressed: _loading ? null : _submit,
-                        icon: _loading
-                            ? const SizedBox(
-                                width: 18, height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Icon(Iconsax.send_2, size: 18),
-                        label: Text(
-                          _loading ? 'MENGIRIM...' : 'Kirim Paket',
-                          style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _C.primary,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic),
               ],
             ],
           ),
@@ -553,7 +769,7 @@ class _AddPackageCardState extends State<_AddPackageCard> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.06) : _C.bg,
+          color: isSelected ? color.withValues(alpha: 0.06) : _C.inputFill,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : _C.border,
@@ -562,7 +778,7 @@ class _AddPackageCardState extends State<_AddPackageCard> {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 22, color: isSelected ? color : _C.textTertiary),
+            Icon(icon, size: 20, color: isSelected ? color : _C.textTertiary),
             const SizedBox(width: 10),
             Expanded(
               child: Text(label,
@@ -572,7 +788,7 @@ class _AddPackageCardState extends State<_AddPackageCard> {
                       color: isSelected ? color : _C.textPrimary)),
             ),
             if (isSelected)
-              Icon(Iconsax.tick_circle, size: 18, color: color),
+              Icon(Iconsax.tick_circle5, size: 18, color: color),
           ],
         ),
       ),
@@ -623,7 +839,7 @@ class _AddPackageCardState extends State<_AddPackageCard> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isSelected ? _C.primary.withValues(alpha: 0.06) : _C.bg,
+                    color: isSelected ? _C.primary.withValues(alpha: 0.06) : _C.inputFill,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected ? _C.primary : _C.border,
@@ -658,7 +874,7 @@ class _AddPackageCardState extends State<_AddPackageCard> {
                         ),
                       ),
                       if (isSelected)
-                        const Icon(Iconsax.tick_circle, size: 18, color: _C.primary),
+                        const Icon(Iconsax.tick_circle5, size: 18, color: _C.primary),
                     ],
                   ),
                 ),
@@ -681,45 +897,6 @@ class _AddPackageCardState extends State<_AddPackageCard> {
     );
   }
 
-  Widget _cityPicker(String label, String? selected, IconData icon, VoidCallback onTap) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: _C.textSecondary)),
-        const SizedBox(height: 6),
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(
-              color: _C.bg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _C.border),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, size: 18, color: _C.textTertiary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    selected ?? 'Pilih $label',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: selected != null ? _C.textPrimary : _C.textTertiary,
-                      fontWeight: selected != null ? FontWeight.w500 : FontWeight.w400,
-                    ),
-                  ),
-                ),
-                const Icon(Iconsax.arrow_down_1, size: 16, color: _C.textTertiary),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _input(TextEditingController ctrl, String hint, IconData icon,
       {TextInputType? keyboardType, int maxLines = 1}) {
@@ -727,18 +904,41 @@ class _AddPackageCardState extends State<_AddPackageCard> {
       controller: ctrl,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: GoogleFonts.inter(fontSize: 14, color: _C.textPrimary),
+      style: GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: _C.textPrimary,
+      ),
+      cursorColor: _C.primary,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.inter(color: _C.textTertiary, fontSize: 13),
+        hintStyle: GoogleFonts.inter(fontSize: 13, color: _C.textHint),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.only(left: 14, right: 10),
+          child: Icon(icon, size: 18, color: _C.textTertiary),
+        ),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 0,
+          minHeight: 0,
+        ),
         filled: true,
-        fillColor: _C.bg,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        fillColor: _C.inputFill,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 15,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _C.border),
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: _C.borderLight),
+          borderSide: const BorderSide(color: _C.border),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _C.primary, width: 1.5),
+        ),
         isDense: true,
       ),
     );
