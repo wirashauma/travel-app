@@ -67,6 +67,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
   String _driverName = 'Sopir';
   bool _profileLoaded = false;
   String _activeFilter = 'Semua';
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -142,8 +143,28 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
               : '';
           final fleetId = assignment?.fleetId;
 
+          // Filter by search query
+          var filteredTrips = tripAssignments;
+          if (_searchQuery.isNotEmpty) {
+            final q = _searchQuery.toLowerCase();
+            filteredTrips = filteredTrips.where((t) {
+              final name = (t.data['name'] as String? ?? '').toLowerCase();
+              final type = (t.data['vehicleType'] as String? ?? '').toLowerCase();
+              final origin = (t.data['origin'] as String? ?? '').toLowerCase();
+              final dest = (t.data['destination'] as String? ?? '').toLowerCase();
+              return name.contains(q) || type.contains(q) || origin.contains(q) || dest.contains(q);
+            }).toList();
+          }
+
+          // Filter by active tab filter
+          if (_activeFilter == 'Penumpang') {
+            filteredTrips = filteredTrips.where((t) => t.data['tripStatus'] != 'selesai').toList();
+          } else if (_activeFilter == 'Selesai') {
+            filteredTrips = filteredTrips.where((t) => t.data['tripStatus'] == 'selesai').toList();
+          }
+
           final showPackage = _activeFilter == 'Semua' || _activeFilter == 'Paket';
-          final showPassenger = _activeFilter == 'Semua' || _activeFilter == 'Penumpang';
+          final showPassenger = _activeFilter == 'Semua' || _activeFilter == 'Penumpang' || _activeFilter == 'Selesai';
 
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -151,8 +172,11 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
               // ── HEADER ──
               SliverToBoxAdapter(child: _buildHeader(topPad, isSmall)),
 
+              // ── SEARCH BAR ──
+              SliverToBoxAdapter(child: _buildSearchBar()),
+
               // ── SECTION TITLE ──
-              SliverToBoxAdapter(child: _buildSectionTitle(tripAssignments.length)),
+              SliverToBoxAdapter(child: _buildSectionTitle(filteredTrips.length)),
 
               // ── FILTER TABS ──
               SliverToBoxAdapter(child: _buildFilterTabs()),
@@ -163,7 +187,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
 
               // ── EMPTY STATE OR FLEET LIST ──
               if (showPassenger) ...[
-                if (tripAssignments.isEmpty)
+                if (filteredTrips.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: _buildEmptyState(),
@@ -173,7 +197,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
                     padding: EdgeInsets.fromLTRB(20, 4, 20, bottomPad + 24),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
-                        final assignment = tripAssignments[index];
+                        final assignment = filteredTrips[index];
                         return _FleetCard(
                           fleetId: assignment.fleetId,
                           data: assignment.data,
@@ -185,7 +209,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
                             departureTime: null,
                           ),
                         );
-                      }, childCount: tripAssignments.length),
+                      }, childCount: filteredTrips.length),
                     ),
                   ),
               ] else if (_activeFilter == 'Paket' && !showPassenger) ...[
@@ -594,6 +618,54 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
     );
   }
 
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _C.border.withValues(alpha: 0.7)),
+          boxShadow: [
+            BoxShadow(
+              color: _C.primary.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: TextField(
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: _C.textPrimary,
+          ),
+          onChanged: (val) {
+            setState(() {
+              _searchQuery = val.trim();
+            });
+          },
+          decoration: InputDecoration(
+            hintText: 'Cari armada, rute, atau tipe mobil...',
+            hintStyle: GoogleFonts.inter(fontSize: 13.5, color: _C.textTertiary),
+            prefixIcon: const Icon(Iconsax.search_normal_1, size: 20, color: _C.textTertiary),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            filled: true,
+            fillColor: Colors.white,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   // ─────────────────────────────────────────────────────
   //  SECTION TITLE
   // ─────────────────────────────────────────────────────
@@ -639,6 +711,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
       ('Semua', Iconsax.category),
       ('Penumpang', Iconsax.people),
       ('Paket', Iconsax.box),
+      ('Selesai', Iconsax.tick_circle),
     ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),

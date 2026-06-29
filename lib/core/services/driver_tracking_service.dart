@@ -74,18 +74,25 @@ class DriverTrackingService {
   }
 
   /// Stop tracking and mark offline.
-  static Future<void> stopTracking() async {
+  static Future<void> stopTracking([String? fleetId]) async {
     _timer?.cancel();
     _timer = null;
 
-    if (_activeFleetId != null) {
-      await _db.collection('driver_locations').doc(_activeFleetId).update({
-        'isOnline': false,
-      });
-      await _db.collection('fleets').doc(_activeFleetId).update({
+    final targetFleetId = fleetId ?? _activeFleetId;
+    if (targetFleetId != null) {
+      try {
+        await _db.collection('driver_locations').doc(targetFleetId).update({
+          'isOnline': false,
+        });
+      } catch (_) {}
+      
+      await _db.collection('fleets').doc(targetFleetId).update({
         'tripStatus': 'selesai',
       });
-      _activeFleetId = null;
+
+      if (targetFleetId == _activeFleetId) {
+        _activeFleetId = null;
+      }
     }
     _lastPosition = null;
   }

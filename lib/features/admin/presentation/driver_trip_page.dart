@@ -386,7 +386,7 @@ class _DriverTripPageState extends State<DriverTripPage> {
     if (confirmed != true) return;
     setState(() => _isEnding = true);
     try {
-      await DriverTrackingService.stopTracking();
+      await DriverTrackingService.stopTracking(widget.fleetId);
       if (mounted) {
         _elapsedTimer?.cancel();
         setState(() {

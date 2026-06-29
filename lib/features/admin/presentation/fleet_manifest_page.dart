@@ -851,7 +851,7 @@ class _FleetManifestPageState extends State<FleetManifestPage>
     if (_tripProcessing) return;
     setState(() => _tripProcessing = true);
     try {
-      await DriverTrackingService.stopTracking();
+      await DriverTrackingService.stopTracking(widget.fleetId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
