@@ -221,7 +221,7 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
         final snap = await FirebaseFirestore.instance
             .collection('shipments')
             .where('fleetId', isEqualTo: id)
-            .where('status', whereIn: ['pending', 'picked_up', 'in_transit'])
+            .where('status', whereIn: ['picked_up', 'in_transit'])
             .get();
         
         int points = 0;

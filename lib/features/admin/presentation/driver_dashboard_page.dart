@@ -140,6 +140,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
           final route = assignment != null
               ? '${assignment.data['origin'] ?? ''} → ${assignment.data['destination'] ?? ''}'
               : '';
+          final fleetId = assignment?.fleetId;
 
           final showPackage = _activeFilter == 'Semua' || _activeFilter == 'Paket';
           final showPassenger = _activeFilter == 'Semua' || _activeFilter == 'Penumpang';
@@ -158,7 +159,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
 
               // ── PAKET BUTTON ──
               if (showPackage)
-                SliverToBoxAdapter(child: _buildPackageCard(route)),
+                SliverToBoxAdapter(child: _buildPackageCard(route, fleetId)),
 
               // ── EMPTY STATE OR FLEET LIST ──
               if (showPassenger) ...[
@@ -381,7 +382,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
   // ─────────────────────────────────────────────────────
   //  PAKET CARD — Konfirmasi Paket
   // ─────────────────────────────────────────────────────
-  Widget _buildPackageCard(String route) {
+  Widget _buildPackageCard(String route, String? fleetId) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
       child: GestureDetector(
@@ -404,173 +405,188 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Top: Icon + Name + Status ──
-                Row(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: fleetId == null
+                  ? const Stream.empty()
+                  : FirebaseFirestore.instance
+                      .collection('shipments')
+                      .where('fleetId', isEqualTo: fleetId)
+                      .where('status', whereIn: ['picked_up', 'in_transit'])
+                      .snapshots(),
+              builder: (context, shipmentSnap) {
+                final count = shipmentSnap.data?.docs.length ?? 0;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: _C.warning.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Iconsax.box_2,
-                        size: 22,
-                        color: _C.warning,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Konfirmasi Paket',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: _C.textPrimary,
-                            ),
+                    // ── Top: Icon + Name + Status ──
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: _C.warning.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Kelola & konfirmasi pengiriman paket',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: _C.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Badge status
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _C.warning.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: _C.warning.withValues(alpha: 0.25),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Iconsax.box_tick,
-                            size: 12,
+                          child: const Icon(
+                            Iconsax.box_2,
+                            size: 22,
                             color: _C.warning,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Paket',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: _C.warning,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Konfirmasi Paket',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: _C.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                count > 0
+                                    ? 'Ada $count paket di dalam mobil Anda'
+                                    : 'Tidak ada paket di dalam mobil Anda',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: count > 0 ? _C.warning : _C.textTertiary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Badge status
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _C.warning.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _C.warning.withValues(alpha: 0.25),
+                              width: 1,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-
-                // ── Route ──
-                if (route.isNotEmpty) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _C.primary.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _C.primary.withValues(alpha: 0.08),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Iconsax.route_square,
-                          size: 16,
-                          color: _C.primary,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Iconsax.box_tick,
+                                size: 12,
+                                color: _C.warning,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                count > 0 ? '$count Paket' : '0 Paket',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: _C.warning,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            route,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // ── Route ──
+                    if (route.isNotEmpty) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _C.primary.withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _C.primary.withValues(alpha: 0.08),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Iconsax.route_square,
+                              size: 16,
                               color: _C.primary,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                route,
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: _C.primary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
+                      ),
+                      const SizedBox(height: 12),
+                    ],
 
-                // ── Bottom: Package info & Action ──
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                    // ── Bottom: Package info & Action ──
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Icon(
-                          Iconsax.box,
-                          size: 14,
-                          color: _C.textTertiary,
+                        Row(
+                          children: [
+                            const Icon(
+                              Iconsax.box,
+                              size: 14,
+                              color: _C.textTertiary,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'Kelola Pengiriman',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: _C.textTertiary,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 5),
-                        Text(
-                          'Kelola Pengiriman',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: _C.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Lihat Detail',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: _C.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Iconsax.arrow_right_3,
-                          size: 16,
-                          color: _C.primary,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Lihat Detail',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: _C.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Iconsax.arrow_right_3,
+                              size: 16,
+                              color: _C.primary,
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
           ),
         ),
@@ -612,7 +628,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
+    );
   }
 
   // ─────────────────────────────────────────────────────
@@ -809,283 +825,300 @@ class _FleetCard extends StatelessWidget {
     }
 
     return GestureDetector(
-          onTap: onTap,
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 14),
-            decoration: BoxDecoration(
-              color: _C.card,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: _C.border.withValues(alpha: 0.7)),
-              boxShadow: [
-                BoxShadow(
-                  color: _C.primary.withValues(alpha: 0.04),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Top: Icon + Name + Arrow ──
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: _C.success.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Iconsax.car,
-                          size: 22,
-                          color: _C.success,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              fleetName,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                color: _C.textPrimary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (vehicleType.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                vehicleType,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: _C.textTertiary,
-                                ),
-                              ),
-                            ],
-                            if (timeLabel != null && timeBadgeColor != null) ...[
-                              const SizedBox(height: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: timeBadgeColor.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: timeBadgeColor.withValues(alpha: 0.15),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  timeLabel,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: timeBadgeColor,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: statusColor.withValues(alpha: 0.25),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              statusIcon,
-                              size: 12,
-                              color: statusColor,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              statusLabel,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: statusColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          color: isTripDone ? const Color(0xFFF8FAFC) : _C.card,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isTripDone
+                ? _C.border.withValues(alpha: 0.4)
+                : _C.border.withValues(alpha: 0.7),
+          ),
+          boxShadow: isTripDone
+              ? null
+              : [
+                  BoxShadow(
+                    color: _C.primary.withValues(alpha: 0.04),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
                   ),
-
-                  const SizedBox(height: 14),
-
-                  // ── Route ──
-                  if (route.isNotEmpty)
+                ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Opacity(
+            opacity: isTripDone ? 0.75 : 1.0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Top: Icon + Name + Status ──
+                Row(
+                  children: [
                     Container(
-                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: isTripDone
+                            ? _C.textTertiary.withValues(alpha: 0.08)
+                            : _C.success.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Iconsax.car,
+                        size: 22,
+                        color: isTripDone ? _C.textTertiary : _C.success,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            fleetName,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: isTripDone ? FontWeight.w700 : FontWeight.w800,
+                              color: isTripDone ? _C.textSecondary : _C.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (vehicleType.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              vehicleType,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: _C.textTertiary,
+                              ),
+                            ),
+                          ],
+                          if (timeLabel != null && timeBadgeColor != null) ...[
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: timeBadgeColor.withValues(
+                                  alpha: isTripDone ? 0.04 : 0.08,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: timeBadgeColor.withValues(
+                                    alpha: isTripDone ? 0.08 : 0.15,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                timeLabel,
+                                style: GoogleFonts.inter(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: isTripDone
+                                      ? _C.textTertiary
+                                      : timeBadgeColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
+                        horizontal: 10,
+                        vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: _C.primary.withValues(alpha: 0.04),
-                        borderRadius: BorderRadius.circular(12),
+                        color: isTripDone
+                            ? _C.borderLight
+                            : statusColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: _C.primary.withValues(alpha: 0.08),
+                          color: isTripDone
+                              ? _C.border
+                              : statusColor.withValues(alpha: 0.25),
+                          width: 1,
                         ),
                       ),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Iconsax.route_square,
-                            size: 16,
-                            color: _C.primary,
+                            statusIcon,
+                            size: 12,
+                            color: isTripDone ? _C.textTertiary : statusColor,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              route,
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: _C.primary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          const SizedBox(width: 4),
+                          Text(
+                            statusLabel,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: isTripDone ? _C.textTertiary : statusColor,
                             ),
                           ),
                         ],
                       ),
                     ),
+                  ],
+                ),
 
-                  const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
-                  // ── Bottom: Seat count + View button ──
-                  Row(
-                    children: [
-                      Flexible(
-                        child: StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('bookings')
-                              .where('fleetId', isEqualTo: fleetId)
-                              .where(
-                                'status',
-                                whereIn: ['paid', 'validated', 'used', 'completed'],
-                              )
-                              .snapshots(),
-                          builder: (context, snap) {
-                            final bookingDocs = snap.data?.docs ?? [];
-                            final todayStr = DateFormat('dd MMM yyyy').format(DateTime.now());
-                            final filteredBookings = bookingDocs
-                                .map((d) => BookingModel.fromFirestore(d))
-                                .where((b) => b.origin == origin &&
-                                              b.destination == destination &&
-                                              b.departureDate == todayStr &&
-                                              (departureTime == null || departureTime!.isEmpty || b.departureTime == departureTime))
-                                .toList();
-                            final ticketCount = filteredBookings.length;
-
-                            int routeBookedSeats = 0;
-                            for (final b in filteredBookings) {
-                              routeBookedSeats += b.seatsBooked;
-                            }
-
-                            return Row(
-                              children: [
-                                Flexible(
-                                  flex: 0,
-                                  child: Icon(
-                                    Iconsax.people,
-                                    size: 14,
-                                    color: _C.textTertiary,
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                Flexible(
-                                  child: Text(
-                                    '$ticketCount penumpang',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: _C.textTertiary,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Flexible(
-                                  flex: 0,
-                                  child: Icon(
-                                    Iconsax.driver,
-                                    size: 14,
-                                    color: _C.textTertiary,
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                Flexible(
-                                  child: Text(
-                                    '$routeBookedSeats/$totalSeats kursi',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: _C.textTertiary,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                // ── Route ──
+                if (route.isNotEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isTripDone
+                          ? _C.borderLight.withValues(alpha: 0.5)
+                          : _C.primary.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isTripDone
+                            ? _C.border.withValues(alpha: 0.3)
+                            : _C.primary.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Iconsax.route_square,
+                          size: 16,
+                          color: isTripDone ? _C.textTertiary : _C.primary,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Lihat Detail',
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            route,
                             style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: _C.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isTripDone ? _C.textSecondary : _C.primary,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Iconsax.arrow_right_3,
-                            size: 16,
-                            color: _C.primary,
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+
+                const SizedBox(height: 12),
+
+                // ── Bottom: Seat count + View button ──
+                Row(
+                  children: [
+                    Flexible(
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('bookings')
+                            .where('fleetId', isEqualTo: fleetId)
+                            .where(
+                              'status',
+                              whereIn: ['paid', 'validated', 'used', 'completed'],
+                            )
+                            .snapshots(),
+                        builder: (context, snap) {
+                          final bookingDocs = snap.data?.docs ?? [];
+                          final todayStr = DateFormat('dd MMM yyyy').format(DateTime.now());
+                          final filteredBookings = bookingDocs
+                              .map((d) => BookingModel.fromFirestore(d))
+                              .where((b) => b.origin == origin &&
+                                            b.destination == destination &&
+                                            b.departureDate == todayStr &&
+                                            (departureTime == null || departureTime!.isEmpty || b.departureTime == departureTime))
+                              .toList();
+                          final ticketCount = filteredBookings.length;
+
+                          int routeBookedSeats = 0;
+                          for (final b in filteredBookings) {
+                            routeBookedSeats += b.seatsBooked;
+                          }
+
+                          return Row(
+                            children: [
+                              Flexible(
+                                flex: 0,
+                                child: Icon(
+                                  Iconsax.people,
+                                  size: 14,
+                                  color: _C.textTertiary,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  '$ticketCount penumpang',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: _C.textTertiary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Flexible(
+                                flex: 0,
+                                child: Icon(
+                                  Iconsax.driver,
+                                  size: 14,
+                                  color: _C.textTertiary,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  '$routeBookedSeats/$totalSeats kursi',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: _C.textTertiary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isTripDone ? 'Detail Riwayat' : 'Lihat Detail',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: isTripDone ? _C.textSecondary : _C.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Iconsax.arrow_right_3,
+                          size: 16,
+                          color: isTripDone ? _C.textSecondary : _C.primary,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-        )
-        .animate()
-        .fadeIn(delay: (100 + index * 80).ms, duration: 400.ms)
-        .slideY(
-          begin: 0.06,
-          delay: (100 + index * 80).ms,
-          duration: 400.ms,
-          curve: Curves.easeOutCubic,
-        );
+        ),
+      ),
+    );
   }
 }

@@ -59,6 +59,18 @@ class ShipmentService {
     });
   }
 
+  static Stream<List<ShipmentModel>> fleetShipmentsStream(String fleetId) {
+    return _db
+        .collection('shipments')
+        .where('fleetId', isEqualTo: fleetId)
+        .snapshots()
+        .map((snap) {
+      final list = snap.docs.map((d) => ShipmentModel.fromFirestore(d)).toList();
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list;
+    });
+  }
+
   static Stream<ShipmentModel> shipmentStream(String shipmentId) {
     return _db
         .collection('shipments')

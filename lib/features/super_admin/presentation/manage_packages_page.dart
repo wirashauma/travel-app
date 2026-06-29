@@ -608,6 +608,6 @@ class _PackageAdminCard extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().fadeIn(delay: (100 + index * 50).ms, duration: 350.ms).slideY(begin: 0.05, end: 0, duration: 350.ms);
+    );
   }
 }

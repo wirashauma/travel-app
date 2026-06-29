@@ -36,8 +36,9 @@ class DriverPackageConfirmationPage extends StatefulWidget {
 class _DriverPackageConfirmationPageState extends State<DriverPackageConfirmationPage> {
   final _auth = FirebaseAuth.instance;
 
-  String? _origin;
-  String? _destination;
+  String? _fleetId;
+  bool _loading = true;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -56,17 +57,29 @@ class _DriverPackageConfirmationPageState extends State<DriverPackageConfirmatio
           .limit(1)
           .get();
 
-      if (fleets.docs.isEmpty) return;
+      if (fleets.docs.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _loading = false;
+          });
+        }
+        return;
+      }
 
       final doc = fleets.docs.first;
-      final data = doc.data();
       if (mounted) {
         setState(() {
-          _origin = data['origin'] as String? ?? '';
-          _destination = data['destination'] as String? ?? '';
+          _fleetId = doc.id;
+          _loading = false;
         });
       }
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -79,187 +92,149 @@ class _DriverPackageConfirmationPageState extends State<DriverPackageConfirmatio
     return Scaffold(
       backgroundColor: _C.bg,
       appBar: AppBar(
-        title: Text('Konfirmasi Paket', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+        title: Text('Detail Paket di Mobil', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
         backgroundColor: _C.primary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: DefaultTabController(
-        length: 2,
-        child: Column(
-          children: [
-            Container(
-              color: _C.primary,
-              child: TabBar(
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white60,
-                indicatorColor: Colors.white,
-                indicatorWeight: 3,
-                labelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
-                tabs: const [
-                  Tab(text: 'Tersedia'),
-                  Tab(text: 'Ditugaskan'),
-                ],
-              ),
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _AvailablePackagesTab(
-                    fleetOrigin: _origin,
-                    fleetDestination: _destination,
+      body: _loading
+          ? const Center(child: CircularProgressIndicator(color: _C.primary))
+          : _fleetId == null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Iconsax.car, size: 64, color: _C.textTertiary),
+                        const SizedBox(height: 16),
+                        Text('Anda belum memiliki armada',
+                            style: GoogleFonts.inter(fontSize: 15, color: _C.textSecondary, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 4),
+                        Text('Hubungi admin untuk penugasan armada',
+                            style: GoogleFonts.inter(fontSize: 12, color: _C.textTertiary)),
+                      ],
+                    ),
                   ),
-                  _DriverPackagesTab(driverId: user.uid, driverName: user.displayName ?? 'Sopir'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+                )
+              : Column(
+                  children: [
+                    // Search Bar
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: _C.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _C.primary.withValues(alpha: 0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          onChanged: (val) {
+                            setState(() {
+                              _searchQuery = val.trim();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Cari resi, pengirim, atau deskripsi...',
+                            hintStyle: GoogleFonts.inter(fontSize: 13.5, color: _C.textTertiary),
+                            prefixIcon: const Icon(Iconsax.search_normal_1, size: 20, color: _C.textTertiary),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: StreamBuilder<List<ShipmentModel>>(
+                        stream: ShipmentService.fleetShipmentsStream(_fleetId!),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return SkeletonLoader.list(itemCount: 3);
+                          }
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Iconsax.warning_2, size: 64, color: _C.textTertiary),
+                                  const SizedBox(height: 16),
+                                  Text('Gagal memuat paket', style: GoogleFonts.inter(fontSize: 15, color: _C.textSecondary)),
+                                  const SizedBox(height: 4),
+                                  Text(snapshot.error.toString(), style: GoogleFonts.inter(fontSize: 11, color: _C.textTertiary)),
+                                ],
+                              ),
+                            );
+                          }
 
-class _AvailablePackagesTab extends StatefulWidget {
-  final String? fleetOrigin;
-  final String? fleetDestination;
+                          // Filter packages to show loaded packages on the fleet
+                          var packages = (snapshot.data ?? [])
+                              .where((s) => s.status == 'picked_up' ||
+                                            s.status == 'in_transit' ||
+                                            s.status == 'delivered' ||
+                                            s.status == 'confirmed_by_passenger')
+                              .toList();
 
-  const _AvailablePackagesTab({
-    this.fleetOrigin,
-    this.fleetDestination,
-  });
+                          // Apply search filter if query is not empty
+                          if (_searchQuery.isNotEmpty) {
+                            final q = _searchQuery.toLowerCase();
+                            packages = packages.where((s) {
+                              final desc = s.description.toLowerCase();
+                              final sender = (s.senderName ?? s.userName).toLowerCase();
+                              final receiver = (s.receiverName ?? '').toLowerCase();
+                              final code = (s.packageCode ?? '').toLowerCase();
+                              return desc.contains(q) ||
+                                  sender.contains(q) ||
+                                  receiver.contains(q) ||
+                                  code.contains(q);
+                            }).toList();
+                          }
 
-  @override
-  State<_AvailablePackagesTab> createState() => _AvailablePackagesTabState();
-}
+                          if (packages.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _searchQuery.isNotEmpty ? Iconsax.box_search : Iconsax.box_tick,
+                                    size: 64,
+                                    color: _C.textTertiary,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    _searchQuery.isNotEmpty
+                                        ? 'Tidak ada paket cocok pencarian'
+                                        : 'Belum ada paket di dalam mobil Anda',
+                                    style: GoogleFonts.inter(fontSize: 15, color: _C.textSecondary, fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
 
-class _AvailablePackagesTabState extends State<_AvailablePackagesTab> {
-  @override
-  Widget build(BuildContext context) {
-    if (widget.fleetOrigin == null || widget.fleetDestination == null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Iconsax.car, size: 64, color: _C.textTertiary),
-            const SizedBox(height: 16),
-            Text('Anda belum memiliki armada',
-                style: GoogleFonts.inter(fontSize: 15, color: _C.textSecondary)),
-            const SizedBox(height: 4),
-            Text('Hubungi admin untuk penugasan armada',
-                style: GoogleFonts.inter(fontSize: 12, color: _C.textTertiary)),
-          ],
-        ),
-      );
-    }
-
-    return StreamBuilder<List<ShipmentModel>>(
-      stream: ShipmentService.pendingShipmentsStream(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return SkeletonLoader.list(itemCount: 3);
-        }
-        if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Iconsax.warning_2, size: 64, color: _C.textTertiary),
-                const SizedBox(height: 16),
-                Text('Gagal memuat paket', style: GoogleFonts.inter(fontSize: 15, color: _C.textSecondary)),
-                const SizedBox(height: 4),
-                Text(snapshot.error.toString(), style: GoogleFonts.inter(fontSize: 11, color: _C.textTertiary)),
-              ],
-            ),
-          );
-        }
-        final packages = (snapshot.data ?? [])
-            .where((s) => s.origin == widget.fleetOrigin && s.destination == widget.fleetDestination)
-            .toList();
-        if (packages.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Iconsax.box_2, size: 64, color: _C.textTertiary),
-                const SizedBox(height: 16),
-                Text('Tidak ada paket tersedia', style: GoogleFonts.inter(fontSize: 15, color: _C.textSecondary)),
-              ],
-            ),
-          );
-        }
-        final user = FirebaseAuth.instance.currentUser;
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: packages.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) => _PackageCard(
-            shipment: packages[index],
-            index: index,
-            showTakeButton: true,
-            driverId: user?.uid ?? '',
-            driverName: user?.displayName ?? 'Sopir',
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _DriverPackagesTab extends StatelessWidget {
-  final String driverId;
-  final String driverName;
-
-  const _DriverPackagesTab({required this.driverId, required this.driverName});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<ShipmentModel>>(
-      stream: ShipmentService.driverShipmentsStream(driverId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return SkeletonLoader.list(itemCount: 3);
-        }
-        if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Iconsax.warning_2, size: 64, color: _C.textTertiary),
-                const SizedBox(height: 16),
-                Text('Gagal memuat paket', style: GoogleFonts.inter(fontSize: 15, color: _C.textSecondary)),
-                const SizedBox(height: 4),
-                Text(snapshot.error.toString(), style: GoogleFonts.inter(fontSize: 11, color: _C.textTertiary)),
-              ],
-            ),
-          );
-        }
-        final packages = snapshot.data ?? [];
-        if (packages.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Iconsax.box_tick, size: 64, color: _C.textTertiary),
-                const SizedBox(height: 16),
-                Text('Belum ada paket ditugaskan', style: GoogleFonts.inter(fontSize: 15, color: _C.textSecondary)),
-              ],
-            ),
-          );
-        }
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: packages.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) => _PackageCard(
-            shipment: packages[index],
-            index: index,
-            showTakeButton: false,
-            driverId: driverId,
-            driverName: driverName,
-          ),
-        );
-      },
+                          return ListView.separated(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: packages.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) => _PackageCard(
+                              shipment: packages[index],
+                              index: index,
+                              showTakeButton: false,
+                              driverId: user.uid,
+                              driverName: user.displayName ?? 'Sopir',
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
     );
   }
 }

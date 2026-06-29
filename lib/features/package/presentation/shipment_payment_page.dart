@@ -216,67 +216,100 @@ class _ShipmentPaymentPageState extends State<ShipmentPaymentPage> {
 
           const SizedBox(height: 20),
 
-          // Payment Detail Card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: _C.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _C.borderLight),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Detail Pembayaran',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: _C.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _detailRow('Kode Pesanan', 'SHIP-${s.id?.substring(0, 6).toUpperCase() ?? ''}'),
-                const SizedBox(height: 10),
-                _detailRow('Layanan', 'Pengiriman Paket'),
-                const SizedBox(height: 10),
-                _detailRow('Rute', '${s.origin} → ${s.destination}'),
-                const SizedBox(height: 10),
-                _detailRow(
-                  'Ukuran Paket',
-                  s.packageSize == 'kecil'
-                      ? 'Kecil'
-                      : s.packageSize == 'sedang'
-                          ? 'Sedang'
-                          : 'Besar',
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Divider(height: 1, color: _C.borderLight),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Receipt Card Container
+          Material(
+            elevation: 8,
+            shadowColor: _C.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(16),
+            child: ClipPath(
+              clipper: ReceiptClipper(),
+              child: Container(
+                width: double.infinity,
+                color: _C.white,
+                padding: const EdgeInsets.fromLTRB(24, 30, 24, 30),
+                child: Column(
                   children: [
+                    // Brand / Logo Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Iconsax.box_tick, size: 24, color: _C.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          'MINANG TRAVEL',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                            color: _C.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
                     Text(
-                      'Total Pembayaran',
+                      'Struk Tagihan Pengiriman',
                       style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: _C.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: _C.textTertiary,
                       ),
                     ),
-                    Text(
-                      'Rp${NumberFormat('#,###', 'id_ID').format(s.packagePrice ?? 0)}',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: _C.primary,
-                      ),
+                    const SizedBox(height: 24),
+                    const DashedDivider(color: _C.borderLight),
+                    const SizedBox(height: 18),
+                    
+                    // Transaction details
+                    _receiptRow('No. Tagihan', 'SHIP-${s.id?.substring(0, 6).toUpperCase() ?? ''}'),
+                    const SizedBox(height: 10),
+                    _receiptRow('Layanan', 'Kirim Paket'),
+                    const SizedBox(height: 10),
+                    _receiptRow('Rute', '${s.origin} → ${s.destination}'),
+                    const SizedBox(height: 10),
+                    _receiptRow(
+                      'Ukuran Paket',
+                      s.packageSize == 'kecil'
+                          ? 'Kecil'
+                          : s.packageSize == 'sedang'
+                              ? 'Sedang'
+                              : 'Besar',
                     ),
+                    const SizedBox(height: 18),
+                    const DashedDivider(color: _C.borderLight),
+                    const SizedBox(height: 18),
+
+                    // Price details
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'TOTAL BAYAR',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: _C.textSecondary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        Text(
+                          'Rp${NumberFormat('#,###', 'id_ID').format(s.packagePrice ?? 0)}',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: _C.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    const DashedDivider(color: _C.borderLight),
+                    const SizedBox(height: 20),
+
+                    // Barcode section
+                    _buildBarcode(),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
 
@@ -314,20 +347,6 @@ class _ShipmentPaymentPageState extends State<ShipmentPaymentPage> {
     );
   }
 
-  Widget _detailRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: GoogleFonts.inter(fontSize: 12, color: _C.textTertiary)),
-        Text(value,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: _C.textPrimary,
-            )),
-      ],
-    );
-  }
 
   Widget _buildSuccessView() {
     return Center(
@@ -366,6 +385,138 @@ class _ShipmentPaymentPageState extends State<ShipmentPaymentPage> {
           ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
         ],
       ),
+    );
+  }
+
+  Widget _receiptRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: _C.textTertiary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: _C.textPrimary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBarcode() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(35, (index) {
+            final isGap = index % 4 == 0;
+            final width = (index % 5 == 0) ? 3.0 : ((index % 2 == 0) ? 1.0 : 2.0);
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 1),
+              width: isGap ? 0 : width,
+              height: 28,
+              color: _C.textPrimary.withValues(alpha: 0.85),
+            );
+          }),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'SHIP-${s.id?.toUpperCase() ?? ''}',
+          style: GoogleFonts.jetBrainsMono(
+            fontSize: 9,
+            color: _C.textTertiary,
+            letterSpacing: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+//  RECEIPT STYLING UTILS — Clipper & Dashed Divider
+// ─────────────────────────────────────────────────────────
+class ReceiptClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height);
+    
+    // Bottom serrated edge
+    double toothWidth = 8;
+    double toothHeight = 4;
+    int toothCount = (size.width / toothWidth).ceil();
+    for (int i = 0; i < toothCount; i++) {
+      double x = i * toothWidth;
+      path.lineTo(x + toothWidth / 2, size.height - toothHeight);
+      path.lineTo(x + toothWidth, size.height);
+    }
+    
+    path.lineTo(size.width, 0);
+    
+    // Top serrated edge
+    for (int i = toothCount - 1; i >= 0; i--) {
+      double x = i * toothWidth;
+      path.lineTo(x + toothWidth / 2, toothHeight);
+      path.lineTo(x, 0);
+    }
+    
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+class DashedDivider extends StatelessWidget {
+  final double height;
+  final Color color;
+  final double dashWidth;
+  final double dashGap;
+
+  const DashedDivider({
+    super.key,
+    this.height = 1,
+    this.color = const Color(0xFFCBD5E1),
+    this.dashWidth = 5,
+    this.dashGap = 3,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final boxWidth = constraints.constrainWidth();
+        final dashCount = (boxWidth / (dashWidth + dashGap)).floor();
+        return Flex(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          direction: Axis.horizontal,
+          children: List.generate(dashCount, (_) {
+            return SizedBox(
+              width: dashWidth,
+              height: height,
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: color),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }
