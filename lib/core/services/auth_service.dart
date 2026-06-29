@@ -160,17 +160,26 @@ class AuthService {
     required String namaLengkap,
     required String nomorHp,
     required String email,
+    String? profileImageUrl,
   }) async {
-    await _db.collection('users').doc(uid).update({
+    final Map<String, dynamic> updates = {
       'namaLengkap': namaLengkap.trim(),
       'nomorHp': nomorHp.trim(),
       'email': email.trim(),
-    });
+    };
+    if (profileImageUrl != null) {
+      updates['profileImageUrl'] = profileImageUrl;
+    }
 
-    // Also update FirebaseAuth displayName
+    await _db.collection('users').doc(uid).update(updates);
+
+    // Also update FirebaseAuth displayName and photoURL
     final user = _auth.currentUser;
     if (user != null) {
       await user.updateDisplayName(namaLengkap.trim());
+      if (profileImageUrl != null) {
+        await user.updatePhotoURL(profileImageUrl);
+      }
     }
   }
 

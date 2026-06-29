@@ -195,6 +195,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           namaLengkap: _nameCtrl.text.trim(),
           nomorHp: _phoneCtrl.text.trim(),
           email: _emailCtrl.text.trim(),
+          profileImageUrl: _profileImageUrl,
         )
         .then((_) {
           if (!mounted) return;

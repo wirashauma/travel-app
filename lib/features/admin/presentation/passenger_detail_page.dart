@@ -733,98 +733,103 @@ class PassengerDetailPage extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Navigate button (if has pickup)
-          if (booking.pickupAddress != null && booking.pickupAddress!.isNotEmpty) ...[
-            Expanded(
-              child: SizedBox(
-                height: 50,
-                child: OutlinedButton.icon(
-                  onPressed: () => _openMaps(context),
-                  icon: const Icon(Iconsax.routing, size: 18),
-                  label: Text(
-                    'Navigasi',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+          if ((booking.pickupAddress != null && booking.pickupAddress!.isNotEmpty) || canMarkNoShow) ...[
+            Row(
+              children: [
+                // Navigate button (if has pickup)
+                if (booking.pickupAddress != null && booking.pickupAddress!.isNotEmpty)
+                  Expanded(
+                    child: SizedBox(
+                      height: 46,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _openMaps(context),
+                        icon: const Icon(Iconsax.routing, size: 16),
+                        label: Text(
+                          'Navigasi',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _C.primary,
+                          side: const BorderSide(color: _C.primary, width: 1.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _C.primary,
-                    side: const BorderSide(color: _C.primary, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                if (booking.pickupAddress != null && booking.pickupAddress!.isNotEmpty && canMarkNoShow)
+                  const SizedBox(width: 10),
+                // No-Show Button
+                if (canMarkNoShow)
+                  Expanded(
+                    child: SizedBox(
+                      height: 46,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _markAsNoShow(context),
+                        icon: const Icon(Iconsax.user_remove, size: 16, color: _C.error),
+                        label: Text(
+                          'No-Show',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _C.error,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _C.error,
+                          side: const BorderSide(color: _C.error, width: 1.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
+              ],
             ),
-            const SizedBox(width: 12),
+            const SizedBox(height: 10),
           ],
-          // No-Show Button
-          if (canMarkNoShow) ...[
-            SizedBox(
-              height: 50,
-              width: 120,
-              child: OutlinedButton.icon(
-                onPressed: () => _markAsNoShow(context),
-                icon: const Icon(Iconsax.user_remove, size: 18, color: _C.error),
-                label: Text(
-                  'No-Show',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: _C.error,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _C.error,
-                  side: const BorderSide(color: _C.error, width: 1.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
+          // Mark as done button (Primary action)
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              onPressed: canMarkDone ? () => _markAsSelesai(context) : null,
+              icon: Icon(
+                isUsed ? Iconsax.tick_circle : Iconsax.check,
+                size: 18,
+                color: Colors.white,
               ),
-            ),
-            const SizedBox(width: 12),
-          ],
-          // Mark as done button
-          Expanded(
-            flex: 2,
-            child: SizedBox(
-              height: 50,
-              child: ElevatedButton.icon(
-                onPressed: canMarkDone ? () => _markAsSelesai(context) : null,
-                icon: Icon(
-                  isUsed ? Iconsax.tick_circle : Iconsax.check,
-                  size: 18,
+              label: Text(
+                isUsed
+                    ? 'Sudah Dijemput'
+                    : isNoShow
+                        ? 'Tidak Datang'
+                        : isValidated
+                            ? 'Tandai Selesai'
+                            : 'Konfirmasi Naik',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                   color: Colors.white,
                 ),
-                label: Text(
-                  isUsed
-                      ? 'Sudah Dijemput'
-                      : isNoShow
-                          ? 'Tidak Datang'
-                          : isValidated
-                              ? 'Tandai Selesai'
-                              : 'Konfirmasi Naik',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isUsed || isNoShow
-                      ? const Color(0xFF94A3B8)
-                      : _C.success,
-                  disabledBackgroundColor: const Color(0xFF94A3B8),
-                  elevation: isUsed || isNoShow ? 0 : 4,
-                  shadowColor: _C.success.withValues(alpha: 0.3),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isUsed || isNoShow
+                    ? const Color(0xFF94A3B8)
+                    : _C.success,
+                disabledBackgroundColor: const Color(0xFF94A3B8),
+                elevation: isUsed || isNoShow ? 0 : 3,
+                shadowColor: _C.success.withValues(alpha: 0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),

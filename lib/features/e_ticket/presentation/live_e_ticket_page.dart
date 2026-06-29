@@ -13,6 +13,7 @@ import '../../../core/models/booking_model.dart';
 import '../../../core/services/booking_service.dart';
 import '../../../core/services/pdf_ticket_service.dart';
 import '../../../core/services/whatsapp_ticket_service.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../navigation/presentation/main_navigation_screen.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -77,9 +78,7 @@ class LiveETicketPage extends StatelessWidget {
                 builder: (context, snapshot) {
                   // ── Loading ──
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: _C.primary),
-                    );
+                    return SkeletonLoader.card();
                   }
 
                   // ── Not found ──

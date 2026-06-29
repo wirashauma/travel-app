@@ -163,11 +163,17 @@ exports.midtransWebhook = functions.https.onRequest(async (req, res) => {
   }
 
   const notification = req.body;
-  const orderId = notification.order_id;
+  const rawOrderId = notification.order_id;
   const transactionStatus = notification.transaction_status;
   const fraudStatus = notification.fraud_status;
 
+  let orderId = rawOrderId;
+  if (orderId && orderId.includes('-admin')) {
+    orderId = orderId.split('-admin')[0];
+  }
+
   functions.logger.info('Midtrans webhook received', {
+    rawOrderId,
     orderId,
     transactionStatus,
     fraudStatus,
@@ -214,12 +220,16 @@ exports.midtransWebhook = functions.https.onRequest(async (req, res) => {
         const currentStatus = bData.status || '';
 
         const bookingUpdates = {
-          status: newStatus,
+          status: currentStatus === 'paid' ? 'paid' : newStatus,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         };
 
         if (newStatus === 'paid') {
-          bookingUpdates.paidAt = admin.firestore.FieldValue.serverTimestamp();
+          if (currentStatus === 'paid') {
+            bookingUpdates.adminFeePaidAt = admin.firestore.FieldValue.serverTimestamp();
+          } else {
+            bookingUpdates.paidAt = admin.firestore.FieldValue.serverTimestamp();
+          }
         }
 
         const fleetId = bData.fleetId || '';

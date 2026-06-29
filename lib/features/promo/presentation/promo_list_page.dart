@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLOR PALETTE — Trust Blue
@@ -121,10 +122,8 @@ class PromoListPage extends StatelessWidget {
             builder: (context, snapshot) {
               // ── Loading ──
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const SliverFillRemaining(
-                  child: Center(
-                    child: CircularProgressIndicator(color: _C.primary),
-                  ),
+                return SliverFillRemaining(
+                  child: SkeletonLoader.grid(itemCount: 4),
                 );
               }
 

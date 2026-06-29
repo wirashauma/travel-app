@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLORS — Trust Blue / Clean Slate / No Purple
@@ -63,10 +64,8 @@ class PopularRoutesPage extends StatelessWidget {
               return Column(
                 children: [
                   _buildAppBar(context, null),
-                  const Expanded(
-                    child: Center(
-                      child: CircularProgressIndicator(color: _C.primary),
-                    ),
+                  Expanded(
+                    child: SkeletonLoader.grid(itemCount: 4),
                   ),
                 ],
               );

@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/utils/logout_dialog.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import 'edit_profile_page.dart';
 import 'sesi_login_page.dart';
 import 'notifikasi_settings_page.dart';
@@ -108,20 +110,10 @@ class _ProfileDashboardPageState extends State<ProfileDashboardPage> {
   }
 
   String _getMemberLabel(Timestamp? createdAt) {
-    if (createdAt == null) return '4 bulan'; // Fallback to mockup value
-    final diffDays = DateTime.now().difference(createdAt.toDate()).inDays;
-    final diffMonths = diffDays ~/ 30;
-
-    if (diffMonths > 0) {
-      return '$diffMonths bulan';
-    } else {
-      final diffWeeks = diffDays ~/ 7;
-      if (diffWeeks > 0) {
-        return '$diffWeeks minggu';
-      } else {
-        return '$diffDays hari';
-      }
+    if (createdAt == null) {
+      return DateFormat('dd MMM yyyy', 'id_ID').format(DateTime.now());
     }
+    return DateFormat('dd MMM yyyy', 'id_ID').format(createdAt.toDate());
   }
 
   Widget _buildMenuItem({
@@ -261,7 +253,7 @@ class _ProfileDashboardPageState extends State<ProfileDashboardPage> {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: _C.primary));
+            return SkeletonLoader.profile();
           }
 
           final data = snapshot.data?.data() as Map<String, dynamic>? ?? {};
@@ -501,7 +493,7 @@ class _ProfileDashboardPageState extends State<ProfileDashboardPage> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Member',
+                                'Bergabung',
                                 style: GoogleFonts.inter(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w500,

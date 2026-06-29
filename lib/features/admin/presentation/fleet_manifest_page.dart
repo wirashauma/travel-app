@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,8 +16,8 @@ import '../../../core/models/booking_model.dart';
 import '../../../core/models/lng_lat.dart';
 import '../../../core/services/city_coordinates_seeder.dart';
 import '../../../core/services/mapbox_directions_service.dart';
+import '../../../core/services/driver_tracking_service.dart';
 import 'ticket_scanner_page.dart';
-import 'driver_trip_page.dart';
 import 'passenger_detail_page.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -76,6 +78,7 @@ class _FleetManifestPageState extends State<FleetManifestPage>
     with SingleTickerProviderStateMixin {
 
   late final AnimationController _headerAnim;
+  bool _tripProcessing = false;
 
   @override
   void initState() {
@@ -208,7 +211,7 @@ class _FleetManifestPageState extends State<FleetManifestPage>
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: _buildBottomBar(context, bottomPad),
+                child: _buildBottomBar(context, bottomPad, bookings),
               ),
             ],
           );
@@ -702,50 +705,176 @@ class _FleetManifestPageState extends State<FleetManifestPage>
             fleetId: widget.fleetId,
             origin: widget.origin,
             destination: widget.destination,
-            onFullMapTap: () => _openDriverTripPage(context),
-          ),
-          const SizedBox(height: 12),
-
-          // ── Quick action buttons ──
-          Row(
-            children: [
-              Expanded(
-                child: _MapActionBtn(
-                  icon: Iconsax.routing_2,
-                  label: 'Peta Lengkap',
-                  color: _C.primary,
-                  onTap: () => _openDriverTripPage(context),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _MapActionBtn(
-                  icon: Iconsax.location_tick,
-                  label: 'Lacak Pengemudi',
-                  color: _C.teal,
-                  onTap: () => _openDriverTripPage(context),
-                ),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  void _openDriverTripPage(BuildContext context) {
-    Navigator.push(
-      context,
-      _pageRoute(
-        DriverTripPage(
-          fleetId: widget.fleetId,
-          fleetName: widget.fleetName,
-          origin: widget.origin,
-          destination: widget.destination,
-          vehicleType: widget.vehicleType,
-        ),
+  Future<void> _startTrip(BuildContext context, List<BookingModel> bookings) async {
+    if (_tripProcessing) return;
+    setState(() => _tripProcessing = true);
+    try {
+      final pendingPickups = bookings.where((b) => 
+        b.status != BookingStatus.used && 
+        b.status != BookingStatus.validated &&
+        b.status != BookingStatus.noShow
+      ).toList();
+
+      if (pendingPickups.isNotEmpty) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: Color(0xFFF1F5F9), width: 1.5),
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+            contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+            actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Iconsax.warning_2,
+                    color: Color(0xFFD97706),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Jemputan Belum Selesai',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'Ada ${pendingPickups.length} penumpang yang belum selesai dijemput. Silakan selesaikan semua penjemputan di manifest terlebih dahulu sebelum memulai perjalanan.',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: const Color(0xFF475569),
+                height: 1.5,
+              ),
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F4C81),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Mengerti',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
+      await DriverTrackingService.startTracking(fleetId: widget.fleetId);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Perjalanan dimulai!', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            backgroundColor: _C.teal,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memulai: ${e.toString().replaceFirst('Exception: ', '')}',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _tripProcessing = false);
+    }
+  }
+
+  Future<void> _endTrip(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Akhiri Perjalanan?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF0F172A))),
+        content: Text('Pastikan semua penumpang sudah turun.', style: GoogleFonts.inter(fontSize: 13.5)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Batal', style: GoogleFonts.inter(color: _C.textTertiary))),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            child: Text('Akhiri', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          ),
+        ],
       ),
     );
+    if (confirmed != true) return;
+
+    if (_tripProcessing) return;
+    setState(() => _tripProcessing = true);
+    try {
+      await DriverTrackingService.stopTracking();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Perjalanan telah berakhir.', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            backgroundColor: _C.teal,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengakhiri: $e'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _tripProcessing = false);
+    }
   }
 
   // ─────────────────────────────────────────────────────
@@ -838,7 +967,7 @@ class _FleetManifestPageState extends State<FleetManifestPage>
   // ─────────────────────────────────────────────────────
   //  BOTTOM BAR
   // ─────────────────────────────────────────────────────
-  Widget _buildBottomBar(BuildContext context, double bottomPad) {
+  Widget _buildBottomBar(BuildContext context, double bottomPad, List<BookingModel> bookings) {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('fleets')
@@ -847,7 +976,30 @@ class _FleetManifestPageState extends State<FleetManifestPage>
       builder: (context, snap) {
         final data       = snap.data?.data() as Map<String, dynamic>?;
         final tripStatus = data?['tripStatus'] as String? ?? 'menunggu';
-        final isDone     = tripStatus == 'selesai';
+        final isWaiting  = tripStatus == 'menunggu';
+        final isActive   = tripStatus == 'berangkat';
+
+        final Color btnColor;
+        final IconData btnIcon;
+        final String btnLabel;
+        final VoidCallback? btnAction;
+
+        if (isWaiting) {
+          btnColor = _C.primary;
+          btnIcon  = Iconsax.routing_2;
+          btnLabel = _tripProcessing ? 'Memproses...' : 'Mulai Perjalanan';
+          btnAction = _tripProcessing ? null : () => _startTrip(context, bookings);
+        } else if (isActive) {
+          btnColor = const Color(0xFFDC2626);
+          btnIcon  = Iconsax.close_circle;
+          btnLabel = _tripProcessing ? 'Memproses...' : 'Akhiri Perjalanan';
+          btnAction = _tripProcessing ? null : () => _endTrip(context);
+        } else {
+          btnColor = const Color(0xFF94A3B8);
+          btnIcon  = Iconsax.tick_circle;
+          btnLabel = 'Perjalanan Selesai';
+          btnAction = null;
+        }
 
         return Container(
           padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPad + 12),
@@ -863,61 +1015,47 @@ class _FleetManifestPageState extends State<FleetManifestPage>
           ),
           child: Row(
             children: [
-              // Scan ticket
-              Expanded(
-                child: SizedBox(
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      _pageRoute(const TicketScannerPage()),
-                    ),
-                    icon: const Icon(Iconsax.scan_barcode, size: 18, color: Colors.white),
-                    label: Text(
-                      'Scan Tiket',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _C.teal,
-                      elevation: 3,
-                      shadowColor: _C.teal.withValues(alpha: 0.3),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+              // Scan ticket (Square Outlined Button)
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    _pageRoute(const TicketScannerPage()),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _C.teal,
+                    side: const BorderSide(color: _C.teal, width: 1.5),
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
+                  child: const Icon(Iconsax.scan_barcode, size: 22),
                 ),
               ),
               const SizedBox(width: 12),
-              // Atur perjalanan
+              // Dynamic Action Button (Primary)
               Expanded(
                 child: SizedBox(
                   height: 52,
                   child: ElevatedButton.icon(
-                    onPressed: () => _openDriverTripPage(context),
-                    icon: Icon(
-                      isDone ? Iconsax.tick_circle : Iconsax.routing_2,
-                      size: 18,
-                      color: Colors.white,
-                    ),
+                    onPressed: btnAction,
+                    icon: Icon(btnIcon, size: 18, color: Colors.white),
                     label: Text(
-                      isDone ? 'Selesai' : 'Atur Perjalanan',
+                      btnLabel,
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.5,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDone
-                          ? const Color(0xFF94A3B8)
-                          : _C.primary,
-                      elevation: isDone ? 0 : 3,
-                      shadowColor: _C.primary.withValues(alpha: 0.3),
+                      backgroundColor: btnColor,
+                      disabledBackgroundColor: const Color(0xFF94A3B8),
+                      elevation: btnAction == null ? 0 : 3,
+                      shadowColor: btnColor.withValues(alpha: 0.3),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -956,13 +1094,11 @@ class _EmbeddedRouteMap extends StatefulWidget {
   final String fleetId;
   final String origin;
   final String destination;
-  final VoidCallback onFullMapTap;
 
   const _EmbeddedRouteMap({
     required this.fleetId,
     required this.origin,
     required this.destination,
-    required this.onFullMapTap,
   });
 
   @override
@@ -1121,14 +1257,14 @@ class _EmbeddedRouteMapState extends State<_EmbeddedRouteMap> {
   // ── Map callbacks ──
   void _onMapCreated(MapboxMap map) async {
     _mapboxMap = map;
-    // Disable gestures — read-only preview
+    // Enable gestures — interactive map
     await map.gestures.updateSettings(GesturesSettings(
-      scrollEnabled: false,
-      rotateEnabled: false,
-      pinchToZoomEnabled: false,
-      pitchEnabled: false,
-      doubleTapToZoomInEnabled: false,
-      doubleTouchToZoomOutEnabled: false,
+      scrollEnabled: true,
+      rotateEnabled: true,
+      pinchToZoomEnabled: true,
+      pitchEnabled: true,
+      doubleTapToZoomInEnabled: true,
+      doubleTouchToZoomOutEnabled: true,
     ));
 
     _pointMgr = await map.annotations.createPointAnnotationManager();
@@ -1239,14 +1375,14 @@ class _EmbeddedRouteMapState extends State<_EmbeddedRouteMap> {
   }
 
   double _zoomForSpan(double span) {
-    if (span < 0.08) { return 13.0; }
-    if (span < 0.20) { return 11.5; }
-    if (span < 0.50) { return 10.5; }
-    if (span < 1.00) { return 9.5; }
-    if (span < 2.00) { return 8.5; }
-    if (span < 4.00) { return 7.8; }
-    if (span < 8.00) { return 7.0; }
-    return 6.0;
+    if (span < 0.08) { return 11.5; }
+    if (span < 0.20) { return 10.0; }
+    if (span < 0.50) { return 9.0; }
+    if (span < 1.00) { return 7.8; }
+    if (span < 2.00) { return 6.8; }
+    if (span < 4.00) { return 6.0; }
+    if (span < 8.00) { return 5.2; }
+    return 4.2;
   }
 
   // ── Update driver marker live ──
@@ -1296,6 +1432,9 @@ class _EmbeddedRouteMapState extends State<_EmbeddedRouteMap> {
             // ── Mapbox Map ──
             MapWidget(
               key: ValueKey('manifest_map_${widget.fleetId}'),
+              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
+              },
               mapOptions: MapOptions(
                 pixelRatio: MediaQuery.of(context).devicePixelRatio,
                 constrainMode: ConstrainMode.HEIGHT_ONLY,
@@ -1466,56 +1605,6 @@ class _EmbeddedRouteMapState extends State<_EmbeddedRouteMap> {
                 ),
               ),
 
-            // ── Expand button (bottom-right) ──
-            Positioned(
-              bottom: 10,
-              right: 10,
-              child: GestureDetector(
-                onTap: widget.onFullMapTap,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(9),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Iconsax.maximize_3,
-                        size: 13,
-                        color: Color(0xFF0F4C81),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Peta Penuh',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF0F4C81),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // ── Tap-to-expand overlay (invisible, entire map tappable) ──
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: widget.onFullMapTap,
-                behavior: HitTestBehavior.translucent,
-                child: const SizedBox.expand(),
-              ),
-            ),
           ],
         ),
       ),
@@ -1897,52 +1986,6 @@ class _SeatCapacityBar extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────
-//  MAP ACTION BUTTON
-// ─────────────────────────────────────────────────────
-class _MapActionBtn extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _MapActionBtn({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 15, color: color),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ─────────────────────────────────────────────────────
 //  STAT ITEM DATA

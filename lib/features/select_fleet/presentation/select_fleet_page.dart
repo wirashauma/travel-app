@@ -9,6 +9,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/widgets/empty_state_widget.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../seat_selection/presentation/seat_selection_page.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -222,9 +223,7 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
               builder: (context, snapshot) {
                 // Loading
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: _C.primary),
-                  );
+                  return SkeletonLoader.list(itemCount: 3);
                 }
 
                 // Error

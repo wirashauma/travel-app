@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/models/booking_model.dart';
 import '../../../core/utils/logout_dialog.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../edit_profile/presentation/edit_profile_page.dart';
 import '../../package/presentation/driver_package_confirmation_page.dart';
 import 'fleet_manifest_page.dart';
@@ -109,8 +110,18 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
         builder: (context, fleetSnap) {
           if (fleetSnap.connectionState == ConnectionState.waiting &&
               !_profileLoaded) {
-            return const Center(
-              child: CircularProgressIndicator(color: _C.primary),
+            return Scaffold(
+              backgroundColor: _C.bg,
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Reuse some layout or just full list loader
+                      SkeletonLoader.list(itemCount: 3),
+                    ],
+                  ),
+                ),
+              ),
             );
           }
 
@@ -124,6 +135,11 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
             ));
           }
 
+          final assignment = tripAssignments.isNotEmpty ? tripAssignments.first : null;
+          final route = assignment != null
+              ? '${assignment.data['origin'] ?? ''} → ${assignment.data['destination'] ?? ''}'
+              : '';
+
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
@@ -134,7 +150,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
               SliverToBoxAdapter(child: _buildSectionTitle(tripAssignments.length)),
 
               // ── PAKET BUTTON ──
-              SliverToBoxAdapter(child: _buildPackageCard()),
+              SliverToBoxAdapter(child: _buildPackageCard(route)),
 
               // ── EMPTY STATE ──
               if (tripAssignments.isEmpty)
@@ -351,38 +367,197 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
   // ─────────────────────────────────────────────────────
   //  PAKET CARD — Konfirmasi Paket
   // ─────────────────────────────────────────────────────
-  Widget _buildPackageCard() {
+  Widget _buildPackageCard(String route) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-      child: InkWell(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DriverPackageConfirmationPage())),
-        borderRadius: BorderRadius.circular(16),
+      child: GestureDetector(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const DriverPackageConfirmationPage()),
+        ),
         child: Container(
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFF0D9488), Color(0xFF14B8A6)]),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Iconsax.box_2, color: Colors.white, size: 24),
+            color: _C.card,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _C.border.withValues(alpha: 0.7)),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Top: Icon + Name + Status ──
+                Row(
                   children: [
-                    Text('Konfirmasi Paket', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
-                    const SizedBox(height: 2),
-                    Text('Kelola & konfirmasi pengiriman paket', style: GoogleFonts.inter(fontSize: 12, color: Colors.white70)),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _C.teal.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Iconsax.box_2,
+                        size: 22,
+                        color: _C.teal,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Konfirmasi Paket',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: _C.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Kelola & konfirmasi pengiriman paket',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: _C.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Badge status
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _C.teal.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _C.teal.withValues(alpha: 0.25),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Iconsax.box_tick,
+                            size: 12,
+                            color: _C.teal,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Paket',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: _C.teal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              Icon(Iconsax.arrow_right_1, color: Colors.white.withValues(alpha: 0.8)),
-            ],
+
+                const SizedBox(height: 14),
+
+                // ── Route ──
+                if (route.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _C.primary.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _C.primary.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Iconsax.route_square,
+                          size: 16,
+                          color: _C.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            route,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _C.primary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // ── Bottom: Package info & Action ──
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Iconsax.box,
+                          size: 14,
+                          color: _C.textTertiary,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Kelola Pengiriman',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: _C.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Lihat Detail',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _C.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Iconsax.arrow_right_3,
+                          size: 16,
+                          color: _C.primary,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -80,7 +80,7 @@ class _ReschedulePageState extends State<ReschedulePage> {
 
     try {
       final formattedDate = _formattedSelectedDate;
-      final formattedTime = _selectedTime!.replaceAll(' WIB', '');
+      final formattedTime = _selectedTime!;
 
       // Untuk booking paid: bayar admin fee dulu, baru apply reschedule
       if (widget.booking.status == BookingStatus.paid) {
@@ -101,7 +101,7 @@ class _ReschedulePageState extends State<ReschedulePage> {
               departureDate: formattedDate,
               departureTime: _selectedTime!,
               expiryDate: DateTime.now().add(const Duration(hours: 1)),
-              customMidtransOrderId: '${widget.booking.id}-admin',
+              customMidtransOrderId: '${widget.booking.id}-admin-${DateTime.now().millisecondsSinceEpoch}',
             ),
           ),
         );

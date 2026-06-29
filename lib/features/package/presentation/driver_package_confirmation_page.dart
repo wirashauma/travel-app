@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/models/shipment_model.dart';
 import '../../../core/services/shipment_service.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 
 class _C {
   static const Color primary = Color(0xFF0F4C81);
@@ -156,7 +157,7 @@ class _AvailablePackagesTabState extends State<_AvailablePackagesTab> {
       stream: ShipmentService.pendingShipmentsStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return SkeletonLoader.list(itemCount: 3);
         }
         if (snapshot.hasError) {
           return Center(
@@ -217,7 +218,7 @@ class _DriverPackagesTab extends StatelessWidget {
       stream: ShipmentService.driverShipmentsStream(driverId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return SkeletonLoader.list(itemCount: 3);
         }
         if (snapshot.hasError) {
           return Center(
