@@ -713,10 +713,11 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
       ('Paket', Iconsax.box),
       ('Selesai', Iconsax.tick_circle),
     ];
-    return Padding(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: filters.map((item) {
           final filterName = item.$1;
           final icon = item.$2;
@@ -772,7 +773,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
           );
         }).toList(),
       ),
-    ).animate().fadeIn(delay: 250.ms, duration: 400.ms);
+    );
   }
 
   // ─────────────────────────────────────────────────────
