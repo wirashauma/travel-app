@@ -9,7 +9,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/models/lng_lat.dart';
-import '../../../core/services/dijkstra_service.dart';
+import '../../../core/services/firestore_dijkstra_service.dart';
+import '../../../core/services/city_coordinates_seeder.dart';
 import '../../../core/widgets/custom_route_map.dart';
 import '../../seat_selection/presentation/seat_selection_page.dart';
 
@@ -72,11 +73,13 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
   int _passengers = 1;
 
   // ── Dijkstra Result ───────────────────────────
-  DijkstraRouteResult? _routeResult;
+  DijkstraResult? _routeResult;
+  bool _isLoading = false;
+  Map<String, LngLat> _dynamicCityCoordinates = {};
   bool _hasSearched = false;
 
   // ── Cities list ───────────────────────────────
-  late final List<String> _cities;
+  List<String> _cities = [];
 
   // ── Koordinat kota-kota Sumatera Barat ────────
   static const Map<String, LngLat> _cityCoordinates = {
@@ -108,7 +111,8 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
-    _cities = DijkstraService.instance.getAllCities();
+    _cities = [];
+    _loadCitiesAndCoordinates();
 
     // ── Pre-fill dari Beranda & auto-search ──
     if (widget.initialOrigin != null) {
@@ -133,6 +137,32 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
   }
 
   // ── Swap origin & destination ─────────────────
+  Future<void> _loadCitiesAndCoordinates() async {
+    try {
+      final list = await FirestoreDijkstraService.instance.getAllCities();
+      final coordsMap = await CityCoordinatesSeeder.fetchAllCoordinates();
+      final newCoords = <String, LngLat>{};
+      for (final entry in coordsMap.entries) {
+        final lat = entry.value['lat'];
+        final lng = entry.value['lng'];
+        if (lat != null && lng != null) {
+          newCoords[entry.key] = LngLat(lng, lat);
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _cities = list;
+          _dynamicCityCoordinates = newCoords;
+        });
+        if (_originCity != null &&
+            _destinationCity != null &&
+            _originCity != _destinationCity) {
+          _handleSearch();
+        }
+      }
+    } catch (_) {}
+  }
+
   void _swapCities() {
     if (_originCity == null && _destinationCity == null) return;
     setState(() {
@@ -145,7 +175,7 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
   }
 
   // ── Run Dijkstra Search ───────────────────────
-  void _handleSearch() {
+  Future<void> _handleSearch() async {
     if (_originCity == null || _destinationCity == null) {
       _showSnack('Pilih kota asal dan tujuan terlebih dahulu');
       return;
@@ -155,15 +185,31 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
       return;
     }
 
-    final result = DijkstraService.instance.getRouteDetail(
-      _originCity!,
-      _destinationCity!,
-    );
-
     setState(() {
-      _routeResult = result;
+      _isLoading = true;
       _hasSearched = true;
+      _routeResult = null;
     });
+
+    try {
+      final result = await FirestoreDijkstraService.instance.findCheapestPath(
+        _originCity!,
+        _destinationCity!,
+      );
+
+      if (mounted) {
+        setState(() {
+          _routeResult = result;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   // ── Date Picker ───────────────────────────────
@@ -252,11 +298,13 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
 
           // ═══ CONTENT AREA ════════════════════════
           Expanded(
-            child: _hasSearched
-                ? (_routeResult != null
-                    ? _buildResultContent()
-                    : _buildNoRoute())
-                : _buildInitialState(),
+            child: _isLoading
+                ? _buildLoadingState()
+                : (_hasSearched
+                    ? (_routeResult != null
+                        ? _buildResultContent()
+                        : _buildNoRoute())
+                    : _buildInitialState()),
           ),
         ],
       ),
@@ -638,13 +686,36 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
     );
   }
 
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            color: _C.primary,
+            strokeWidth: 3,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Mencari rute terbaik...',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: _C.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─────────────────────────────────────────────────
   //  RESULT CONTENT — Route + Fleet List
   // ─────────────────────────────────────────────────
   Widget _buildResultContent() {
     final result = _routeResult!;
     // Estimate price per km (Rp 600/km avg Sumatera Barat travel rate)
-    final estimatedPrice = result.totalDistanceKm * 600;
+    final estimatedPrice = (result.totalDistance * 600).toInt();
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -692,11 +763,11 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
   }
 
   // ── Dijkstra Mapbox Map Widget ──
-  Widget _buildDijkstraMap(DijkstraRouteResult result) {
+  Widget _buildDijkstraMap(DijkstraResult result) {
     // Map city names in the Dijkstra path to LngLat coordinates
     final routePoints = <LngLat>[];
     for (final city in result.path) {
-      final coord = _cityCoordinates[city];
+      final coord = _dynamicCityCoordinates[city] ?? _cityCoordinates[city];
       if (coord != null) routePoints.add(coord);
     }
 
@@ -712,7 +783,7 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
   }
 
   // ── Route Card ──
-  Widget _buildRouteCard(DijkstraRouteResult result, int estimatedPrice) {
+  Widget _buildRouteCard(DijkstraResult result, int estimatedPrice) {
     return Container(
       decoration: BoxDecoration(
         color: _C.card,
@@ -767,7 +838,7 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${result.path.length - 1} segmen · ${result.totalDistanceKm} km',
+                        '${result.path.length - 1} segmen · ${result.totalDistance.toInt()} km',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           color: _C.textTertiary,
@@ -873,7 +944,7 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
               children: [
                 _buildStatItem(
                   Iconsax.routing,
-                  '${result.totalDistanceKm} km',
+                  '${result.totalDistance.toInt()} km',
                   'Jarak',
                 ),
                 _buildStatDivider(),
@@ -951,7 +1022,7 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
   // ─────────────────────────────────────────────────
   //  FLEET STREAM — Real-time Firestore
   // ─────────────────────────────────────────────────
-  Widget _buildFleetStream(DijkstraRouteResult result, int estimatedPrice) {
+  Widget _buildFleetStream(DijkstraResult result, int estimatedPrice) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('fleets')
@@ -1045,7 +1116,7 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
     required String fleetId,
     required String fleetName,
     required int totalSeats,
-    required DijkstraRouteResult routeResult,
+    required DijkstraResult routeResult,
     required int estimatedPrice,
   }) {
     final totalPrice = estimatedPrice * _passengers;
@@ -1062,8 +1133,9 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
           passengers: _passengers,
           routePrice: estimatedPrice,
           routeSummary: routeResult.routeSummary,
-          totalDistance: routeResult.totalDistanceKm.toDouble(),
-          totalDurationMinutes: routeResult.estimatedDurationMinutes,
+          totalDistance: routeResult.totalDistance,
+          totalDurationMinutes: routeResult.totalDurationMinutes,
+          departureTime: '10:00 WIB',
         ),
       ),
     );
@@ -1112,7 +1184,7 @@ class _FleetCard extends StatelessWidget {
   final int index;
   final int passengers;
   final int estimatedPrice;
-  final DijkstraRouteResult routeResult;
+  final DijkstraResult routeResult;
   final DateTime date;
   final VoidCallback onBook;
 

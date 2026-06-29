@@ -10,7 +10,6 @@ import '../../../core/models/booking_model.dart';
 import '../../../core/services/booking_service.dart';
 import '../../e_ticket/presentation/live_e_ticket_page.dart';
 import '../../payment/presentation/payment_page.dart';
-import '../../tracking/presentation/live_tracking_page.dart';
 import 'cancel_booking_page.dart';
 import 'reschedule_page.dart';
 
@@ -155,6 +154,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                       booking: booking,
                       onTap: () {
                         if (booking.status == BookingStatus.paid ||
+                            booking.status == BookingStatus.validated ||
                             booking.status == BookingStatus.used ||
                             booking.status == BookingStatus.completed) {
                           Navigator.push(
@@ -349,6 +349,7 @@ class _BookingCard extends StatelessWidget {
     final displayStatus = isExpired ? BookingStatus.cancelled : booking.status;
     final sColor = _statusColor(displayStatus);
     final isClickable = !isExpired && (booking.status == BookingStatus.paid ||
+        booking.status == BookingStatus.validated ||
         booking.status == BookingStatus.used ||
         booking.status == BookingStatus.completed);
 
@@ -483,7 +484,7 @@ class _BookingCard extends StatelessWidget {
                       Expanded(
                         child: _metaItem(
                           Iconsax.calendar_1,
-                          booking.departureDate,
+                          '${booking.departureDate} (${booking.departureTime})',
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -493,6 +494,28 @@ class _BookingCard extends StatelessWidget {
                       ),
                     ],
                   ),
+
+                  if (booking.selectedSeatLabels.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(
+                          Iconsax.driver,
+                          size: 14,
+                          color: _C.textTertiary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Kursi: ${booking.selectedSeatLabels.join(", ")}',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _C.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
 
                   const SizedBox(height: 12),
 
@@ -559,6 +582,7 @@ class _BookingCard extends StatelessWidget {
                                 fleetName: booking.fleetName,
                                 passengers: booking.seatsBooked,
                                 departureDate: booking.departureDate,
+                                departureTime: booking.departureTime,
                                 expiryDate: booking.expiryDate ?? DateTime.now().add(const Duration(minutes: 15)),
                               ),
                             ),
@@ -663,82 +687,6 @@ class _BookingCard extends StatelessWidget {
                           side: BorderSide(
                             color: _C.danger.withValues(alpha: 0.3),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    // Lacak Armada
-                    SizedBox(
-                      width: double.infinity,
-                      height: 44,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => LiveTrackingPage(
-                                fleetId: booking.fleetId,
-                                origin: booking.origin,
-                                destination: booking.destination,
-                                fleetName: booking.fleetName,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Iconsax.routing_2, size: 18),
-                        label: Text(
-                          'Lacak Armada',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _C.primary,
-                          foregroundColor: _C.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ] else if (booking.status == BookingStatus.validated) ...[
-                    const SizedBox(height: 12),
-                    Container(height: 1, color: _C.borderLight),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 44,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => LiveTrackingPage(
-                                fleetId: booking.fleetId,
-                                origin: booking.origin,
-                                destination: booking.destination,
-                                fleetName: booking.fleetName,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Iconsax.routing_2, size: 18),
-                        label: Text(
-                          'Lacak Armada',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _C.primary,
-                          foregroundColor: _C.white,
-                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

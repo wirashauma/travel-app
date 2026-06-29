@@ -10,8 +10,8 @@ import 'package:e_travel/main.dart';
 
 void main() {
   testWidgets('App starts', (WidgetTester tester) async {
-    await tester.pumpWidget(const ETravelApp());
+    await tester.pumpWidget(const MinangTravelApp());
     await tester.pump();
-    expect(find.byType(ETravelApp), findsOneWidget);
+    expect(find.byType(MinangTravelApp), findsOneWidget);
   });
 }

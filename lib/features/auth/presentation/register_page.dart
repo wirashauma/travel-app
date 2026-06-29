@@ -193,7 +193,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         const AuthHeader(
                           title: 'Buat Akun Baru',
                           subtitle:
-                              'Bergabung dengan E-Travel dan nikmati\nperjalanan nyaman ke seluruh Sumatera Barat.',
+                              'Bergabung dengan Minang Travel dan nikmati\nperjalanan nyaman ke seluruh Sumatera Barat.',
                           showLogo: false,
                         ),
 
@@ -493,7 +493,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       fontSize: 12.5,
                     ),
                   ),
-                  const TextSpan(text: ' E-Travel.'),
+                  const TextSpan(text: ' Minang Travel.'),
                 ],
               ),
             ),

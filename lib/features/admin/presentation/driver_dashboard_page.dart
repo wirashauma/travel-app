@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/models/booking_model.dart';
 import '../../../core/utils/logout_dialog.dart';
 import '../../edit_profile/presentation/edit_profile_page.dart';
 import '../../package/presentation/driver_package_confirmation_page.dart';
@@ -40,13 +41,22 @@ class _C {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  DRIVER TRIP ASSIGNMENT MODEL
+// ═══════════════════════════════════════════════════════════
+class DriverTripAssignment {
+  final String fleetId;
+  final Map<String, dynamic> data;
+  final String departureTime;
+
+  DriverTripAssignment({
+    required this.fleetId,
+    required this.data,
+    required this.departureTime,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
 //  DRIVER DASHBOARD PAGE — Multi-Fleet Assignment List
-//
-//  Flow:
-//  1. StreamBuilder: `fleets` where `driverId == currentUid`
-//     → JIKA kosong → Ilustrasi "Belum ada penugasan"
-//     → JIKA ada → ListView.builder card armada
-//  2. Klik card → Navigasi ke FleetManifestPage(fleetId)
 // ═══════════════════════════════════════════════════════════
 class DriverDashboardPage extends StatefulWidget {
   const DriverDashboardPage({super.key});
@@ -108,6 +118,18 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
           }
 
           final fleetDocs = fleetSnap.data?.docs ?? [];
+          final List<DriverTripAssignment> tripAssignments = [];
+          for (final doc in fleetDocs) {
+            final data = doc.data() as Map<String, dynamic>;
+            final times = List<String>.from(data['departureTimes'] ?? ['10:00 WIB', '14:00 WIB', '20:00 WIB']);
+            for (final time in times) {
+              tripAssignments.add(DriverTripAssignment(
+                fleetId: doc.id,
+                data: data,
+                departureTime: time,
+              ));
+            }
+          }
 
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -116,13 +138,13 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
               SliverToBoxAdapter(child: _buildHeader(topPad, isSmall)),
 
               // ── SECTION TITLE ──
-              SliverToBoxAdapter(child: _buildSectionTitle(fleetDocs.length)),
+              SliverToBoxAdapter(child: _buildSectionTitle(tripAssignments.length)),
 
               // ── PAKET BUTTON ──
               SliverToBoxAdapter(child: _buildPackageCard()),
 
               // ── EMPTY STATE ──
-              if (fleetDocs.isEmpty)
+              if (tripAssignments.isEmpty)
                 SliverFillRemaining(child: _buildEmptyState())
               // ── FLEET LIST ──
               else
@@ -130,16 +152,19 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
                   padding: EdgeInsets.fromLTRB(20, 4, 20, bottomPad + 24),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      final doc = fleetDocs[index];
-                      final data = doc.data() as Map<String, dynamic>;
+                      final assignment = tripAssignments[index];
                       return _FleetCard(
-                        fleetId: doc.id,
-                        data: data,
+                        fleetId: assignment.fleetId,
+                        data: assignment.data,
+                        departureTime: assignment.departureTime,
                         index: index,
-                        onTap: () =>
-                            _navigateToManifest(fleetId: doc.id, data: data),
+                        onTap: () => _navigateToManifest(
+                          fleetId: assignment.fleetId,
+                          data: assignment.data,
+                          departureTime: assignment.departureTime,
+                        ),
                       );
-                    }, childCount: fleetDocs.length),
+                    }, childCount: tripAssignments.length),
                   ),
                 ),
             ],
@@ -155,6 +180,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
   void _navigateToManifest({
     required String fleetId,
     required Map<String, dynamic> data,
+    required String departureTime,
   }) {
     Navigator.push(
       context,
@@ -165,6 +191,7 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
           vehicleType: data['vehicleType'] as String? ?? '',
           origin: data['origin'] as String? ?? '',
           destination: data['destination'] as String? ?? '',
+          departureTime: departureTime,
         ),
       ),
     );
@@ -468,12 +495,14 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
 class _FleetCard extends StatelessWidget {
   final String fleetId;
   final Map<String, dynamic> data;
+  final String departureTime;
   final int index;
   final VoidCallback onTap;
 
   const _FleetCard({
     required this.fleetId,
     required this.data,
+    required this.departureTime,
     required this.index,
     required this.onTap,
   });
@@ -485,11 +514,43 @@ class _FleetCard extends StatelessWidget {
     final origin = data['origin'] as String? ?? '';
     final destination = data['destination'] as String? ?? '';
     final totalSeats = (data['totalSeats'] as num?)?.toInt() ?? 0;
-    final availableSeats = (data['availableSeats'] as num?)?.toInt() ?? 0;
-    final bookedSeats = totalSeats - availableSeats;
     final route = (origin.isNotEmpty && destination.isNotEmpty)
         ? '$origin → $destination'
         : '';
+    final tripStatus = data['tripStatus'] as String? ?? 'menunggu';
+    final isTripDone = tripStatus == 'selesai';
+
+    final String statusLabel;
+    final Color statusColor;
+    final IconData statusIcon;
+
+    if (isTripDone) {
+      statusLabel = 'Selesai';
+      statusColor = _C.textTertiary;
+      statusIcon = Iconsax.tick_circle;
+    } else if (tripStatus == 'berangkat') {
+      statusLabel = 'Berangkat';
+      statusColor = _C.success;
+      statusIcon = Iconsax.routing_2;
+    } else {
+      statusLabel = 'Menunggu';
+      statusColor = _C.info;
+      statusIcon = Iconsax.clock;
+    }
+
+    // Custom time slot styling
+    final String timeLabel;
+    final Color timeBadgeColor;
+    if (departureTime == '10:00 WIB') {
+      timeLabel = 'Pagi (10:00)';
+      timeBadgeColor = const Color(0xFFD97706); // Amber
+    } else if (departureTime == '14:00 WIB') {
+      timeLabel = 'Siang (14:00)';
+      timeBadgeColor = const Color(0xFF0D9488); // Teal
+    } else {
+      timeLabel = 'Malam (20:00)';
+      timeBadgeColor = const Color(0xFF0F4C81); // Indigo
+    }
 
     return GestureDetector(
           onTap: onTap,
@@ -553,6 +614,26 @@ class _FleetCard extends StatelessWidget {
                                 ),
                               ),
                             ],
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: timeBadgeColor.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: timeBadgeColor.withValues(alpha: 0.15),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                timeLabel,
+                                style: GoogleFonts.inter(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: timeBadgeColor,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -562,16 +643,31 @@ class _FleetCard extends StatelessWidget {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: _C.success,
+                          color: statusColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Aktif',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                          border: Border.all(
+                            color: statusColor.withValues(alpha: 0.25),
+                            width: 1,
                           ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              statusIcon,
+                              size: 12,
+                              color: statusColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              statusLabel,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: statusColor,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -634,8 +730,22 @@ class _FleetCard extends StatelessWidget {
                               )
                               .snapshots(),
                           builder: (context, snap) {
-                            final ticketCount =
-                                snap.data?.docs.length ?? 0;
+                            final bookingDocs = snap.data?.docs ?? [];
+                            final todayStr = DateFormat('dd MMM yyyy').format(DateTime.now());
+                            final filteredBookings = bookingDocs
+                                .map((d) => BookingModel.fromFirestore(d))
+                                .where((b) => b.origin == origin &&
+                                              b.destination == destination &&
+                                              b.departureDate == todayStr &&
+                                              b.departureTime == departureTime) // Filter by specific departureTime
+                                .toList();
+                            final ticketCount = filteredBookings.length;
+
+                            int routeBookedSeats = 0;
+                            for (final b in filteredBookings) {
+                              routeBookedSeats += b.seatsBooked;
+                            }
+
                             return Row(
                               children: [
                                 Flexible(
@@ -670,7 +780,7 @@ class _FleetCard extends StatelessWidget {
                                 const SizedBox(width: 5),
                                 Flexible(
                                   child: Text(
-                                    '$bookedSeats/$totalSeats kursi',
+                                    '$routeBookedSeats/$totalSeats kursi',
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
@@ -727,17 +837,17 @@ class _FleetCard extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: const Icon(Iconsax.routing_2, size: 18),
+                      icon: Icon(isTripDone ? Iconsax.tick_circle : Iconsax.routing_2, size: 18),
                       label: Text(
-                        'Atur Perjalanan',
+                        isTripDone ? 'Perjalanan Selesai' : 'Atur Perjalanan',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _C.primary,
-                        foregroundColor: _C.white,
+                        backgroundColor: isTripDone ? _C.border : _C.primary,
+                        foregroundColor: isTripDone ? _C.textSecondary : _C.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

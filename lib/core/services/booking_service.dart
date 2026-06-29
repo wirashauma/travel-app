@@ -102,7 +102,7 @@ class BookingService {
           final status = entry['status'] as String? ?? '';
           final lockUserId = entry['userId'] as String? ?? '';
 
-          if (status == 'paid' || status == 'used') {
+          if (status == 'paid' || status == 'used' || status == 'validated' || status == 'completed') {
             // Permanently sold — conflict (regardless of who)
             conflicted.add(seat);
           } else if (status == 'pending') {
@@ -132,7 +132,7 @@ class BookingService {
       for (final entry in seatEntries.values) {
         final e = Map<String, dynamic>.from(entry as Map);
         final st = e['status'] as String? ?? '';
-        if (st == 'paid' || st == 'used' || st == 'validated') {
+        if (st == 'paid' || st == 'used' || st == 'validated' || st == 'completed') {
           activeLockCount++;
         } else if (st == 'pending') {
           final exp = (e['expiryDate'] as Timestamp?)?.toDate();
@@ -356,7 +356,7 @@ class BookingService {
         for (final entry in remainingSeats.values) {
           final e = Map<String, dynamic>.from(entry as Map);
           final st = e['status'] as String? ?? '';
-          if (st == 'paid' || st == 'used' || st == 'validated' || st == 'pending') {
+          if (st == 'paid' || st == 'used' || st == 'validated' || st == 'completed' || st == 'pending') {
             activeLocks++;
           }
         }
@@ -464,7 +464,7 @@ class BookingService {
       for (final entry in newSeats.values) {
         final e = Map<String, dynamic>.from(entry as Map);
         final st = e['status'] as String? ?? '';
-        if (st == 'paid' || st == 'used' || st == 'validated' || st == 'pending') {
+        if (st == 'paid' || st == 'used' || st == 'validated' || st == 'completed' || st == 'pending') {
           activeNewLocks++;
         }
       }
@@ -490,7 +490,7 @@ class BookingService {
         for (final entry in newSeats.values) {
           final e = Map<String, dynamic>.from(entry as Map);
           final st = e['status'] as String? ?? '';
-          if (st == 'paid' || st == 'used' || st == 'validated' || st == 'pending') {
+          if (st == 'paid' || st == 'used' || st == 'validated' || st == 'completed' || st == 'pending') {
             activeNewLocks++;
           }
         }

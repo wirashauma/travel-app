@@ -361,7 +361,7 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                           fontWeight: FontWeight.w700,
                           color: _C.textPrimary,
                         ),
-                        decoration: _inputDeco('Misal: ETRAVEL20'),
+                        decoration: _inputDeco('Misal: MINANG20'),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) {
                             return 'Kode tidak boleh kosong';

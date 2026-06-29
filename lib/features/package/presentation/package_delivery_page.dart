@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/constants/app_constants.dart';
 import '../../../core/models/shipment_model.dart';
 import '../../../core/services/firestore_dijkstra_service.dart';
 import '../../../core/services/shipment_service.dart';
@@ -196,8 +195,8 @@ class _AddPackageCardState extends State<_AddPackageCard> {
         return;
       }
     } catch (_) {}
-    // Fallback ke daftar lokal jika Firestore gagal
-    if (mounted) setState(() => _cities = List.from(AppConstants.cities));
+    // Jika Firestore gagal, biarkan _cities kosong (akan tampil state kosong)
+    if (mounted) setState(() => _cities = []);
   }
 
   Future<void> _loadMatchingFleets() async {

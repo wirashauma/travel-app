@@ -10,7 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../admin/presentation/driver_dashboard_page.dart';
 import '../../admin/presentation/ticket_scanner_page.dart';
 import '../../booking_history/presentation/booking_history_page.dart';
-import '../../edit_profile/presentation/edit_profile_page.dart';
+import '../../edit_profile/presentation/profile_dashboard_page.dart';
 import '../../home/presentation/home_search_page.dart';
 import '../../package/presentation/package_delivery_page.dart';
 import '../../super_admin/presentation/super_admin_dashboard.dart';
@@ -178,7 +178,7 @@ class _LoadingSplash extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.15)),
             const SizedBox(height: 28),
             Text(
-              'E-Travel',
+              'Minang Travel',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
@@ -377,7 +377,7 @@ class _UserNavShellState extends State<_UserNavShell> {
     BookingHistoryPage(),
     HomeSearchPage(),
     PackageDeliveryPage(),
-    EditProfilePage(),
+    ProfileDashboardPage(),
   ];
 
   @override
@@ -427,7 +427,7 @@ class _UserNavShellState extends State<_UserNavShell> {
           ],
         ),
         content: Text(
-          'Apakah Anda yakin ingin keluar dari E-Travel?',
+          'Apakah Anda yakin ingin keluar dari Minang Travel?',
           style: GoogleFonts.inter(
             fontSize: 14,
             color: _C.textSecondary,
@@ -607,7 +607,7 @@ class _AdminNavShellState extends State<_AdminNavShell> {
   static const List<Widget> _pages = [
     DriverDashboardPage(),
     TicketScannerPage(),
-    EditProfilePage(),
+    ProfileDashboardPage(),
   ];
 
   @override
@@ -680,7 +680,7 @@ class _AdminNavShellState extends State<_AdminNavShell> {
           ],
         ),
         content: Text(
-          'Apakah Anda yakin ingin keluar dari E-Travel?',
+          'Apakah Anda yakin ingin keluar dari Minang Travel?',
           style: GoogleFonts.inter(
             fontSize: 14,
             color: _C.textSecondary,

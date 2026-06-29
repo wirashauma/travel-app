@@ -156,7 +156,7 @@ class _LogoutDialogState extends State<_LogoutDialog> {
 
                 // ── Title ──
                 Text(
-                  'Keluar dari E-Travel?',
+                  'Keluar dari Minang Travel?',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 19,
                     fontWeight: FontWeight.w800,

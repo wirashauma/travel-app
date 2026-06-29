@@ -62,6 +62,7 @@ class SelectFleetPage extends StatefulWidget {
 
 class _SelectFleetPageState extends State<SelectFleetPage> {
   final bool _isBooking = false;
+  String _selectedTime = '10:00 WIB';
 
   // ── Firestore ref ──
   static final _fleetsRef = FirebaseFirestore.instance
@@ -93,8 +94,86 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
     );
   }
 
+  // ── Time Selector ──
+  Widget _buildTimeSelector() {
+    final times = [
+      ('10:00 WIB', 'Pagi', Iconsax.sun_1),
+      ('14:00 WIB', 'Siang', Iconsax.sun_fog),
+      ('20:00 WIB', 'Malam', Iconsax.moon),
+    ];
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: times.map((t) {
+          final isSelected = _selectedTime == t.$1;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedTime = t.$1;
+                });
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? _C.primary : _C.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? _C.primary : _C.border,
+                    width: 1.5,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: _C.primary.withValues(alpha: 0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          )
+                        ]
+                      : null,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      t.$3,
+                      size: 16,
+                      color: isSelected ? Colors.white : _C.textSecondary,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      t.$2,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? Colors.white : _C.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      t.$1.split(' ')[0],
+                      style: GoogleFonts.inter(
+                        fontSize: 10.5,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected ? Colors.white.withValues(alpha: 0.8) : _C.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   // ── Navigate to Seat Selection ──
-  void _goToSeatSelection(String fleetId, String fleetName, int totalSeats) {
+  void _goToSeatSelection(String fleetId, String fleetName, int totalSeats, String departureTime) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -110,6 +189,7 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
           routeSummary: widget.routeSummary,
           totalDistance: widget.totalDistance,
           totalDurationMinutes: widget.totalDurationMinutes,
+          departureTime: departureTime,
         ),
       ),
     );
@@ -132,6 +212,9 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
           // ═══ ROUTE INFO STRIP ═══════════════════
           _buildRouteStrip().animate().fadeIn(delay: 100.ms, duration: 400.ms),
 
+          // ═══ TIME SELECTOR ══════════════════════
+          _buildTimeSelector().animate().fadeIn(delay: 150.ms, duration: 400.ms),
+
           // ═══ FLEET LIST — StreamBuilder ═════════
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
@@ -149,27 +232,29 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
                   return _buildErrorState(snapshot.error.toString());
                 }
 
-                // Empty
-                final docs = snapshot.data?.docs ?? [];
-                if (docs.isEmpty) {
+                // Filter route & time client-side (safe, robust fallback to avoid Firestore compound index failures)
+                final routeDocs = (snapshot.data?.docs ?? []).where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final fOrigin = data['origin'] as String? ?? '';
+                  final fDest = data['destination'] as String? ?? '';
+                  final fTimes = List<String>.from(data['departureTimes'] ?? ['10:00 WIB', '14:00 WIB', '20:00 WIB']);
+                  return fOrigin.toLowerCase() == widget.origin.toLowerCase() &&
+                         fDest.toLowerCase() == widget.destination.toLowerCase() &&
+                         fTimes.contains(_selectedTime);
+                }).toList();
+
+                if (routeDocs.isEmpty) {
                   return _buildEmptyState();
                 }
-
-                // Check if all fleets are full for requested passengers
-                // Note: individual _FleetCard computes real-time
-                // availability via bookings StreamBuilder.
-                // This guard is kept as a quick heuristic — remove
-                // if you want cards to always render.
-                // (Skipping stale hasAvailableFleet check — cards handle it)
 
                 // Fleet cards
                 return ListView.separated(
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-                  itemCount: docs.length,
+                  itemCount: routeDocs.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 14),
                   itemBuilder: (context, index) {
-                    final doc = docs[index];
+                    final doc = routeDocs[index];
                     final d = doc.data() as Map<String, dynamic>;
                     return _FleetCard(
                           fleetId: doc.id,
@@ -181,10 +266,13 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
                           passengers: widget.passengers,
                           formatPrice: _fmtPrice,
                           isBooking: _isBooking,
+                          departureDate: widget.date,
+                          selectedTime: _selectedTime,
                           onBook: () => _goToSeatSelection(
                             doc.id,
                             d['name'] as String? ?? 'Armada',
                             (d['totalSeats'] as num?)?.toInt() ?? 0,
+                            _selectedTime,
                           ),
                         )
                         .animate()
@@ -428,6 +516,8 @@ class _FleetCard extends StatelessWidget {
   final int passengers;
   final String Function(int) formatPrice;
   final bool isBooking;
+  final DateTime departureDate;
+  final String selectedTime;
   final VoidCallback onBook;
 
   const _FleetCard({
@@ -440,6 +530,8 @@ class _FleetCard extends StatelessWidget {
     required this.passengers,
     required this.formatPrice,
     required this.isBooking,
+    required this.departureDate,
+    required this.selectedTime,
     required this.onBook,
   });
 
@@ -455,9 +547,17 @@ class _FleetCard extends StatelessWidget {
       builder: (context, bookingSnap) {
         int bookedSeatCount = 0;
         if (bookingSnap.hasData) {
+          final targetDate = DateFormat('dd MMM yyyy').format(departureDate);
           for (final doc in bookingSnap.data!.docs) {
             final d = doc.data() as Map<String, dynamic>;
-            bookedSeatCount += (d['seatsBooked'] as num?)?.toInt() ?? 0;
+            final status = d['status'] as String? ?? '';
+            final depDate = d['departureDate'] as String? ?? '';
+            final depTime = d['departureTime'] as String? ?? '';
+            if (depDate == targetDate &&
+                depTime == selectedTime &&
+                (status == 'pending' || status == 'paid' || status == 'validated' || status == 'used' || status == 'completed')) {
+              bookedSeatCount += (d['seatsBooked'] as num?)?.toInt() ?? 0;
+            }
           }
         }
 

@@ -39,7 +39,7 @@ class _ReschedulePageState extends State<ReschedulePage> {
   String? _selectedTime;
   bool _isProcessing = false;
 
-  static const _timeSlots = ['08:00 WIB', '10:00 WIB', '13:00 WIB', '16:00 WIB'];
+  static const _timeSlots = ['10:00 WIB', '14:00 WIB', '20:00 WIB'];
 
   String get _formattedSelectedDate {
     if (_selectedDate == null) return '';
@@ -99,6 +99,7 @@ class _ReschedulePageState extends State<ReschedulePage> {
               fleetName: widget.booking.fleetName,
               passengers: widget.booking.seatsBooked,
               departureDate: formattedDate,
+              departureTime: _selectedTime!,
               expiryDate: DateTime.now().add(const Duration(hours: 1)),
               customMidtransOrderId: '${widget.booking.id}-admin',
             ),

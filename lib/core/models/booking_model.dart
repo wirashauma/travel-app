@@ -125,6 +125,7 @@ class BookingModel {
   final String origin;
   final String destination;
   final String departureDate;
+  final String departureTime;
   final List<int> seatNumbers;
   final List<String> selectedSeatLabels; // e.g. ['1A', '2B']
   final int seatsBooked;
@@ -151,6 +152,7 @@ class BookingModel {
     required this.origin,
     required this.destination,
     required this.departureDate,
+    required this.departureTime,
     required this.seatNumbers,
     this.selectedSeatLabels = const [],
     required this.seatsBooked,
@@ -181,6 +183,7 @@ class BookingModel {
       origin: d['origin'] as String? ?? '',
       destination: d['destination'] as String? ?? '',
       departureDate: d['departureDate'] as String? ?? '',
+      departureTime: d['departureTime'] as String? ?? '10:00 WIB',
       seatNumbers: (d['seatNumbers'] as List<dynamic>?)
               ?.map((e) => (e as num).toInt())
               .toList() ??
@@ -217,6 +220,7 @@ class BookingModel {
       'origin': origin,
       'destination': destination,
       'departureDate': departureDate,
+      'departureTime': departureTime,
       'seatNumbers': seatNumbers,
       'selectedSeatLabels': selectedSeatLabels,
       'seatsBooked': seatsBooked,
@@ -249,6 +253,7 @@ class BookingModel {
     String? origin,
     String? destination,
     String? departureDate,
+    String? departureTime,
     List<int>? seatNumbers,
     List<String>? selectedSeatLabels,
     int? seatsBooked,
@@ -275,6 +280,7 @@ class BookingModel {
       origin: origin ?? this.origin,
       destination: destination ?? this.destination,
       departureDate: departureDate ?? this.departureDate,
+      departureTime: departureTime ?? this.departureTime,
       seatNumbers: seatNumbers ?? this.seatNumbers,
       selectedSeatLabels: selectedSeatLabels ?? this.selectedSeatLabels,
       seatsBooked: seatsBooked ?? this.seatsBooked,

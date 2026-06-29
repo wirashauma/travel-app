@@ -103,6 +103,7 @@ class TripData {
   final String origin;
   final String destination;
   final DateTime departureTime;
+  final String departureTimeLabel;
   final String vehiclePlate;
   final String vehicleName;
   final int totalSeats;
@@ -115,6 +116,7 @@ class TripData {
     required this.origin,
     required this.destination,
     required this.departureTime,
+    required this.departureTimeLabel,
     required this.vehiclePlate,
     required this.vehicleName,
     required this.totalSeats,
@@ -216,10 +218,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
   // ── Convert flat bookings list into grouped TripData ──
   List<TripData> _bookingsToTrips(List<BookingModel> bookings) {
-    // Group by departureDate|origin|destination
+    // Group by departureDate|departureTime|origin|destination
     final Map<String, List<BookingModel>> grouped = {};
     for (final b in bookings) {
-      final key = '${b.departureDate}|${b.origin}|${b.destination}';
+      final key = '${b.departureDate}|${b.departureTime}|${b.origin}|${b.destination}';
       grouped.putIfAbsent(key, () => []).add(b);
     }
 
@@ -265,9 +267,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
       return TripData(
         id: first.id ?? 'TRP-${entry.key.hashCode.abs()}',
-        origin: parts.length > 1 ? parts[1] : first.origin,
-        destination: parts.length > 2 ? parts[2] : first.destination,
+        origin: parts.length > 2 ? parts[2] : first.origin,
+        destination: parts.length > 3 ? parts[3] : first.destination,
         departureTime: first.createdAt ?? DateTime.now(),
+        departureTimeLabel: parts.length > 1 ? parts[1] : first.departureTime,
         vehiclePlate: '',
         vehicleName: _fleetName.isNotEmpty ? _fleetName : first.fleetName,
         totalSeats: _totalSeats,
@@ -701,7 +704,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   //  TRIP CARD
   // ─────────────────────────────────────────────────────
   Widget _buildTripCard(TripData trip, int index) {
-    final time = DateFormat('HH:mm').format(trip.departureTime);
+    final time = trip.departureTimeLabel;
     final isUpcoming = trip.departureTime.isAfter(DateTime.now());
     final timeUntil = trip.departureTime.difference(DateTime.now());
 
@@ -737,12 +740,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             // Navigate to live manifest (Firestore-backed) if fleet assigned,
             // otherwise fall back to static TripManifestPage
             if (_assignedFleetId.isNotEmpty) {
-              Navigator.push(
+               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => LiveTripManifestPage(
                     fleetId: _assignedFleetId,
                     departureDate: DateFormat('dd MMM yyyy').format(trip.departureTime),
+                    departureTime: trip.departureTimeLabel,
                     origin: trip.origin,
                     destination: trip.destination,
                     fleetName: _fleetName.isNotEmpty ? _fleetName : trip.vehicleName,

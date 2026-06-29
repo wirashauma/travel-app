@@ -217,10 +217,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
   // ─────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final canGoBack = Navigator.of(context).canPop();
+
     return Scaffold(
       backgroundColor: _C.bg,
       body: SafeArea(
-        bottom: false,
         child: Column(
           children: [
             // ═══ APP BAR ═══
@@ -329,36 +330,38 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             delay: 360,
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) {
-                                return 'Email tidak boleh kosong';
-                              }
-                              if (!v.contains('@')) return 'Format email salah';
-                              return null;
-                            },
-                          ),
-                        ],
+                                  return 'Email tidak boleh kosong';
+                                }
+                                if (!v.contains('@')) return 'Format email salah';
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 40),
+                      const SizedBox(height: 40),
 
-                    // ── LOG OUT BUTTON ──
-                    _buildLogoutButton(),
+                      // ── LOG OUT BUTTON ──
+                      if (!canGoBack) ...[
+                        _buildLogoutButton(),
+                        const SizedBox(height: 24),
+                      ],
 
-                    const SizedBox(height: 24),
-
-                    // ── APP VERSION (secret backdoor trigger) ──
-                    _buildVersionLabel(),
-                  ],
+                      // ── APP VERSION (secret backdoor trigger) ──
+                      _buildVersionLabel(),
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
-      ),
 
-      // ═══ STICKY BOTTOM BUTTON ═══
-      bottomNavigationBar: _isLoadingProfile ? null : _buildBottomButton(),
-    );
-  }
+        // ═══ STICKY BOTTOM BUTTON ═══
+        bottomNavigationBar: _isLoadingProfile ? null : _buildBottomButton(),
+      );
+    }
+
 
   // ─────────────────────────────────────────────────
   //  APP BAR

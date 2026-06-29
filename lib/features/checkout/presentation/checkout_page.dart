@@ -53,6 +53,7 @@ class CheckoutPage extends StatefulWidget {
   final String fleetName;
   final int availableSeats;
   final List<String> selectedSeats;
+  final String departureTime;
 
   const CheckoutPage({
     super.key,
@@ -67,6 +68,7 @@ class CheckoutPage extends StatefulWidget {
     required this.fleetId,
     required this.fleetName,
     required this.availableSeats,
+    required this.departureTime,
     this.selectedSeats = const [],
   });
 
@@ -227,6 +229,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         origin: widget.origin,
         destination: widget.destination,
         departureDate: dateStr,
+        departureTime: widget.departureTime,
         seatNumbers: seatNumbers,
         seatsBooked: widget.passengers,
         totalPrice: _totalPrice, // After discount
@@ -256,6 +259,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             fleetName: widget.fleetName,
             passengers: widget.passengers,
             departureDate: dateStr,
+            departureTime: widget.departureTime,
             expiryDate: result.expiryDate!,
           ),
         ),
@@ -608,16 +612,32 @@ class _CheckoutPageState extends State<CheckoutPage> {
           const SizedBox(height: 14),
           Container(height: 1, color: _C.borderLight),
           const SizedBox(height: 12),
-          // Meta chips
+          // Meta chips (2x2 grid for clear spacing)
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _metaChip(Iconsax.calendar_1, dateStr),
-              const SizedBox(width: 14),
-              _metaChip(Iconsax.people, '${widget.passengers} penumpang'),
-              const Spacer(),
-              _metaChip(
-                Iconsax.clock,
-                _fmtDuration(widget.totalDurationMinutes),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _metaChip(Iconsax.calendar_1, dateStr),
+                    const SizedBox(height: 8),
+                    _metaChip(Iconsax.clock, 'Jam: ${widget.departureTime}'),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _metaChip(Iconsax.people, '${widget.passengers} penumpang'),
+                    const SizedBox(height: 8),
+                    _metaChip(
+                      Iconsax.timer_1,
+                      'Durasi: ${_fmtDuration(widget.totalDurationMinutes)}',
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

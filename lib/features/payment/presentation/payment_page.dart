@@ -50,6 +50,7 @@ class PaymentPage extends StatefulWidget {
   final String fleetName;
   final int passengers;
   final String departureDate;
+  final String departureTime;
   final DateTime expiryDate;
 
   /// Custom order ID for Midtrans (defaults to [bookingId]).
@@ -66,6 +67,7 @@ class PaymentPage extends StatefulWidget {
     required this.fleetName,
     required this.passengers,
     required this.departureDate,
+    required this.departureTime,
     required this.expiryDate,
     this.customMidtransOrderId,
   });
@@ -439,12 +441,8 @@ class _PaymentPageState extends State<PaymentPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ── Amount & Countdown ──
-                          _buildAmountCard(),
-                          const SizedBox(height: 20),
-
-                          // ── Booking Summary ──
-                          _buildBookingSummary(),
+                          // ── Cashier Receipt (Integrated Amount & Summary) ──
+                          _buildCashierReceipt(),
                           const SizedBox(height: 20),
 
                           // ── Payment Methods (Midtrans Snap) ──
@@ -574,69 +572,261 @@ class _PaymentPageState extends State<PaymentPage> {
     ).animate().fadeIn(duration: 350.ms);
   }
 
-  // ── Amount Card ───────────────────────────────────
-  Widget _buildAmountCard() {
+  // ── Cashier Receipt (Integrated Amount & Summary) ──
+  Widget _buildCashierReceipt() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F4C81), Color(0xFF0D7377)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: _C.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      child: Column(
+      child: Stack(
         children: [
-          Text(
-            'Total Pembayaran',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            _fmtPrice(widget.totalAmount),
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              'Kode: ${widget.bookingCode}',
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          // Countdown
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Iconsax.clock, size: 14, color: Colors.white70),
-              const SizedBox(width: 6),
-              Text(
-                'Bayar sebelum ${_fmtCountdown()}',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: Colors.white70,
+          // Receipt Content
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header (Store Info)
+                Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _C.primary.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Iconsax.ticket_discount,
+                          size: 24,
+                          color: _C.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'TIKET ELEKTRONIK TRAVEL',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: _C.primary,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Sumatera Barat Express Delivery',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: _C.textTertiary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(height: 24),
+
+                // Dashed line 1 (Top portion cut)
+                _buildDottedLine(),
+                const SizedBox(height: 20),
+
+                // Booking Code and Barcode Simulator
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'KODE BOOKING',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: _C.textTertiary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.bookingCode,
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: _C.textPrimary,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Barcode design
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: List.generate(12, (index) {
+                              final widths = [2.0, 4.0, 1.0, 3.0, 2.0, 5.0, 1.0, 3.0, 2.0, 1.0, 4.0, 2.0];
+                              return Container(
+                                width: widths[index % widths.length],
+                                height: double.infinity,
+                                color: _C.textPrimary.withValues(alpha: 0.8),
+                              );
+                            }),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'SANDBOX',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: _C.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Expiry timer row
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: _countdownColor.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Iconsax.clock, size: 16, color: _countdownColor),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: _C.textSecondary,
+                            ),
+                            children: [
+                              const TextSpan(text: 'Bayar sebelum '),
+                              TextSpan(
+                                text: _fmtCountdown(),
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontWeight: FontWeight.w800,
+                                  color: _countdownColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Dashed line 2 (Middle portion cut)
+                _buildDottedLine(),
+                const SizedBox(height: 20),
+
+                // Trip Details Section
+                Text(
+                  'DETAIL PERJALANAN',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: _C.textTertiary,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Receipt Row: Route
+                _receiptDetailRow('Rute', '${widget.origin} → ${widget.destination}'),
+                const SizedBox(height: 10),
+
+                // Receipt Row: Fleet
+                _receiptDetailRow('Armada', widget.fleetName),
+                const SizedBox(height: 10),
+
+                // Receipt Row: Date & Time
+                _receiptDetailRow('Jadwal', '${widget.departureDate} (${widget.departureTime})'),
+                const SizedBox(height: 10),
+
+                // Receipt Row: Passengers
+                _receiptDetailRow('Penumpang', '${widget.passengers} Pax'),
+                const SizedBox(height: 24),
+
+                // Dashed line 3 (Total cut)
+                _buildDottedLine(),
+                const SizedBox(height: 20),
+
+                // Payment amount section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'TOTAL BAYAR',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: _C.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      _fmtPrice(widget.totalAmount),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: _C.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Left Circular Cutout
+          Positioned(
+            left: -10,
+            top: 250, // aligns close to second dotted line
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: const BoxDecoration(
+                color: _C.bg,
+                shape: BoxShape.circle,
               ),
-            ],
+            ),
+          ),
+
+          // Right Circular Cutout
+          Positioned(
+            right: -10,
+            top: 250, // aligns close to second dotted line
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: const BoxDecoration(
+                color: _C.bg,
+                shape: BoxShape.circle,
+              ),
+            ),
           ),
         ],
       ),
@@ -646,58 +836,56 @@ class _PaymentPageState extends State<PaymentPage> {
         .slideY(begin: 0.05, duration: 500.ms, curve: Curves.easeOutCubic);
   }
 
-  // ── Booking Summary ───────────────────────────────
-  Widget _buildBookingSummary() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.borderLight),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Ringkasan Pemesanan',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
+  Widget _buildDottedLine() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final boxWidth = constraints.constrainWidth();
+        const dashWidth = 5.0;
+        const dashSpace = 4.0;
+        final dashCount = (boxWidth / (dashWidth + dashSpace)).floor();
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(dashCount, (index) {
+            return SizedBox(
+              width: dashWidth,
+              height: 1.5,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _C.borderLight.withValues(alpha: 0.8),
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  Widget _receiptDetailRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 90,
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: _C.textSecondary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
               color: _C.textPrimary,
             ),
-          ),
-          const SizedBox(height: 12),
-          _summaryRow(Iconsax.routing_2,
-              '${widget.origin} → ${widget.destination}'),
-          const SizedBox(height: 8),
-          _summaryRow(Iconsax.car, widget.fleetName),
-          const SizedBox(height: 8),
-          _summaryRow(
-              Iconsax.calendar_1, widget.departureDate),
-          const SizedBox(height: 8),
-          _summaryRow(Iconsax.people, '${widget.passengers} penumpang'),
-        ],
-      ),
-    )
-        .animate()
-        .fadeIn(delay: 100.ms, duration: 400.ms)
-        .slideY(begin: 0.05, duration: 400.ms, curve: Curves.easeOutCubic);
-  }
-
-  Widget _summaryRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: _C.textTertiary),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            text,
-            style: GoogleFonts.inter(
-              fontSize: 12.5,
-              color: _C.textSecondary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
           ),
         ),
       ],

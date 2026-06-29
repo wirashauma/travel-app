@@ -81,27 +81,31 @@ class _SearchResultPageState extends State<SearchResultPage> {
       // Convert city names → LngLat for the map
       List<LngLat> latLngs = [];
       if (result != null) {
-        // 1) Coba lokal dulu (0ms, tanpa network)
-        final missingCities = <String>[];
-        for (final cityName in result.path) {
-          final localCoords = CityCoordinatesSeeder.getCoordinates(cityName);
-          if (localCoords != null) {
-            latLngs.add(LngLat(localCoords['lng']!, localCoords['lat']!));
-          } else {
-            missingCities.add(cityName);
-          }
-        }
-        // 2) Fallback Firestore hanya untuk kota yang tidak ada di lokal
-        if (missingCities.isNotEmpty) {
-          try {
-            final coordsMap = await CityCoordinatesSeeder.fetchAllCoordinates();
-            for (final cityName in missingCities) {
-              final fc = coordsMap[cityName];
-              if (fc != null) {
-                latLngs.add(LngLat(fc['lng']!, fc['lat']!));
+        try {
+          // 1) Ambil koordinat dari Firestore (dinamis - prioritas utama)
+          final coordsMap = await CityCoordinatesSeeder.fetchAllCoordinates();
+          for (final cityName in result.path) {
+            final fc = coordsMap[cityName];
+            if (fc != null) {
+              latLngs.add(LngLat(fc['lng']!, fc['lat']!));
+            } else {
+              // 2) Fallback ke data lokal jika tidak ada di Firestore
+              final localCoords =
+                  CityCoordinatesSeeder.getCoordinates(cityName);
+              if (localCoords != null) {
+                latLngs.add(LngLat(localCoords['lng']!, localCoords['lat']!));
               }
             }
-          } catch (_) {}
+          }
+        } catch (_) {
+          // 3) Jika Firestore gagal, gunakan semua dari lokal
+          for (final cityName in result.path) {
+            final localCoords =
+                CityCoordinatesSeeder.getCoordinates(cityName);
+            if (localCoords != null) {
+              latLngs.add(LngLat(localCoords['lng']!, localCoords['lat']!));
+            }
+          }
         }
       }
 

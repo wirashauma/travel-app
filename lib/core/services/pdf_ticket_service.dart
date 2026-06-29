@@ -15,7 +15,7 @@ import '../models/booking_model.dart';
 //  PDF TICKET SERVICE — Generate beautiful E-Ticket PDF
 //
 //  Generates a professional A4 PDF with:
-//  - E-Travel branded header
+//  - Minang Travel branded header
 //  - Booking details (code, route, date, fleet, price)
 //  - QR Code (barcode) from booking code
 //  - Perforated-style layout
@@ -33,7 +33,7 @@ class PdfTicketService {
   static Future<Uint8List> generateTicketPdf(BookingModel booking) async {
     final doc = pw.Document(
       title: 'E-Ticket ${booking.bookingCode}',
-      author: 'E-Travel',
+      author: 'Minang Travel',
     );
 
     // Load fonts
@@ -423,7 +423,7 @@ class PdfTicketService {
               // ═══ FOOTER ═══
               pw.Center(
                 child: pw.Text(
-                  'E-Travel — Perjalanan Nyaman, Harga Terjangkau',
+                  'Minang Travel — Perjalanan Nyaman, Harga Terjangkau',
                   style: pw.TextStyle(
                     font: fontRegular,
                     fontSize: 9,

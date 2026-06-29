@@ -1,9 +1,8 @@
 // ignore_for_file: unused_field, deprecated_member_use
-
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/services/firestore_dijkstra_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -37,357 +36,18 @@ const String _kCloudName = 'dr5lqvvhy';
 const String _kUploadPreset = 'etravel_preset';
 const String _kCloudinaryUrl =
     'https://api.cloudinary.com/v1_1/$_kCloudName/image/upload';
-
 // Default placeholder image for fleets
 const String _kDefaultFleetImage =
     'https://images.unsplash.com/photo-1748215210950-536c6621629a?w=600&q=80';
-
-// ─────────────────────────────────────────────────────────
-//  DAFTAR ARMADA TRAVEL LOKAL SUMBAR (BAKU)
-// ─────────────────────────────────────────────────────────
-const List<String> kSumbarFleetNames = [
-  'Minang Travel',
-  'Tranex Mandiri',
-  'Travel AWR (Andalas Wira Rutin)',
-  'Maestro Travel',
-  'Armada Travel Oke',
-  'Yok Travel',
-  'Andalas Transport',
-  'Rhino Travel',
-  'Bukit Express',
-  'Ayah Travel',
-  'Xago Travel',
-  'Hikmah Travel',
-  'Sumatera Shuttle',
-  'Padang Travelindo',
-  'TX Travel Padang',
-  'Nusa Mulya Travel',
-  'Annanta Travel',
-  'Regina Transport',
-  'ASRI Travel (Asri Karya Angkasa)',
-  'Aura Wisata Transport',
-  'Nazira Wisata Transport',
-  'Jasa Mulya Travel',
-  'Sarana Wisata',
-  'PO NPM (Naikilah Perusahaan Minang)',
-  'ANS (Anas Nasional Motor)',
-  'Gumarang Jaya',
-];
-
-const List<String> kSumbarVehicleTypes = [
-  'Toyota Avanza',
-  'Toyota Calya',
-  'Daihatsu Xenia',
-  'Toyota Innova Reborn',
-  'Innova Reborn',
-  'Toyota Innova Zenix',
-  'Mitsubishi Xpander',
-  'Suzuki Ertiga',
-  'Toyota Hiace',
-  'Isuzu Elf',
-];
-
-const List<String> kSumbarCities = [
-  'Batusangkar',
-  'Bukittinggi',
-  'Dharmasraya',
-  'Lubuk Basung',
-  'Padang',
-  'Padang Panjang',
-  'Pariaman',
-  'Pasaman',
-  'Pasaman Barat',
-  'Payakumbuh',
-  'Pesisir Selatan',
-  'Sawahlunto',
-  'Sijunjung',
-  'Solok',
-  'Solok Selatan',
-];
-
-// ─────────────────────────────────────────────────────────
-//  SEED DATA — Travel & Minibus Sumatera Barat
-//  Semua armada menggunakan tipe kendaraan Minibus/Travel
-//  (Toyota Hiace, Isuzu Elf, Toyota Innova)
-//
-//  Field `driverId` dikosongkan sebagai default — akan diisi
-//  oleh Super Admin via halaman Manajemen Penugasan Sopir.
-// ─────────────────────────────────────────────────────────
-const List<Map<String, dynamic>> _kSumatranFleets = [
-  {
-    'name': 'Minang Travel',
-    'imageUrl': '',
-    'totalSeats': 7,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Bukittinggi',
-    'driverId': '',
-    'description': 'Toyota Avanza — Padang–Bukittinggi–Payakumbuh',
-  },
-  {
-    'name': 'Tranex Mandiri',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Bukittinggi',
-    'driverId': '',
-    'description': 'Toyota Hiace Premio — Padang–Bukittinggi door-to-door',
-  },
-  {
-    'name': 'Travel AWR (Andalas Wira Rutin)',
-    'imageUrl': '',
-    'totalSeats': 12,
-    'vehicleType': 'Isuzu Elf',
-    'origin': 'Padang',
-    'destination': 'Solok',
-    'driverId': '',
-    'description': 'Isuzu Elf Microbus — Padang–Solok–Sawahlunto',
-  },
-  {
-    'name': 'Maestro Travel',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Bukittinggi',
-    'driverId': '',
-    'description': 'Toyota Hiace Commuter — Padang–Pekanbaru via Bukittinggi',
-  },
-  {
-    'name': 'Armada Travel Oke',
-    'imageUrl': '',
-    'totalSeats': 7,
-    'vehicleType': 'Innova Reborn',
-    'origin': 'Padang',
-    'destination': 'Dharmasraya',
-    'driverId': '',
-    'description': 'Toyota Innova Reborn — Padang–Solok–Dharmasraya',
-  },
-  {
-    'name': 'Yok Travel',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Bukittinggi',
-    'destination': 'Payakumbuh',
-    'driverId': '',
-    'description': 'Toyota Hiace Premio — Bukittinggi–Pekanbaru express',
-  },
-  {
-    'name': 'Andalas Transport',
-    'imageUrl': '',
-    'totalSeats': 12,
-    'vehicleType': 'Isuzu Elf',
-    'origin': 'Padang',
-    'destination': 'Batusangkar',
-    'driverId': '',
-    'description': 'Isuzu Elf NLR — Padang–Padang Panjang–Batusangkar',
-  },
-  {
-    'name': 'Rhino Travel',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Pasaman',
-    'driverId': '',
-    'description': 'Toyota Hiace Commuter — Padang–Bukittinggi–Pasaman',
-  },
-  {
-    'name': 'Bukit Express',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Bukittinggi',
-    'destination': 'Payakumbuh',
-    'driverId': '',
-    'description': 'Toyota Hiace Premio — Bukittinggi–Payakumbuh–Pekanbaru',
-  },
-  {
-    'name': 'Ayah Travel',
-    'imageUrl': '',
-    'totalSeats': 7,
-    'vehicleType': 'Innova Reborn',
-    'origin': 'Padang',
-    'destination': 'Pasaman Barat',
-    'driverId': '',
-    'description': 'Toyota Innova Zenix — Padang–Pariaman–Pasaman Barat',
-  },
-  {
-    'name': 'Xago Travel',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Solok Selatan',
-    'driverId': '',
-    'description': 'Toyota Hiace Commuter — Padang–Solok–Solok Selatan',
-  },
-  {
-    'name': 'Hikmah Travel',
-    'imageUrl': '',
-    'totalSeats': 12,
-    'vehicleType': 'Isuzu Elf',
-    'origin': 'Padang',
-    'destination': 'Pesisir Selatan',
-    'driverId': '',
-    'description': 'Isuzu Elf Microbus — Padang–Pesisir Selatan',
-  },
-  {
-    'name': 'Sumatera Shuttle',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Bukittinggi',
-    'driverId': '',
-    'description': 'Toyota Hiace Premio — Padang–Bukittinggi nonstop',
-  },
-  {
-    'name': 'Padang Travelindo',
-    'imageUrl': '',
-    'totalSeats': 7,
-    'vehicleType': 'Innova Reborn',
-    'origin': 'Padang',
-    'destination': 'Lubuk Basung',
-    'driverId': '',
-    'description': 'Toyota Innova Reborn — Padang–Pariaman–Lubuk Basung',
-  },
-  {
-    'name': 'TX Travel Padang',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Payakumbuh',
-    'driverId': '',
-    'description': 'Toyota Hiace Commuter — Padang–Pekanbaru premium',
-  },
-  {
-    'name': 'Nusa Mulya Travel',
-    'imageUrl': '',
-    'totalSeats': 12,
-    'vehicleType': 'Isuzu Elf',
-    'origin': 'Bukittinggi',
-    'destination': 'Sijunjung',
-    'driverId': '',
-    'description': 'Isuzu Elf NLR — Bukittinggi–Batusangkar–Sijunjung',
-  },
-  {
-    'name': 'Annanta Travel',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Payakumbuh',
-    'driverId': '',
-    'description': 'Toyota Hiace Premio — Padang–Bukittinggi–Payakumbuh',
-  },
-  {
-    'name': 'Regina Transport',
-    'imageUrl': '',
-    'totalSeats': 7,
-    'vehicleType': 'Innova Reborn',
-    'origin': 'Padang',
-    'destination': 'Solok',
-    'driverId': '',
-    'description': 'Toyota Innova Zenix — Padang–Solok eksekutif',
-  },
-  {
-    'name': 'ASRI Travel (Asri Karya Angkasa)',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Solok Selatan',
-    'driverId': '',
-    'description':
-        'Toyota Hiace Commuter — Padang–Pesisir Selatan–Solok Selatan',
-  },
-  {
-    'name': 'Aura Wisata Transport',
-    'imageUrl': '',
-    'totalSeats': 12,
-    'vehicleType': 'Isuzu Elf',
-    'origin': 'Padang',
-    'destination': 'Dharmasraya',
-    'driverId': '',
-    'description': 'Isuzu Elf Microbus — Padang–Sawahlunto–Dharmasraya',
-  },
-  {
-    'name': 'Nazira Wisata Transport',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Pasaman Barat',
-    'driverId': '',
-    'description': 'Toyota Hiace Premio — Padang–Pasaman–Pasaman Barat',
-  },
-  {
-    'name': 'Jasa Mulya Travel',
-    'imageUrl': '',
-    'totalSeats': 7,
-    'vehicleType': 'Innova Reborn',
-    'origin': 'Bukittinggi',
-    'destination': 'Solok',
-    'driverId': '',
-    'description': 'Toyota Innova Reborn — Bukittinggi–Padang Panjang–Solok',
-  },
-  {
-    'name': 'Sarana Wisata',
-    'imageUrl': '',
-    'totalSeats': 12,
-    'vehicleType': 'Isuzu Elf',
-    'origin': 'Padang',
-    'destination': 'Dharmasraya',
-    'driverId': '',
-    'description': 'Isuzu Elf NLR — Padang–Sijunjung–Dharmasraya',
-  },
-  {
-    'name': 'PO NPM (Naikilah Perusahaan Minang)',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Bukittinggi',
-    'driverId': '',
-    'description': 'Toyota Hiace Commuter — Padang–Bukittinggi–Pekanbaru',
-  },
-  {
-    'name': 'ANS (Anas Nasional Motor)',
-    'imageUrl': '',
-    'totalSeats': 14,
-    'vehicleType': 'Toyota Hiace',
-    'origin': 'Padang',
-    'destination': 'Payakumbuh',
-    'driverId': '',
-    'description': 'Toyota Hiace Premio — Padang–Bukittinggi–Payakumbuh',
-  },
-  {
-    'name': 'Gumarang Jaya',
-    'imageUrl': '',
-    'totalSeats': 12,
-    'vehicleType': 'Isuzu Elf',
-    'origin': 'Padang',
-    'destination': 'Payakumbuh',
-    'driverId': '',
-    'description': 'Isuzu Elf Microbus — Padang–Batusangkar–Payakumbuh',
-  },
-];
 
 // ═══════════════════════════════════════════════════════════
 //  MANAGE FLEET PAGE — Real-time CRUD for Armada
 // ═══════════════════════════════════════════════════════════
 class ManageFleetPage extends StatelessWidget {
   const ManageFleetPage({super.key});
-
   // ── Firestore ref ──
-  static final _fleetsRef = FirebaseFirestore.instance
-      .collection('fleets')
-      .orderBy('name');
-
+  static final _fleetsRef =
+      FirebaseFirestore.instance.collection('fleets').orderBy('name');
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -402,7 +62,6 @@ class ManageFleetPage extends StatelessWidget {
               child: CircularProgressIndicator(color: _C.primary),
             );
           }
-
           // ── Error ──
           if (snapshot.hasError) {
             return _EmptyState(
@@ -412,7 +71,6 @@ class ManageFleetPage extends StatelessWidget {
               color: _C.error,
             );
           }
-
           // ── Empty ──
           final docs = snapshot.data?.docs ?? [];
           if (docs.isEmpty) {
@@ -420,11 +78,10 @@ class ManageFleetPage extends StatelessWidget {
               icon: Iconsax.car,
               title: 'Belum Ada Armada',
               subtitle:
-                  'Tekan tombol + untuk menambahkan armada baru\natau gunakan ikon \u2728 untuk seed data Sumatera.',
+                  'Tekan tombol + untuk menambahkan armada baru.',
               color: _C.primary,
             );
           }
-
           // ── Fleet List ──
           return ListView.builder(
             physics: const BouncingScrollPhysics(),
@@ -452,7 +109,7 @@ class ManageFleetPage extends StatelessWidget {
   }
 
   // ─────────────────────────────────────────────────────
-  //  APP BAR  (with seed button)
+  //  APP BAR
   // ─────────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
@@ -467,148 +124,19 @@ class ManageFleetPage extends StatelessWidget {
       backgroundColor: _C.primary,
       foregroundColor: Colors.white,
       elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.auto_awesome, size: 22),
-          tooltip: 'Seed Data Armada Sumatera',
-          onPressed: () => _seedFleets(context),
-        ),
-      ],
     );
   }
 
-  // ─────────────────────────────────────────────────────
-  //  SEED FLEETS
-  // ─────────────────────────────────────────────────────
-  static Future<void> _seedFleets(BuildContext context) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.auto_awesome, color: _C.teal, size: 24),
-            const SizedBox(width: 10),
-            Text(
-              'Seed Armada?',
-              style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w700,
-                color: _C.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          'Akan menambahkan 26 armada travel Sumatera Barat:\n'
-          '\u2022 Minang Travel, Tranex Mandiri, Bintang Minang\n'
-          '\u2022 Sumbar Travel, Ratu Intan, Travel Ranah Minang\n'
-          '\u2022 Koto Travel, Travel Pariaman, Bukittinggi Jaya\n'
-          '\u2022 Solok Trans, Payakumbuh Express, Sawahlunto Go\n'
-          '\u2022 Agam Jaya, Pesisir Travel, Sijunjung Trans\n'
-          'dan lainnya (Minibus/Hiace Sumatera Barat).',
-          style: GoogleFonts.inter(fontSize: 13, color: _C.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Batal',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                color: _C.textTertiary,
-              ),
-            ),
-          ),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(ctx, true),
-            icon: const Icon(Icons.auto_awesome, size: 18),
-            label: Text(
-              'Seed',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _C.teal,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 0,
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    try {
-      final ref = FirebaseFirestore.instance.collection('fleets');
-      final batch = FirebaseFirestore.instance.batch();
-      final now = FieldValue.serverTimestamp();
-
-      for (final fleet in _kSumatranFleets) {
-        final doc = ref.doc();
-        batch.set(doc, {
-          'name': fleet['name'],
-          'imageUrl': fleet['imageUrl'],
-          'totalSeats': fleet['totalSeats'],
-          'availableSeats': fleet['totalSeats'],
-          'vehicleType': fleet['vehicleType'] ?? '',
-          'origin': fleet['origin'] ?? '',
-          'destination': fleet['destination'] ?? '',
-          'driverId': fleet['driverId'] ?? '',
-          'description': fleet['description'],
-          'createdAt': now,
-          'updatedAt': now,
-        });
-      }
-
-      await batch.commit();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '\u2728 ${_kSumatranFleets.length} armada Sumatera berhasil ditambahkan!',
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
-            ),
-            backgroundColor: _C.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal seed: $e'),
-            backgroundColor: _C.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
-      }
-    }
-  }
 
   // ─────────────────────────────────────────────────────
   //  CLOUDINARY UPLOAD HELPER
+
   // ─────────────────────────────────────────────────────
   static Future<String?> _uploadToCloudinary(File imageFile) async {
     try {
       final request = http.MultipartRequest('POST', Uri.parse(_kCloudinaryUrl))
         ..fields['upload_preset'] = _kUploadPreset
         ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
-
       final response = await request.send();
       if (response.statusCode == 200) {
         final body = await response.stream.bytesToString();
@@ -630,21 +158,15 @@ class ManageFleetPage extends StatelessWidget {
     Map<String, dynamic>? existing,
   }) {
     final existingName = existing?['name'] as String? ?? '';
-    // Check if existing name matches a known Sumbar fleet
-    String? initialFleetName;
-    if (existingName.isNotEmpty) {
-      final match = kSumbarFleetNames.cast<String?>().firstWhere(
-        (n) => n == existingName,
-        orElse: () => null,
-      );
-      initialFleetName = match;
-    }
+    final nameCtrl = TextEditingController(text: existingName);
     final seatsCtrl = TextEditingController(
       text: existing != null ? '${existing['totalSeats'] ?? ''}' : '',
     );
+    final vehicleTypeCtrl = TextEditingController(
+      text: existing?['vehicleType'] as String? ?? '',
+    );
     final isEdit = docId != null;
     final formKey = GlobalKey<FormState>();
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -654,11 +176,8 @@ class ManageFleetPage extends StatelessWidget {
         String? existingImageUrl = existing?['imageUrl'] as String?;
         bool isSaving = false;
         bool isUploading = false;
-        String? selectedFleetName = initialFleetName;
-        String? selectedVehicleType = existing?['vehicleType'] as String?;
         String? selectedOrigin = existing?['origin'] as String?;
         String? selectedDestination = existing?['destination'] as String?;
-
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
             // ── pick image ──
@@ -705,7 +224,6 @@ class ManageFleetPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 20),
-
                         // ── Title ──
                         Text(
                           isEdit ? 'Edit Armada' : 'Tambah Armada Baru',
@@ -726,7 +244,6 @@ class ManageFleetPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 24),
-
                         // ── IMAGE PICKER AREA ──
                         Text(
                           'Foto Armada',
@@ -755,372 +272,239 @@ class ManageFleetPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 16),
-
-                        // ── Nama Armada (Dropdown Baku Sumbar) ──
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Nama Armada',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: _C.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            DropdownButtonFormField<String>(
-                              value: selectedFleetName,
-                              isExpanded: true,
-                              decoration: InputDecoration(
-                                hintText: 'Pilih nama armada',
-                                hintStyle: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  color: _C.textSecondary,
-                                ),
-                                prefixIcon: const Icon(
-                                  Iconsax.car,
-                                  size: 20,
-                                  color: _C.textTertiary,
-                                ),
-                                filled: true,
-                                fillColor: _C.bg,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: _C.border),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: _C.border),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: _C.primary,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                errorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: _C.error),
-                                ),
-                                focusedErrorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: _C.error,
-                                    width: 1.5,
-                                  ),
-                                ),
-                              ),
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: _C.textPrimary,
-                              ),
-                              dropdownColor: _C.card,
-                              menuMaxHeight: 350,
-                              items: kSumbarFleetNames
-                                  .map(
-                                    (name) => DropdownMenuItem<String>(
-                                      value: name,
-                                      child: Text(
-                                        name,
-                                        style: GoogleFonts.inter(fontSize: 13),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (val) {
-                                selectedFleetName = val;
-                              },
-                              onSaved: (val) {
-                                selectedFleetName = val;
-                              },
-                              validator: (v) => (v == null || v.trim().isEmpty)
-                                  ? 'Wajib pilih armada'
-                                  : null,
-                            ),
-                          ],
+                        _FormField(
+                          label: 'Nama Mobil / Plat Nomor',
+                          hint: 'Contoh: Minang Travel (Hiace BA 1234 MT)',
+                          controller: nameCtrl,
+                          icon: Iconsax.car,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Wajib diisi';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
-
-                        // ── Jenis Kendaraan (Dropdown) ──
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Jenis Kendaraan',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: _C.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            DropdownButtonFormField<String>(
-                              value:
-                                  selectedVehicleType != null &&
-                                      kSumbarVehicleTypes.contains(
-                                        selectedVehicleType,
+                        _FormField(
+                          label: 'Jenis Kendaraan',
+                          hint: 'Contoh: Toyota Hiace Premio',
+                          controller: vehicleTypeCtrl,
+                          icon: Iconsax.car,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Wajib diisi';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        // ── Rute Asal (Dynamic) ──
+                        FutureBuilder<List<String>>(
+                          future:
+                              FirestoreDijkstraService.instance.getAllCities(),
+                          builder: (ctx, snapshot) {
+                            final citiesList = snapshot.data ?? [];
+                            final isLoading = snapshot.connectionState ==
+                                ConnectionState.waiting;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Rute Asal',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: _C.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                DropdownButtonFormField<String>(
+                                  value: (selectedOrigin != null &&
+                                          citiesList.contains(selectedOrigin))
+                                      ? selectedOrigin
+                                      : null,
+                                  isExpanded: true,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    color: _C.textPrimary,
+                                  ),
+                                  dropdownColor: _C.card,
+                                  decoration: InputDecoration(
+                                    hintText: isLoading
+                                        ? 'Memuat kota...'
+                                        : 'Pilih kota asal',
+                                    hintStyle: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      color: _C.textSecondary,
+                                    ),
+                                    prefixIcon: const Icon(
+                                      Iconsax.location,
+                                      size: 20,
+                                      color: _C.textTertiary,
+                                    ),
+                                    filled: true,
+                                    fillColor: _C.bg,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: _C.border,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: _C.border,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                        color: _C.primary,
+                                        width: 1.8,
+                                      ),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 14,
+                                    ),
+                                  ),
+                                  items: citiesList
+                                      .map(
+                                        (c) => DropdownMenuItem(
+                                          value: c,
+                                          child: Text(
+                                            c,
+                                            style:
+                                                GoogleFonts.inter(fontSize: 13),
+                                          ),
+                                        ),
                                       )
-                                  ? selectedVehicleType
-                                  : null,
-                              isExpanded: true,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: _C.textPrimary,
-                              ),
-                              dropdownColor: _C.card,
-                              decoration: InputDecoration(
-                                hintText: 'Pilih jenis kendaraan',
-                                hintStyle: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  color: _C.textSecondary,
+                                      .toList(),
+                                  onChanged: isLoading
+                                      ? null
+                                      : (val) {
+                                          selectedOrigin = val;
+                                        },
+                                  onSaved: (val) {
+                                    selectedOrigin = val;
+                                  },
+                                  validator: (v) => v == null
+                                      ? 'Wajib pilih kota asal'
+                                      : null,
                                 ),
-                                prefixIcon: const Icon(
-                                  Iconsax.car,
-                                  size: 20,
-                                  color: _C.textTertiary,
-                                ),
-                                filled: true,
-                                fillColor: _C.bg,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: _C.border,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: _C.border,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: _C.primary,
-                                    width: 1.8,
-                                  ),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 14,
-                                ),
-                              ),
-                              items: kSumbarVehicleTypes
-                                  .map(
-                                    (t) => DropdownMenuItem(
-                                      value: t,
-                                      child: Text(
-                                        t,
-                                        style: GoogleFonts.inter(fontSize: 13),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (val) {
-                                selectedVehicleType = val;
-                              },
-                              onSaved: (val) {
-                                selectedVehicleType = val;
-                              },
-                              validator: (v) =>
-                                  v == null ? 'Wajib pilih kendaraan' : null,
-                            ),
-                          ],
+                              ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 16),
-
-                        // ── Rute Asal (Dropdown) ──
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Rute Asal',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: _C.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            DropdownButtonFormField<String>(
-                              value:
-                                  selectedOrigin != null &&
-                                      kSumbarCities.contains(selectedOrigin)
-                                  ? selectedOrigin
-                                  : null,
-                              isExpanded: true,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: _C.textPrimary,
-                              ),
-                              dropdownColor: _C.card,
-                              decoration: InputDecoration(
-                                hintText: 'Pilih kota asal',
-                                hintStyle: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  color: _C.textSecondary,
-                                ),
-                                prefixIcon: const Icon(
-                                  Iconsax.location,
-                                  size: 20,
-                                  color: _C.textTertiary,
-                                ),
-                                filled: true,
-                                fillColor: _C.bg,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: _C.border,
-                                    width: 1.5,
+                        // ── Rute Tujuan (Dynamic) ──
+                        FutureBuilder<List<String>>(
+                          future:
+                              FirestoreDijkstraService.instance.getAllCities(),
+                          builder: (ctx, snapshot) {
+                            final citiesList = snapshot.data ?? [];
+                            final isLoading = snapshot.connectionState ==
+                                ConnectionState.waiting;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Rute Tujuan',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: _C.textPrimary,
                                   ),
                                 ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: _C.border,
-                                    width: 1.5,
+                                const SizedBox(height: 8),
+                                DropdownButtonFormField<String>(
+                                  value: (selectedDestination != null &&
+                                          citiesList
+                                              .contains(selectedDestination))
+                                      ? selectedDestination
+                                      : null,
+                                  isExpanded: true,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    color: _C.textPrimary,
                                   ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: _C.primary,
-                                    width: 1.8,
-                                  ),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 14,
-                                ),
-                              ),
-                              items: kSumbarCities
-                                  .map(
-                                    (c) => DropdownMenuItem(
-                                      value: c,
-                                      child: Text(
-                                        c,
-                                        style: GoogleFonts.inter(fontSize: 13),
+                                  dropdownColor: _C.card,
+                                  decoration: InputDecoration(
+                                    hintText: isLoading
+                                        ? 'Memuat kota...'
+                                        : 'Pilih kota tujuan',
+                                    hintStyle: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      color: _C.textSecondary,
+                                    ),
+                                    prefixIcon: const Icon(
+                                      Iconsax.location_tick,
+                                      size: 20,
+                                      color: _C.textTertiary,
+                                    ),
+                                    filled: true,
+                                    fillColor: _C.bg,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: _C.border,
+                                        width: 1.5,
                                       ),
                                     ),
-                                  )
-                                  .toList(),
-                              onChanged: (val) {
-                                selectedOrigin = val;
-                              },
-                              onSaved: (val) {
-                                selectedOrigin = val;
-                              },
-                              validator: (v) =>
-                                  v == null ? 'Wajib pilih kota asal' : null,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // ── Rute Tujuan (Dropdown) ──
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Rute Tujuan',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: _C.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            DropdownButtonFormField<String>(
-                              value:
-                                  selectedDestination != null &&
-                                      kSumbarCities.contains(
-                                        selectedDestination,
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: _C.border,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                        color: _C.primary,
+                                        width: 1.8,
+                                      ),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 14,
+                                    ),
+                                  ),
+                                  items: citiesList
+                                      .map(
+                                        (c) => DropdownMenuItem(
+                                          value: c,
+                                          child: Text(
+                                            c,
+                                            style:
+                                                GoogleFonts.inter(fontSize: 13),
+                                          ),
+                                        ),
                                       )
-                                  ? selectedDestination
-                                  : null,
-                              isExpanded: true,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: _C.textPrimary,
-                              ),
-                              dropdownColor: _C.card,
-                              decoration: InputDecoration(
-                                hintText: 'Pilih kota tujuan',
-                                hintStyle: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  color: _C.textSecondary,
+                                      .toList(),
+                                  onChanged: isLoading
+                                      ? null
+                                      : (val) {
+                                          selectedDestination = val;
+                                        },
+                                  onSaved: (val) {
+                                    selectedDestination = val;
+                                  },
+                                  validator: (v) {
+                                    if (v == null)
+                                      return 'Wajib pilih kota tujuan';
+                                    if (v == selectedOrigin) {
+                                      return 'Tidak boleh sama dengan kota asal';
+                                    }
+                                    return null;
+                                  },
                                 ),
-                                prefixIcon: const Icon(
-                                  Iconsax.location_tick,
-                                  size: 20,
-                                  color: _C.textTertiary,
-                                ),
-                                filled: true,
-                                fillColor: _C.bg,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: _C.border,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: _C.border,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: _C.primary,
-                                    width: 1.8,
-                                  ),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 14,
-                                ),
-                              ),
-                              items: kSumbarCities
-                                  .map(
-                                    (c) => DropdownMenuItem(
-                                      value: c,
-                                      child: Text(
-                                        c,
-                                        style: GoogleFonts.inter(fontSize: 13),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (val) {
-                                selectedDestination = val;
-                              },
-                              onSaved: (val) {
-                                selectedDestination = val;
-                              },
-                              validator: (v) {
-                                if (v == null) return 'Wajib pilih kota tujuan';
-                                if (v == selectedOrigin) {
-                                  return 'Tidak boleh sama dengan kota asal';
-                                }
-                                return null;
-                              },
-                            ),
-                          ],
+                              ],
+                            );
+                          },
                         ),
-                        const SizedBox(height: 16),
-
                         // ── Total Kursi ──
                         _FormField(
                           label: 'Total Kursi',
@@ -1141,7 +525,6 @@ class ManageFleetPage extends StatelessWidget {
                           },
                         ),
                         const SizedBox(height: 28),
-
                         // ── Save Button ──
                         SizedBox(
                           height: 50,
@@ -1151,8 +534,7 @@ class ManageFleetPage extends StatelessWidget {
                                 : () async {
                                     try {
                                       if (formKey.currentState == null ||
-                                          !formKey.currentState!
-                                              .validate()) {
+                                          !formKey.currentState!.validate()) {
                                         if (ctx.mounted) {
                                           ScaffoldMessenger.of(ctx)
                                             ..clearSnackBars()
@@ -1179,16 +561,13 @@ class ManageFleetPage extends StatelessWidget {
                                         }
                                         return;
                                       }
-
                                       formKey.currentState!.save();
-
                                       setSheetState(() => isSaving = true);
-
-                                      final name = selectedFleetName?.trim();
-                                      if (name == null || name.isEmpty) {
-                                        throw Exception('Nama armada tidak valid');
+                                      final name = nameCtrl.text.trim();
+                                      if (name.isEmpty) {
+                                        throw Exception(
+                                            'Nama armada tidak valid');
                                       }
-
                                       final totalSeatsText =
                                           seatsCtrl.text.trim();
                                       final totalSeats =
@@ -1199,10 +578,8 @@ class ManageFleetPage extends StatelessWidget {
                                           'Jumlah kursi tidak valid',
                                         );
                                       }
-
                                       // Upload image to Cloudinary if picked
-                                      String imageUrl =
-                                          existingImageUrl ??
+                                      String imageUrl = existingImageUrl ??
                                           _kDefaultFleetImage;
                                       if (pickedImage != null) {
                                         setSheetState(() => isUploading = true);
@@ -1233,8 +610,8 @@ class ManageFleetPage extends StatelessWidget {
                                                   shape: RoundedRectangleBorder(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          10,
-                                                        ),
+                                                      10,
+                                                    ),
                                                   ),
                                                   margin: const EdgeInsets.all(
                                                     16,
@@ -1244,30 +621,28 @@ class ManageFleetPage extends StatelessWidget {
                                           }
                                         }
                                       }
-
                                       final ref = FirebaseFirestore.instance
                                           .collection('fleets');
-
                                       if (isEdit) {
                                         final oldTotal =
                                             (existing?['totalSeats'] as num?)
-                                                ?.toInt() ??
-                                            totalSeats;
+                                                    ?.toInt() ??
+                                                totalSeats;
                                         final oldAvail =
                                             (existing?['availableSeats']
-                                                    as num?)
-                                                ?.toInt() ??
-                                            oldTotal;
+                                                        as num?)
+                                                    ?.toInt() ??
+                                                oldTotal;
                                         final diff = totalSeats - oldTotal;
                                         final newAvail = (oldAvail + diff)
                                             .clamp(0, totalSeats);
-
                                         await ref.doc(docId).update({
                                           'name': name,
                                           'imageUrl': imageUrl,
                                           'totalSeats': totalSeats,
                                           'availableSeats': newAvail,
-                                          'vehicleType': selectedVehicleType,
+                                          'vehicleType':
+                                              vehicleTypeCtrl.text.trim(),
                                           'origin': selectedOrigin,
                                           'destination': selectedDestination,
                                           'updatedAt':
@@ -1279,7 +654,8 @@ class ManageFleetPage extends StatelessWidget {
                                           'imageUrl': imageUrl,
                                           'totalSeats': totalSeats,
                                           'availableSeats': totalSeats,
-                                          'vehicleType': selectedVehicleType,
+                                          'vehicleType':
+                                              vehicleTypeCtrl.text.trim(),
                                           'origin': selectedOrigin,
                                           'destination': selectedDestination,
                                           'createdAt':
@@ -1288,7 +664,6 @@ class ManageFleetPage extends StatelessWidget {
                                               FieldValue.serverTimestamp(),
                                         });
                                       }
-
                                       if (ctx.mounted) {
                                         Navigator.pop(ctx);
                                       }
@@ -1420,7 +795,6 @@ class ManageFleetPage extends StatelessWidget {
         ),
       );
     }
-
     if (pickedImage != null) {
       return Stack(
         fit: StackFit.expand,
@@ -1448,7 +822,6 @@ class ManageFleetPage extends StatelessWidget {
         ],
       );
     }
-
     if (existingUrl != null && existingUrl.isNotEmpty) {
       return Stack(
         fit: StackFit.expand,
@@ -1488,7 +861,6 @@ class ManageFleetPage extends StatelessWidget {
         ],
       );
     }
-
     return _imagePlaceholder();
   }
 
@@ -1669,9 +1041,7 @@ class ManageFleetPage extends StatelessWidget {
         ],
       ),
     );
-
     if (confirm != true) return;
-
     try {
       await FirebaseFirestore.instance.collection('fleets').doc(docId).delete();
       if (context.mounted) {
@@ -1724,26 +1094,23 @@ class _FleetCard extends StatelessWidget {
   final String docId;
   final Map<String, dynamic> data;
   final int index;
-
   const _FleetCard({
     required this.docId,
     required this.data,
     required this.index,
   });
-
   @override
   Widget build(BuildContext context) {
     final name = data['name'] as String? ?? 'Armada Tanpa Nama';
     final imageUrl = data['imageUrl'] as String? ?? _kDefaultFleetImage;
     final totalSeats = (data['totalSeats'] as num?)?.toInt() ?? 0;
-
     // ── StreamBuilder: hitung kursi terpakai dari bookings ──
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('bookings')
           .where('fleetId', isEqualTo: docId)
-          .where('status', whereIn: ['pending', 'paid', 'validated', 'used'])
-          .snapshots(),
+          .where('status',
+              whereIn: ['pending', 'paid', 'validated', 'used']).snapshots(),
       builder: (context, bookingSnap) {
         // Hitung total kursi terpakai dari SEMUA booking aktif
         int bookedSeatCount = 0;
@@ -1754,13 +1121,11 @@ class _FleetCard extends StatelessWidget {
             bookedSeatCount += seats;
           }
         }
-
         final availableSeats = (totalSeats - bookedSeatCount).clamp(
           0,
           totalSeats,
         );
         final ratio = totalSeats > 0 ? availableSeats / totalSeats : 0.0;
-
         Color statusColor;
         String statusLabel;
         Color statusBg;
@@ -1777,164 +1142,162 @@ class _FleetCard extends StatelessWidget {
           statusLabel = 'Tersedia';
           statusBg = _C.successBg;
         }
-
         return Container(
-              margin: const EdgeInsets.only(bottom: 14),
-              decoration: BoxDecoration(
-                color: _C.card,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: _C.border.withValues(alpha: 0.6)),
-                boxShadow: [
-                  BoxShadow(
-                    color: _C.primary.withValues(alpha: 0.04),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            color: _C.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _C.border.withValues(alpha: 0.6)),
+            boxShadow: [
+              BoxShadow(
+                color: _C.primary.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Image ──
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
-                    child: SizedBox(
-                      height: 150,
-                      width: double.infinity,
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: _C.border.withValues(alpha: 0.3),
-                          child: Center(
-                            child: Icon(
-                              Iconsax.car,
-                              size: 48,
-                              color: _C.textTertiary.withValues(alpha: 0.5),
-                            ),
-                          ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Image ──
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+                child: SizedBox(
+                  height: 150,
+                  width: double.infinity,
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: _C.border.withValues(alpha: 0.3),
+                      child: Center(
+                        child: Icon(
+                          Iconsax.car,
+                          size: 48,
+                          color: _C.textTertiary.withValues(alpha: 0.5),
                         ),
-                        loadingBuilder: (_, child, progress) {
-                          if (progress == null) return child;
-                          return Container(
-                            color: _C.border.withValues(alpha: 0.15),
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: _C.primary,
-                              ),
-                            ),
-                          );
-                        },
                       ),
                     ),
-                  ),
-
-                  // ── Content ──
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                name,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: _C.textPrimary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: statusBg,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                statusLabel,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: statusColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Icon(
-                              Iconsax.user,
-                              size: 15,
-                              color: _C.textTertiary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Tersedia: $availableSeats / $totalSeats Kursi',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: _C.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: ratio,
-                            minHeight: 6,
-                            backgroundColor: _C.border.withValues(alpha: 0.5),
-                            valueColor: AlwaysStoppedAnimation(statusColor),
+                    loadingBuilder: (_, child, progress) {
+                      if (progress == null) return child;
+                      return Container(
+                        color: _C.border.withValues(alpha: 0.15),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: _C.primary,
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _ActionChip(
-                              icon: Iconsax.edit_2,
-                              label: 'Edit',
-                              color: _C.primary,
-                              onTap: () => ManageFleetPage._showFleetForm(
-                                context,
-                                docId: docId,
-                                existing: data,
-                              ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              // ── Content ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: _C.textPrimary,
                             ),
-                            const SizedBox(width: 10),
-                            _ActionChip(
-                              icon: Iconsax.trash,
-                              label: 'Hapus',
-                              color: _C.error,
-                              onTap: () => ManageFleetPage._deleteFleet(
-                                context,
-                                docId,
-                                name,
-                              ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusBg,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            statusLabel,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: statusColor,
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Icon(
+                          Iconsax.user,
+                          size: 15,
+                          color: _C.textTertiary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Tersedia: $availableSeats / $totalSeats Kursi',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: _C.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: ratio,
+                        minHeight: 6,
+                        backgroundColor: _C.border.withValues(alpha: 0.5),
+                        valueColor: AlwaysStoppedAnimation(statusColor),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _ActionChip(
+                          icon: Iconsax.edit_2,
+                          label: 'Edit',
+                          color: _C.primary,
+                          onTap: () => ManageFleetPage._showFleetForm(
+                            context,
+                            docId: docId,
+                            existing: data,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        _ActionChip(
+                          icon: Iconsax.trash,
+                          label: 'Hapus',
+                          color: _C.error,
+                          onTap: () => ManageFleetPage._deleteFleet(
+                            context,
+                            docId,
+                            name,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            )
+            ],
+          ),
+        )
             .animate()
             .fadeIn(delay: (100 + index * 60).ms, duration: 400.ms)
             .slideY(
@@ -1955,14 +1318,12 @@ class _ActionChip extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-
   const _ActionChip({
     required this.icon,
     required this.label,
     required this.color,
     required this.onTap,
   });
-
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -2005,7 +1366,6 @@ class _FormField extends StatelessWidget {
   final TextInputType keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final String? Function(String?)? validator;
-
   const _FormField({
     required this.label,
     required this.hint,
@@ -2015,7 +1375,6 @@ class _FormField extends StatelessWidget {
     this.inputFormatters,
     this.validator,
   });
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -2081,14 +1440,12 @@ class _EmptyState extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
-
   const _EmptyState({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.color,
   });
-
   @override
   Widget build(BuildContext context) {
     return Center(

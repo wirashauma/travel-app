@@ -57,6 +57,7 @@ class LiveTripManifestPage extends StatelessWidget {
 
   /// Trip identification — used to filter bookings for THIS specific trip
   final String departureDate;
+  final String departureTime;
   final String origin;
   final String destination;
 
@@ -68,6 +69,7 @@ class LiveTripManifestPage extends StatelessWidget {
     super.key,
     required this.fleetId,
     required this.departureDate,
+    required this.departureTime,
     required this.origin,
     required this.destination,
     required this.fleetName,
@@ -80,6 +82,7 @@ class LiveTripManifestPage extends StatelessWidget {
         .collection('bookings')
         .where('fleetId', isEqualTo: fleetId)
         .where('departureDate', isEqualTo: departureDate)
+        .where('departureTime', isEqualTo: departureTime)
         .where('origin', isEqualTo: origin)
         .where('destination', isEqualTo: destination)
         .where('status', whereIn: ['paid', 'used', 'completed'])

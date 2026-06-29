@@ -84,6 +84,7 @@ class SeatSelectionPage extends StatefulWidget {
   final String routeSummary;
   final double totalDistance;
   final int totalDurationMinutes;
+  final String departureTime;
 
   const SeatSelectionPage({
     super.key,
@@ -98,6 +99,7 @@ class SeatSelectionPage extends StatefulWidget {
     required this.routeSummary,
     required this.totalDistance,
     required this.totalDurationMinutes,
+    required this.departureTime,
   });
 
   @override
@@ -135,20 +137,26 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
   // ─────────────────────────────────────────────────────
   //  DERIVE SEAT STATES — Client-side filtering
   // ─────────────────────────────────────────────────────
-  Map<String, SeatState> _deriveSeatStates(QuerySnapshot snapshot) {
+  ({Map<String, SeatState> states, Set<String> myBookedSeats}) _deriveSeatStates(QuerySnapshot snapshot) {
     final now = DateTime.now();
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final states = <String, SeatState>{};
+    final myBookedSeats = <String>{};
 
     for (final doc in snapshot.docs) {
       final data = doc.data() as Map<String, dynamic>;
       final status = data['status'] as String? ?? '';
       final docUserId = data['userId'] as String? ?? '';
+      final docDepTime = data['departureTime'] as String? ?? '';
+      if (docDepTime != widget.departureTime) continue;
+
       final seats =
           (data['selectedSeatLabels'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [];
+
+      final isMine = docUserId == currentUid;
 
       if (status == 'paid' ||
           status == 'validated' ||
@@ -156,12 +164,18 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
           status == 'completed') {
         for (final seat in seats) {
           states[seat] = SeatState.sold;
+          if (isMine) {
+            myBookedSeats.add(seat);
+          }
         }
       } else if (status == 'pending') {
         final expiryDate = (data['expiryDate'] as Timestamp?)?.toDate();
 
         if (expiryDate != null && expiryDate.isAfter(now)) {
-          if (docUserId == currentUid) continue;
+          if (isMine) {
+            myBookedSeats.addAll(seats);
+            continue;
+          }
 
           for (final seat in seats) {
             if (states[seat] != SeatState.sold) {
@@ -172,7 +186,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
       }
     }
 
-    return states;
+    return (states: states, myBookedSeats: myBookedSeats);
   }
 
   // ─────────────────────────────────────────────────────
@@ -280,6 +294,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
           fleetName: widget.fleetName,
           availableSeats: widget.totalSeats,
           selectedSeats: sortedSeats,
+          departureTime: widget.departureTime,
         ),
       ),
     ).then((_) {
@@ -306,9 +321,11 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
             .where('departureDate', isEqualTo: _dateStr)
             .snapshots(),
         builder: (context, snapshot) {
-          final seatStates = snapshot.hasData
+          final derivation = snapshot.hasData
               ? _deriveSeatStates(snapshot.data!)
-              : <String, SeatState>{};
+              : (states: <String, SeatState>{}, myBookedSeats: <String>{});
+          final seatStates = derivation.states;
+          final myBookedSeats = derivation.myBookedSeats;
 
           // ── Auto-deselect seats snatched by others ──
           final snatched = _isNavigatingToCheckout
@@ -316,8 +333,9 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
               : _selectedSeats
                   .where(
                     (s) =>
-                        seatStates[s] == SeatState.sold ||
-                        seatStates[s] == SeatState.pending,
+                        (seatStates[s] == SeatState.sold ||
+                         seatStates[s] == SeatState.pending) &&
+                        !myBookedSeats.contains(s),
                   )
                   .toSet();
 

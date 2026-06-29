@@ -261,7 +261,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: SlideTransition(
                       position: _nameSlide,
                       child: Text(
-                        'E-Travel',
+                        'Minang Travel',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: titleSize,
                           fontWeight: FontWeight.w800,

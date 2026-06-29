@@ -47,12 +47,13 @@ class _C {
 //  • Stats row: total, paid, validated, boarded
 //  • Floating "Scan QR Tiket" button → TicketScannerPage
 // ═══════════════════════════════════════════════════════════
-class FleetManifestPage extends StatelessWidget {
+class FleetManifestPage extends StatefulWidget {
   final String fleetId;
   final String fleetName;
   final String vehicleType;
   final String origin;
   final String destination;
+  final String? departureTime;
 
   const FleetManifestPage({
     super.key,
@@ -61,7 +62,21 @@ class FleetManifestPage extends StatelessWidget {
     this.vehicleType = '',
     this.origin = '',
     this.destination = '',
+    this.departureTime,
   });
+
+  @override
+  State<FleetManifestPage> createState() => _FleetManifestPageState();
+}
+
+class _FleetManifestPageState extends State<FleetManifestPage> {
+  late String _selectedTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTime = widget.departureTime ?? '10:00 WIB';
+  }
 
   String _fmtPrice(int price) {
     return NumberFormat.currency(
@@ -69,6 +84,73 @@ class FleetManifestPage extends StatelessWidget {
       symbol: 'Rp ',
       decimalDigits: 0,
     ).format(price);
+  }
+
+  Widget _buildTimeFilterSelector() {
+    final times = [
+      ('10:00 WIB', 'Pagi', Iconsax.sun_1),
+      ('14:00 WIB', 'Siang', Iconsax.sun_fog),
+      ('20:00 WIB', 'Malam', Iconsax.moon),
+    ];
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: _C.borderLight,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: times.map((t) {
+          final isSelected = _selectedTime == t.$1;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedTime = t.$1;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? _C.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(11),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: _C.primary.withValues(alpha: 0.15),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          )
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      t.$3,
+                      size: 14,
+                      color: isSelected ? Colors.white : _C.textSecondary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      t.$2,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? Colors.white : _C.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 
   @override
@@ -82,13 +164,18 @@ class FleetManifestPage extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('bookings')
-            .where('fleetId', isEqualTo: fleetId)
+            .where('fleetId', isEqualTo: widget.fleetId)
             .where('status', whereIn: ['paid', 'validated', 'used'])
             .snapshots(),
         builder: (context, snapshot) {
           final bookingDocs = snapshot.data?.docs ?? [];
+          final todayStr = DateFormat('dd MMM yyyy').format(DateTime.now());
           final bookings = bookingDocs
               .map((d) => BookingModel.fromFirestore(d))
+              .where((b) => b.origin == widget.origin &&
+                            b.destination == widget.destination &&
+                            b.departureDate == todayStr &&
+                            b.departureTime == _selectedTime)
               .toList();
 
           final paidCount = bookings
@@ -111,6 +198,10 @@ class FleetManifestPage extends StatelessWidget {
 
                   // ── FLEET INFO CARD ──
                   SliverToBoxAdapter(child: _buildFleetInfo()),
+
+                  // ── TIME FILTER SELECTOR ──
+                  if (widget.departureTime == null)
+                    SliverToBoxAdapter(child: _buildTimeFilterSelector()),
 
                   // ── STATS ROW ──
                   SliverToBoxAdapter(
@@ -217,14 +308,14 @@ class FleetManifestPage extends StatelessWidget {
                 Text(
                   'Manifest Penumpang',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 17,
+                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: _C.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  fleetName,
+                  widget.fleetName,
                   style: GoogleFonts.inter(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
@@ -245,8 +336,8 @@ class FleetManifestPage extends StatelessWidget {
   //  FLEET INFO CARD
   // ─────────────────────────────────────────────────────
   Widget _buildFleetInfo() {
-    final route = (origin.isNotEmpty && destination.isNotEmpty)
-        ? '$origin → $destination'
+    final route = (widget.origin.isNotEmpty && widget.destination.isNotEmpty)
+        ? '${widget.origin} → ${widget.destination}'
         : '';
 
     return Padding(
@@ -274,17 +365,17 @@ class FleetManifestPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        fleetName,
+                        widget.fleetName,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
                           color: _C.success,
                         ),
                       ),
-                      if (vehicleType.isNotEmpty) ...[
+                      if (widget.vehicleType.isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(
-                          vehicleType,
+                          widget.vehicleType,
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -301,6 +392,23 @@ class FleetManifestPage extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                             color: _C.primary,
                           ),
+                        ),
+                      ],
+                      if (widget.departureTime != null) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Iconsax.clock, size: 13, color: _C.warning),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Jadwal: ${widget.departureTime}',
+                              style: GoogleFonts.inter(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: _C.warning,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ],
@@ -334,7 +442,7 @@ class FleetManifestPage extends StatelessWidget {
   }
 
   // ─────────────────────────────────────────────────────
-  //  STATS ROW
+  //  STATS ROW (Unified Single Card with Dividers)
   // ─────────────────────────────────────────────────────
   Widget _buildStatsRow(
     bool isSmall, {
@@ -376,78 +484,79 @@ class FleetManifestPage extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-      child: Row(
-        children: stats.asMap().entries.map((entry) {
-          final i = entry.key;
-          final stat = entry.value;
-          return Expanded(
-            child:
-                Container(
-                      margin: EdgeInsets.only(
-                        left: i == 0 ? 0 : 6,
-                        right: i == stats.length - 1 ? 0 : 6,
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isSmall ? 10 : 14,
-                        vertical: isSmall ? 12 : 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _C.card,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _C.border.withValues(alpha: 0.6),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _C.primary.withValues(alpha: 0.04),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: _C.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _C.border.withValues(alpha: 0.8)),
+          boxShadow: [
+            BoxShadow(
+              color: _C.primary.withValues(alpha: 0.03),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            children: stats.asMap().entries.map((entry) {
+              final i = entry.key;
+              final stat = entry.value;
+              return Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                               color: stat.bgColor,
-                              borderRadius: BorderRadius.circular(10),
+                              shape: BoxShape.circle,
                             ),
-                            child: Icon(stat.icon, size: 18, color: stat.color),
+                            child: Center(
+                              child: Icon(stat.icon, size: 16, color: stat.color),
+                            ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
                           Text(
                             stat.value,
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: isSmall ? 18 : 22,
-                              fontWeight: FontWeight.w700,
+                              fontSize: isSmall ? 15 : 18,
+                              fontWeight: FontWeight.w800,
                               color: _C.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 4),
                           Text(
                             stat.label,
                             style: GoogleFonts.inter(
-                              fontSize: isSmall ? 10 : 11,
-                              fontWeight: FontWeight.w500,
+                              fontSize: isSmall ? 10.5 : 12,
+                              fontWeight: FontWeight.w600,
                               color: _C.textTertiary,
                             ),
                             textAlign: TextAlign.center,
                           ),
                         ],
                       ),
-                    )
-                    .animate()
-                    .fadeIn(delay: (200 + i * 100).ms, duration: 400.ms)
-                    .slideY(
-                      begin: 0.15,
-                      delay: (200 + i * 100).ms,
-                      duration: 400.ms,
                     ),
-          );
-        }).toList(),
+                    if (i < stats.length - 1)
+                      Container(
+                        width: 1,
+                        height: 36,
+                        color: _C.border.withValues(alpha: 0.6),
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06, duration: 400.ms);
   }
 
   // ─────────────────────────────────────────────────────
@@ -803,8 +912,8 @@ class _PassengerCard extends StatelessWidget {
                           Text(
                             booking.userName,
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
                               color: nameColor,
                               decoration: nameDecoration,
                               decorationColor: _C.success.withValues(
@@ -813,13 +922,13 @@ class _PassengerCard extends StatelessWidget {
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           Text(
                             'Kode: ${booking.bookingCode}',
                             style: GoogleFonts.jetBrainsMono(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: _C.textTertiary,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: _C.textSecondary,
                             ),
                           ),
                         ],
@@ -855,16 +964,17 @@ class _PassengerCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
 
-                // ── Route row ──
+                // ── Route row (Premium boarding pass style with High Contrast Connector) ──
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: isUsed
                         ? _C.success.withValues(alpha: 0.04)
                         : isValidated
                         ? _C.info.withValues(alpha: 0.04)
                         : _C.bg,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: _C.border.withValues(alpha: 0.4)),
                   ),
                   child: Row(
                     children: [
@@ -873,37 +983,65 @@ class _PassengerCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Asal',
+                              'ASAL',
                               style: GoogleFonts.inter(
-                                fontSize: 10,
-                                color: _C.textTertiary,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                color: _C.textSecondary,
+                                letterSpacing: 0.8,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 4),
                             Text(
                               booking.origin,
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: isUsed
-                                    ? _C.textSecondary
-                                    : _C.textPrimary,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: isUsed ? _C.textSecondary : _C.textPrimary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
+                      // Neutral High Contrast gray arrow connector
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Icon(
-                          Iconsax.arrow_right_3,
-                          size: 16,
-                          color: isUsed
-                              ? _C.success
-                              : isValidated
-                              ? _C.info
-                              : _C.teal,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _C.textTertiary,
+                              ),
+                            ),
+                            Container(
+                              width: 20,
+                              height: 1,
+                              color: _C.border,
+                            ),
+                            const Icon(
+                              Iconsax.arrow_right_1,
+                              size: 14,
+                              color: _C.textSecondary,
+                            ),
+                            Container(
+                              width: 20,
+                              height: 1,
+                              color: _C.border,
+                            ),
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _C.textTertiary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       Expanded(
@@ -911,21 +1049,21 @@ class _PassengerCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              'Tujuan',
+                              'TUJUAN',
                               style: GoogleFonts.inter(
-                                fontSize: 10,
-                                color: _C.textTertiary,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                color: _C.textSecondary,
+                                letterSpacing: 0.8,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 4),
                             Text(
                               booking.destination,
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: isUsed
-                                    ? _C.textSecondary
-                                    : _C.textPrimary,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: isUsed ? _C.textSecondary : _C.textPrimary,
                               ),
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.end,
@@ -936,13 +1074,13 @@ class _PassengerCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
                 // ── Bottom: Seat + Date + Price ──
                 Row(
                   children: [
                     _InfoChip(
-                      icon: Iconsax.driver,
+                      icon: Iconsax.ticket,
                       label: seatLabel,
                       color: isUsed
                           ? _C.success
@@ -950,7 +1088,44 @@ class _PassengerCard extends StatelessWidget {
                           ? _C.info
                           : _C.primary,
                     ),
-                    const SizedBox(width: 8),
+                    if (isUsed || isValidated) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isUsed
+                              ? _C.success.withValues(alpha: 0.12)
+                              : _C.info.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: isUsed
+                                ? _C.success.withValues(alpha: 0.25)
+                                : _C.info.withValues(alpha: 0.25),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Iconsax.verify,
+                              size: 10,
+                              color: isUsed ? _C.success : _C.info,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Terisi',
+                              style: GoogleFonts.inter(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                color: isUsed ? _C.success : _C.info,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(width: 10),
                     _InfoChip(
                       icon: Iconsax.calendar_1,
                       label: booking.departureDate,
@@ -960,8 +1135,8 @@ class _PassengerCard extends StatelessWidget {
                     Text(
                       fmtPrice(booking.totalPrice),
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
                         color: isUsed
                             ? _C.success
                             : isValidated
@@ -972,30 +1147,52 @@ class _PassengerCard extends StatelessWidget {
                   ],
                 ),
 
-                // ── Pickup Address Card ──
+                // ── Pickup Address Card (Clean, Premium, High Contrast Alert Box) ──
                 if (booking.pickupAddress != null && booking.pickupAddress!.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
                       color: _C.bg,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _C.borderLight),
+                      border: Border.all(color: _C.border.withValues(alpha: 0.8)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Iconsax.location5, size: 14, color: Color(0xFFEF4444)),
-                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Iconsax.location, size: 16, color: Color(0xFFEF4444)),
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            booking.pickupAddress!,
-                            style: GoogleFonts.inter(
-                              fontSize: 11.5,
-                              color: _C.textSecondary,
-                              fontWeight: FontWeight.w500,
-                              height: 1.4,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'ALAMAT PENJEMPUTAN',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: _C.textPrimary,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                booking.pickupAddress!,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12.5,
+                                  color: _C.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -1008,23 +1205,35 @@ class _PassengerCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _openGoogleMaps(context, booking),
-                        icon: const Icon(Iconsax.map_1, size: 16, color: Colors.white),
-                        label: Text(
-                          'Petunjuk Arah Penjemputan',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _C.primary.withValues(alpha: 0.12),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _C.primary,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 11),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                        child: ElevatedButton.icon(
+                          onPressed: () => _openGoogleMaps(context, booking),
+                          icon: const Icon(Iconsax.map_1, size: 16, color: Colors.white),
+                          label: Text(
+                            'Buka Rute Navigasi (Google Maps)',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _C.primary,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),

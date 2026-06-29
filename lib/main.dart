@@ -47,11 +47,11 @@ Future<void> main() async {
     'pk.eyJ1IjoiY29kZWluMjEiLCJhIjoiY21jMW53a21iMGV3ajJrczd2bTR3b25mciJ9.VufbKuZE1e18mU4zCbvVyw',
   );
 
-  runApp(const ETravelApp());
+  runApp(const MinangTravelApp());
 }
 
-class ETravelApp extends StatelessWidget {
-  const ETravelApp({super.key});
+class MinangTravelApp extends StatelessWidget {
+  const MinangTravelApp({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -7,7 +7,6 @@ import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
 
-import '../../../core/constants/app_constants.dart';
 import '../../../core/services/firestore_dijkstra_service.dart';
 import '../../edit_profile/presentation/edit_profile_page.dart';
 import '../../booking_history/presentation/booking_history_page.dart';
@@ -799,8 +798,8 @@ class _HomeSearchPageState extends State<HomeSearchPage>
                   ),
                 ),
               ),
-              _miniBtn(Icons.add_rounded, _passengers < AppConstants.seatsPerVehicle,
-                  () { if (_passengers < AppConstants.seatsPerVehicle) setState(() => _passengers++); }
+              _miniBtn(Icons.add_rounded, _passengers < 14,
+                  () { if (_passengers < 14) setState(() => _passengers++); }
               ),
             ],
           ),
@@ -1022,14 +1021,14 @@ class _HomeSearchPageState extends State<HomeSearchPage>
           highlightColor: Colors.white.withValues(alpha: 0.08),
           onTap: () {
             Clipboard.setData(
-              const ClipboardData(text: 'ETRAVEL20'),
+              const ClipboardData(text: 'MINANG20'),
             );
             ScaffoldMessenger.of(context)
               ..clearSnackBars()
               ..showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Kode Promo ETRAVEL20 berhasil disalin!',
+                    'Kode Promo MINANG20 berhasil disalin!',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: Colors.white,
@@ -1101,7 +1100,7 @@ class _HomeSearchPageState extends State<HomeSearchPage>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Gunakan kode: ETRAVEL20',
+                    'Gunakan kode: MINANG20',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,

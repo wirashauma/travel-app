@@ -58,7 +58,7 @@ class WhatsAppTicketService {
     required String fleetName,
   }) {
     return '''
-🚐 *E-Ticket E-Travel*
+🚐 *E-Ticket Minang Travel*
 ━━━━━━━━━━━━━━━━━
 
 📋 *Kode Booking:* $bookingId
@@ -66,7 +66,7 @@ class WhatsAppTicketService {
 🚌 *Armada:* $fleetName
 
 Tiket ini sah dan dapat ditunjukkan saat boarding.
-Terima kasih telah menggunakan E-Travel! 🙏
+Terima kasih telah menggunakan Minang Travel! 🙏
 ''';
   }
 }
