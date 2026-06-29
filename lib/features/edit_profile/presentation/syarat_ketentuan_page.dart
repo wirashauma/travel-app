@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class _C {
   static const Color bg = Color(0xFFFAFBFD);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color borderLight = Color(0xFFF1F5F9);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF475569);
   static const Color primary = Color(0xFF0F4C81);
@@ -61,19 +61,20 @@ class SyaratKetentuanPage extends StatelessWidget {
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.w800,
             fontSize: 18,
+            color: _C.white,
           ),
         ),
         centerTitle: true,
-        backgroundColor: _C.white,
-        foregroundColor: _C.textPrimary,
+        backgroundColor: _C.primary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: _C.white),
           onPressed: () => Navigator.pop(context),
         ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(color: _C.borderLight, height: 1),
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
         ),
       ),
       body: SafeArea(

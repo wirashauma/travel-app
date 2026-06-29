@@ -221,12 +221,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     return Scaffold(
       backgroundColor: _C.bg,
+      appBar: AppBar(
+        title: Text(
+          canGoBack ? 'Edit Profil' : 'Profil Saya',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            color: _C.white,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: _C.primary,
+        elevation: 0,
+        leading: canGoBack
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: _C.white),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // ═══ APP BAR ═══
-            _buildAppBar(),
-
             // ═══ LOADING / ERROR / CONTENT ═══
             if (_isLoadingProfile)
               const Expanded(
@@ -362,50 +383,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       );
     }
 
-
-  // ─────────────────────────────────────────────────
-  //  APP BAR
-  // ─────────────────────────────────────────────────
-  Widget _buildAppBar() {
-    final canGoBack = Navigator.of(context).canPop();
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(canGoBack ? 6 : 20, 4, 20, 14),
-      decoration: const BoxDecoration(
-        color: _C.white,
-        border: Border(bottom: BorderSide(color: _C.borderLight, width: 1)),
-      ),
-      child: Row(
-        children: [
-          // ── Tombol Kembali — only when pushed (not root tab) ──
-          if (canGoBack) ...[
-            IconButton(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(
-                Icons.arrow_back_ios,
-                color: _C.textPrimary,
-                size: 20,
-              ),
-              splashRadius: 22,
-              tooltip: 'Kembali',
-            ),
-            const SizedBox(width: 4),
-          ],
-          Expanded(
-            child: Text(
-              canGoBack ? 'Edit Profil' : 'Profil Saya',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: _C.textPrimary,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms);
-  }
 
   // ─────────────────────────────────────────────────
   //  AVATAR SECTION — Cloudinary-enabled
