@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iconsax/iconsax.dart';
 
 class _C {
   static const Color primary = Color(0xFF0F4C81);
@@ -67,11 +66,11 @@ class TentangAplikasiPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Iconsax.car,
-                      size: 44,
-                      color: Colors.white,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Image.asset(
+                      'assets/logo.jpg',
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),

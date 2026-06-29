@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iconsax/iconsax.dart';
 import '../../auth/presentation/login_page.dart';
 import '../../navigation/presentation/main_navigation_screen.dart';
 
@@ -372,10 +371,12 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ],
         ),
-        child: Icon(
-          Iconsax.car,
-          size: iconSize,
-          color: Colors.white,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(logoRadius - 1.5),
+          child: Image.asset(
+            'assets/logo.jpg',
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );

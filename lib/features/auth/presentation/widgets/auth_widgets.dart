@@ -318,10 +318,12 @@ class AuthHeader extends StatelessWidget {
               color: AuthColors.primary,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
-              Icons.directions_car_rounded,
-              size: 30,
-              color: Colors.white,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                'assets/logo.jpg',
+                fit: BoxFit.cover,
+              ),
             ),
           )
               .animate()

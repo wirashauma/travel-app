@@ -167,10 +167,12 @@ class _LoadingSplash extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.15),
                 ),
               ),
-              child: const Icon(
-                Iconsax.car,
-                size: 38,
-                color: Colors.white,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(23),
+                child: Image.asset(
+                  'assets/logo.jpg',
+                  fit: BoxFit.cover,
+                ),
               ),
             )
                 .animate(onPlay: (c) => c.repeat())
