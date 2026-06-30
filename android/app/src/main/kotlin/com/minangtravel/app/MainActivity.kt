@@ -1,4 +1,4 @@
-package com.etravel.e_travel
+package com.minangtravel.app
 
 import io.flutter.embedding.android.FlutterActivity
 

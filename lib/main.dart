@@ -23,8 +23,8 @@ Future<void> main() async {
     );
   }
 
-  // Temporary reset call
-  await _resetDatabase();
+  // Temporary reset call (Commented out to prevent data loss on hot reload/restart)
+  // await _resetDatabase();
 
   // Initialize locale data for intl package
   Intl.defaultLocale = 'id_ID';
@@ -53,29 +53,29 @@ Future<void> main() async {
   runApp(const MinangTravelApp());
 }
 
-Future<void> _resetDatabase() async {
-  final db = FirebaseFirestore.instance;
-  final collections = [
-    'bookings',
-    'seat_locks',
-    'fleets',
-    'driver_locations',
-    'routes',
-    'promo_codes',
-    'shipments'
-  ];
-  for (final col in collections) {
-    try {
-      final snap = await db.collection(col).get();
-      for (final doc in snap.docs) {
-        await doc.reference.delete();
-      }
-      print('>>> RESET DATABASE: Deleted collection: $col (${snap.docs.length} docs)');
-    } catch (e) {
-      print('>>> RESET DATABASE: Error deleting collection $col: $e');
-    }
-  }
-}
+// Future<void> _resetDatabase() async {
+//   final db = FirebaseFirestore.instance;
+//   final collections = [
+//     'bookings',
+//     'seat_locks',
+//     'fleets',
+//     'driver_locations',
+//     'routes',
+//     'promo_codes',
+//     'shipments'
+//   ];
+//   for (final col in collections) {
+//     try {
+//       final snap = await db.collection(col).get();
+//       for (final doc in snap.docs) {
+//         await doc.reference.delete();
+//       }
+//       print('>>> RESET DATABASE: Deleted collection: $col (${snap.docs.length} docs)');
+//     } catch (e) {
+//       print('>>> RESET DATABASE: Error deleting collection $col: $e');
+//     }
+//   }
+// }
 
 class MinangTravelApp extends StatelessWidget {
   const MinangTravelApp({super.key});
