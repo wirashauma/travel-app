@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Minang Travel — Brand Colors (Night Mode) -->
+<resources>
+    <!-- Keep the same brand color even in dark mode for splash consistency -->
+    <color name="splash_bg">#0F4C81</color>
+    <color name="primary">#0F4C81</color>
+    <color name="primary_dark">#0A3560</color>
+</resources>

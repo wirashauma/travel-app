@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Minang Travel — Brand Colors -->
+<resources>
+    <!-- Primary brand color for splash screen background -->
+    <color name="splash_bg">#0F4C81</color>
+    <!-- Status bar color -->
+    <color name="primary">#0F4C81</color>
+    <color name="primary_dark">#0A3560</color>
+</resources>

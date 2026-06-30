@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.etravel.e_travel"
+    namespace = "com.minangtravel.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -19,8 +19,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.etravel.e_travel"
+        applicationId = "com.minangtravel.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // Tambahkan ini — floor ke API 21 agar MultiDex native tersedia
