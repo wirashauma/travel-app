@@ -149,11 +149,11 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
 
-    return AuthScaffold(
-      child: SafeArea(
-        child: Column(
-          children: [
+    Widget content = Column(
+      children: [
             // ── Top Bar ─────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 28, 0),
@@ -418,7 +418,20 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ],
+        );
+
+    if (isTablet) {
+      content = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 550),
+          child: content,
         ),
+      );
+    }
+
+    return AuthScaffold(
+      child: SafeArea(
+        child: content,
       ),
     );
   }

@@ -80,10 +80,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AuthScaffold(
-      child: SafeArea(
-        child: Column(
-          children: [
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
+
+    Widget content = Column(
+      children: [
             // ── Top Bar ─────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 28, 0),
@@ -126,7 +127,20 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
             ),
           ],
+        );
+
+    if (isTablet) {
+      content = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 550),
+          child: content,
         ),
+      );
+    }
+
+    return AuthScaffold(
+      child: SafeArea(
+        child: content,
       ),
     );
   }
@@ -233,6 +247,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               onTap: () => Navigator.pop(context),
             ),
           ).animate().fadeIn(delay: 650.ms, duration: 450.ms),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
         ],
       ),
     );
@@ -380,6 +395,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
           ),
         ).animate().fadeIn(delay: 900.ms, duration: 450.ms),
+        SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
       ],
     );
   }

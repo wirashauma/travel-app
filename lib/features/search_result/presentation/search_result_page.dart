@@ -261,10 +261,11 @@ class _SearchResultPageState extends State<SearchResultPage> {
     final result = _result!;
     final isDirect = result.path.length <= 2;
     final transitCount = result.path.length - 2;
+    final isTablet = MediaQuery.of(context).size.width >= 600;
 
-    return SingleChildScrollView(
+    Widget content = SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 32 + MediaQuery.of(context).padding.bottom),
       child: Column(
         children: [
           // ── Route Summary Card ──
@@ -313,6 +314,17 @@ class _SearchResultPageState extends State<SearchResultPage> {
         ],
       ),
     );
+
+    if (isTablet) {
+      content = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
   }
 
   // ── Route Summary Card ───────────────────────────

@@ -389,6 +389,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final topPadding = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final dateStr = DateFormat('EEE, d MMM yyyy', 'id_ID').format(widget.date);
+    final isTablet = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -402,9 +403,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: isTablet ? 600 : double.infinity),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   // ── Section: Rute Perjalanan ──
                   _sectionTitle('Rute Perjalanan', Iconsax.routing_2, 0),
                   const SizedBox(height: 10),
@@ -454,6 +458,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             ),
           ),
+        ),
+      ),
 
           // ═══ BOTTOM CTA ═══
           _buildBottomCTA(bottomPadding),
@@ -1100,22 +1106,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   // ── Bottom CTA ────────────────────────────────────
   Widget _buildBottomCTA(double bottomPadding) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(20, 14, 20, bottomPadding + 16),
-      decoration: BoxDecoration(
-        color: _C.white,
-        border: const Border(
-          top: BorderSide(color: _C.borderLight, width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Row(
+    final isTablet = MediaQuery.of(context).size.width >= 600;
+
+    Widget ctaContent = Row(
         children: [
           // Price
           Expanded(
@@ -1183,7 +1176,33 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
           ),
         ],
+      );
+
+    if (isTablet) {
+      ctaContent = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: ctaContent,
+        ),
+      );
+    }
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 14, 20, bottomPadding + 16),
+      decoration: BoxDecoration(
+        color: _C.white,
+        border: const Border(
+          top: BorderSide(color: _C.borderLight, width: 1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
+      child: ctaContent,
     )
         .animate()
         .fadeIn(delay: 500.ms, duration: 400.ms)

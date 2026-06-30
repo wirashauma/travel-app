@@ -699,9 +699,11 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
     // Estimate price per km (Rp 600/km avg Sumatera Barat travel rate)
     final estimatedPrice = (result.totalDistance * 600).toInt();
 
-    return SingleChildScrollView(
+    final isTablet = MediaQuery.of(context).size.width >= 600;
+
+    Widget content = SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 24 + MediaQuery.of(context).padding.bottom),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -742,6 +744,17 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
         ],
       ),
     );
+
+    if (isTablet) {
+      content = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
   }
 
   // ── Dijkstra Mapbox Map Widget ──

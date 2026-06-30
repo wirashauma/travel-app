@@ -146,6 +146,7 @@ class _CancelBookingPageState extends State<CancelBookingPage> {
     return Scaffold(
       backgroundColor: _C.bg,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             _buildAppBar(topPadding),

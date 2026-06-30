@@ -17,6 +17,9 @@ class Responsive {
   static bool isLargeScreen(BuildContext context) =>
       screenWidth(context) >= 414;
 
+  static bool isTablet(BuildContext context) =>
+      screenWidth(context) >= 600;
+
   /// Adaptive value based on screen width
   static double adaptive(BuildContext context,
       {required double sm, required double md, required double lg}) {

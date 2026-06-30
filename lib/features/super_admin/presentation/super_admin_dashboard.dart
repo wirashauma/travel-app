@@ -453,12 +453,15 @@ class SuperAdminDashboard extends StatelessWidget {
       ),
     ];
 
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
+
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+        crossAxisCount: isTablet ? 3 : 2,
         mainAxisSpacing: 14,
         crossAxisSpacing: 14,
-        childAspectRatio: isSmall ? 1.05 : 1.15,
+        childAspectRatio: isTablet ? 1.25 : (isSmall ? 1.05 : 1.15),
       ),
       delegate: SliverChildBuilderDelegate(
         (context, i) => MenuCard(data: items[i], index: i),

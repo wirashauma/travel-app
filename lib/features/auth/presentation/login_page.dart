@@ -385,6 +385,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isTablet = MediaQuery.of(context).size.width >= 600;
+
     return Scaffold(
       backgroundColor: AuthColors.primary,
       body: Container(
@@ -452,13 +454,24 @@ class _LoginPageState extends State<LoginPage> {
               ),
 
               // ── Lower section: White Form Card ──────────────────────────────────
-              Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-                ),
-                padding: const EdgeInsets.fromLTRB(28, 36, 28, 40),
+              Center(
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: isTablet ? 520 : double.infinity),
+                  margin: isTablet ? const EdgeInsets.symmetric(vertical: 24, horizontal: 28) : EdgeInsets.zero,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: isTablet 
+                        ? BorderRadius.circular(24) 
+                        : const BorderRadius.vertical(top: Radius.circular(32)),
+                    boxShadow: isTablet ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      )
+                    ] : null,
+                  ),
+                  padding: const EdgeInsets.fromLTRB(28, 36, 28, 40),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -690,9 +703,13 @@ class _LoginPageState extends State<LoginPage> {
                           onTap: _navigateToRegister,
                         ),
                       ).animate().fadeIn(delay: 900.ms, duration: 450.ms),
+
+                      if (!isTablet)
+                        SizedBox(height: MediaQuery.of(context).padding.bottom + 12),
                     ],
                   ),
                 ),
+              ),
               ),
             ],
           ),

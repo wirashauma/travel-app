@@ -202,6 +202,7 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final isTablet = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -247,9 +248,14 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
                 }
 
                 // Fleet cards
-                return ListView.separated(
+                Widget list = ListView.separated(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    16,
+                    20,
+                    32 + MediaQuery.of(context).padding.bottom,
+                  ),
                   itemCount: routeDocs.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 14),
                   itemBuilder: (context, index) {
@@ -284,6 +290,16 @@ class _SelectFleetPageState extends State<SelectFleetPage> {
                         );
                   },
                 );
+
+                if (isTablet) {
+                  list = Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: list,
+                    ),
+                  );
+                }
+                return list;
               },
             ),
           ),

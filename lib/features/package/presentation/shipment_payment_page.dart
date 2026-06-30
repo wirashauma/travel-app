@@ -179,10 +179,15 @@ class _ShipmentPaymentPageState extends State<ShipmentPaymentPage> {
   }
 
   Widget _buildPaymentContent() {
+    final isTablet = MediaQuery.of(context).size.width >= 600;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(context).padding.bottom),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: isTablet ? 550 : double.infinity),
+          child: Column(
+            children: [
           // Countdown
           Container(
             width: double.infinity,
@@ -344,6 +349,8 @@ class _ShipmentPaymentPageState extends State<ShipmentPaymentPage> {
           ),
         ],
       ),
+    ),
+    ),
     );
   }
 

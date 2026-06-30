@@ -873,59 +873,71 @@ class _EditProfilePageState extends State<EditProfilePage> {
   //  STICKY BOTTOM BUTTON
   // ─────────────────────────────────────────────────
   Widget _buildBottomButton() {
-    return SafeArea(
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(24, 14, 24, 14),
-            decoration: BoxDecoration(
-              color: _C.white,
-              border: const Border(
-                top: BorderSide(color: _C.borderLight, width: 1),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0F4C81).withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, -6),
-                ),
-              ],
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _C.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shadowColor: _C.primary.withValues(alpha: 0.2),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  disabledBackgroundColor: _C.primary.withValues(alpha: 0.6),
-                ),
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      )
-                    : Text(
-                        'Simpan Perubahan',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-              ),
-            ),
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final isTablet = MediaQuery.of(context).size.width >= 600;
+
+    Widget btnContent = SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: _isSaving ? null : _save,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _C.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: _C.primary.withValues(alpha: 0.2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
           ),
-        )
+          disabledBackgroundColor: _C.primary.withValues(alpha: 0.6),
+        ),
+        child: _isSaving
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.white,
+                  ),
+                ),
+              )
+            : Text(
+                'Simpan Perubahan',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+      ),
+    );
+
+    if (isTablet) {
+      btnContent = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: btnContent,
+        ),
+      );
+    }
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(24, 14, 24, 14 + bottomPadding),
+      decoration: BoxDecoration(
+        color: _C.white,
+        border: const Border(
+          top: BorderSide(color: _C.borderLight, width: 1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F4C81).withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      child: btnContent,
+    )
         .animate()
         .fadeIn(delay: 450.ms, duration: 400.ms)
         .slideY(begin: 0.08, delay: 450.ms, duration: 400.ms);

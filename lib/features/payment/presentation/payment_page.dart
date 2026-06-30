@@ -429,6 +429,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
     final topPadding = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final isTablet = MediaQuery.of(context).size.width >= 600;
 
     return PopScope(
       canPop: false,
@@ -443,9 +444,12 @@ class _PaymentPageState extends State<PaymentPage> {
                   : SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: isTablet ? 600 : double.infinity),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                           // ── Cashier Receipt (Integrated Amount & Summary) ──
                           _buildCashierReceipt(),
                           const SizedBox(height: 20),
@@ -458,6 +462,8 @@ class _PaymentPageState extends State<PaymentPage> {
                         ],
                       ),
                     ),
+                  ),
+                ),
             ),
             if (!_paymentDone) _buildBottomCTA(bottomPadding),
           ],
@@ -1025,22 +1031,9 @@ class _PaymentPageState extends State<PaymentPage> {
 
   // ── Bottom CTA ────────────────────────────────────
   Widget _buildBottomCTA(double bottomPadding) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(20, 14, 20, bottomPadding + 16),
-      decoration: BoxDecoration(
-        color: _C.white,
-        border: const Border(
-          top: BorderSide(color: _C.borderLight, width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SizedBox(
+    final isTablet = MediaQuery.of(context).size.width >= 600;
+
+    Widget ctaContent = SizedBox(
         width: double.infinity,
         height: 50,
         child: ElevatedButton.icon(
@@ -1071,7 +1064,33 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
           ),
         ),
+      );
+
+    if (isTablet) {
+      ctaContent = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: ctaContent,
+        ),
+      );
+    }
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 14, 20, bottomPadding + 16),
+      decoration: BoxDecoration(
+        color: _C.white,
+        border: const Border(
+          top: BorderSide(color: _C.borderLight, width: 1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
+      child: ctaContent,
     )
         .animate()
         .fadeIn(delay: 400.ms, duration: 400.ms)
