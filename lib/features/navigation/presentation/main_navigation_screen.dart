@@ -170,7 +170,7 @@ class _LoadingSplash extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(23),
                 child: Image.asset(
-                  'assets/logo.jpg',
+                  'assets/logo.png',
                   fit: BoxFit.cover,
                 ),
               ),

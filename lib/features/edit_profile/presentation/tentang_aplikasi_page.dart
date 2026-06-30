@@ -69,7 +69,7 @@ class TentangAplikasiPage extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(28),
                     child: Image.asset(
-                      'assets/logo.jpg',
+                      'assets/logo.png',
                       fit: BoxFit.cover,
                     ),
                   ),

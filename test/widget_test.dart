@@ -6,7 +6,7 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:e_travel/main.dart';
+import 'package:minang_travel/main.dart';
 
 void main() {
   testWidgets('App starts', (WidgetTester tester) async {

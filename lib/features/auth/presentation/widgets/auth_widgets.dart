@@ -321,7 +321,7 @@ class AuthHeader extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.asset(
-                'assets/logo.jpg',
+                'assets/logo.png',
                 fit: BoxFit.cover,
               ),
             ),
