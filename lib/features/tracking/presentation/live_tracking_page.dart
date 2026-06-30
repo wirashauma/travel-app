@@ -783,7 +783,12 @@ class _StatusPanel extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              24 + MediaQuery.of(context).padding.bottom,
+            ),
             child: Column(
               children: [
                 Row(

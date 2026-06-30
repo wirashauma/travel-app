@@ -178,7 +178,12 @@ class ManageDriverAssignmentsPage extends StatelessWidget {
 
               return SliverPadding(
 
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  0,
+                  16,
+                  80 + MediaQuery.of(context).padding.bottom,
+                ),
 
                 sliver: SliverList.separated(
 

@@ -85,7 +85,12 @@ class ManageFleetPage extends StatelessWidget {
           // ── Fleet List ──
           return ListView.builder(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              80 + MediaQuery.of(context).padding.bottom,
+            ),
             itemCount: docs.length,
             itemBuilder: (context, i) {
               final doc = docs[i];

@@ -95,7 +95,8 @@ class PassengerHomeScreen extends StatelessWidget {
                   // ── DEPARTURE SCHEDULE SECTION ──
                   _buildDepartureScheduleSection(context, user.uid),
 
-                  const SizedBox(height: 40),
+                  // ── Bottom clearance: respects system gesture bar / home indicator ──
+                  SizedBox(height: 24 + MediaQuery.of(context).padding.bottom),
                 ],
               ),
             ),

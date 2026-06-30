@@ -137,7 +137,12 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                 // List
                 return ListView.separated(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    16,
+                    20,
+                    32 + MediaQuery.of(context).padding.bottom,
+                  ),
                   itemCount: filtered.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {

@@ -189,7 +189,11 @@ class PromoListPage extends StatelessWidget {
             },
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 32 + MediaQuery.of(context).padding.bottom,
+            ),
+          ),
         ],
       ),
     );

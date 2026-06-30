@@ -89,7 +89,12 @@ class _PackageHistoryPageState extends State<PackageHistoryPage> {
                   );
                 }
                 return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    24 + MediaQuery.of(context).padding.bottom,
+                  ),
                   itemCount: shipments.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (_, i) => _PackageCard(

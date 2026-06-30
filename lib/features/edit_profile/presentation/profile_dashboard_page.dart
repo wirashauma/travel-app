@@ -268,7 +268,9 @@ class _ProfileDashboardPageState extends State<ProfileDashboardPage> {
 
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 40),
+            padding: EdgeInsets.only(
+              bottom: 40 + MediaQuery.of(context).padding.bottom,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

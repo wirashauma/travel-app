@@ -454,7 +454,12 @@ class _InfoPanel extends StatelessWidget {
             decoration: BoxDecoration(color: _C.borderLight, borderRadius: BorderRadius.circular(2)),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              24 + MediaQuery.of(context).padding.bottom,
+            ),
             child: Column(
               children: [
                 Row(

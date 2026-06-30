@@ -135,8 +135,12 @@ class _TransactionReportPageState extends State<TransactionReportPage> {
                     Expanded(
                       child: ListView.builder(
                         physics: const BouncingScrollPhysics(),
-                        padding:
-                            const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                        padding: EdgeInsets.fromLTRB(
+                          20,
+                          8,
+                          20,
+                          32 + MediaQuery.of(context).padding.bottom,
+                        ),
                         itemCount: docs.length,
                         itemBuilder: (context, i) {
                           final doc = docs[i];
