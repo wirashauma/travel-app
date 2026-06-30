@@ -167,17 +167,19 @@ class ManageFleetPage extends StatelessWidget {
     );
     final isEdit = docId != null;
     final formKey = GlobalKey<FormState>();
+
+    File? pickedImage;
+    String? existingImageUrl = existing?['imageUrl'] as String?;
+    bool isSaving = false;
+    bool isUploading = false;
+    String? selectedOrigin = existing?['origin'] as String?;
+    String? selectedDestination = existing?['destination'] as String?;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        File? pickedImage;
-        String? existingImageUrl = existing?['imageUrl'] as String?;
-        bool isSaving = false;
-        bool isUploading = false;
-        String? selectedOrigin = existing?['origin'] as String?;
-        String? selectedDestination = existing?['destination'] as String?;
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
             // ── pick image ──
@@ -361,7 +363,7 @@ class ManageFleetPage extends StatelessWidget {
                         // ── Total Kursi ──
                         _FormField(
                           label: 'Total Kursi',
-                          hint: 'Contoh: 14',
+                          hint: 'Maksimal 7',
                           controller: seatsCtrl,
                           icon: Iconsax.user,
                           keyboardType: TextInputType.number,
@@ -374,6 +376,7 @@ class ManageFleetPage extends StatelessWidget {
                             }
                             final n = int.tryParse(v);
                             if (n == null || n <= 0) return 'Harus > 0';
+                            if (n > 7) return 'Maksimal 7 kursi';
                             return null;
                           },
                         ),
@@ -426,9 +429,10 @@ class ManageFleetPage extends StatelessWidget {
                                       final totalSeats =
                                           int.tryParse(totalSeatsText);
                                       if (totalSeats == null ||
-                                          totalSeats <= 0) {
+                                          totalSeats <= 0 ||
+                                          totalSeats > 7) {
                                         throw Exception(
-                                          'Jumlah kursi tidak valid',
+                                          'Jumlah kursi tidak valid (maksimal 7)',
                                         );
                                       }
                                       // Upload image to Cloudinary if picked

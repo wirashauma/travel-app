@@ -330,20 +330,186 @@ class _AddPackageCardState extends State<_AddPackageCard> with SingleTickerProvi
         _receiverPhoneCtrl.clear();
         _descCtrl.clear();
       });
-      _showSnack('Paket berhasil didaftarkan');
       if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PackageTrackingPage(shipment: shipment),
-          ),
-        );
+        _showSuccessDialog(context, shipment);
       }
     } catch (e) {
       _showSnack('Gagal mendaftarkan paket');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _showSuccessDialog(BuildContext context, dynamic shipment) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        final origin = shipment.origin ?? '-';
+        final dest = shipment.destination ?? '-';
+        final code = shipment.shipmentCode ?? '';
+        final size = shipment.packageSize ?? '';
+
+        String sizeLabel = 'Kecil';
+        if (size == 'medium') sizeLabel = 'Sedang';
+        if (size == 'large') sizeLabel = 'Besar';
+
+        return Dialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          elevation: 24,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFA7F3D0), width: 1.5),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Iconsax.tick_circle,
+                      size: 38,
+                      color: Color(0xFF059669),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                Text(
+                  'Pengiriman Diajukan!',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                Text(
+                  'Paket Anda telah berhasil didaftarkan ke sistem dan siap untuk dikirim via armada travel.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF475569),
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    children: [
+                      _dialogInfoRow('Kode Resi', code, isCode: true),
+                      const SizedBox(height: 10),
+                      _dialogInfoRow('Rute', '$origin → $dest'),
+                      const SizedBox(height: 10),
+                      _dialogInfoRow('Ukuran', sizeLabel),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF475569),
+                          side: const BorderSide(color: Color(0xFFCBD5E1)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(
+                          'Tutup',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PackageTrackingPage(shipment: shipment),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F4C81),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(
+                          'Lacak Paket',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _dialogInfoRow(String label, String value, {bool isCode = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: const Color(0xFF64748B),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Text(
+          value,
+          style: isCode
+              ? GoogleFonts.jetBrainsMono(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                )
+              : GoogleFonts.plusJakartaSans(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
+        ),
+      ],
+    );
   }
 
   void _showPackageDetailsFormSheet() {

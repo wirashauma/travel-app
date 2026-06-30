@@ -131,6 +131,22 @@ class _DriverDashboardPageState extends State<DriverDashboardPage> {
           final List<DriverTripAssignment> tripAssignments = [];
           for (final doc in fleetDocs) {
             final data = doc.data() as Map<String, dynamic>;
+            final tripStartedAt = (data['tripStartedAt'] as Timestamp?)?.toDate();
+            final tripStatus = data['tripStatus'] as String? ?? 'menunggu';
+            if (tripStatus == 'selesai' && tripStartedAt != null) {
+              final now = DateTime.now();
+              final isSameDay = tripStartedAt.year == now.year &&
+                                tripStartedAt.month == now.month &&
+                                tripStartedAt.day == now.day;
+              if (!isSameDay) {
+                FirebaseFirestore.instance.collection('fleets').doc(doc.id).update({
+                  'tripStatus': 'menunggu',
+                  'availableSeats': data['totalSeats'] ?? 7,
+                  'tripStartedAt': null,
+                });
+                continue;
+              }
+            }
             tripAssignments.add(DriverTripAssignment(
               fleetId: doc.id,
               data: data,

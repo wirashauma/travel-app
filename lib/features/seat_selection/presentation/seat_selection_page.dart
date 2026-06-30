@@ -192,52 +192,444 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
   // ─────────────────────────────────────────────────────
   //  TOGGLE SEAT — Select / deselect
   // ─────────────────────────────────────────────────────
-  void _toggleSeat(String label, Map<String, SeatState> seatStates) {
-    final state = seatStates[label];
-    if (state == SeatState.sold || state == SeatState.pending) return;
+  // ─────────────────────────────────────────────────────
+  //  CONFIRMATION DIALOGS — Select, deselect, swap
+  // ─────────────────────────────────────────────────────
+  Future<bool> _showConfirmSelectDialog(String label) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: _C.white,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _C.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Iconsax.info_circle, size: 22, color: _C.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Pilih Kursi',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: _C.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: RichText(
+          text: TextSpan(
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: _C.textSecondary,
+              height: 1.5,
+            ),
+            children: [
+              const TextSpan(text: 'Apakah Anda yakin ingin memilih kursi '),
+              TextSpan(
+                text: label,
+                style: GoogleFonts.jetBrainsMono(
+                  fontWeight: FontWeight.w800,
+                  color: _C.primary,
+                ),
+              ),
+              const TextSpan(text: '?'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            style: TextButton.styleFrom(
+              foregroundColor: _C.textSecondary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _C.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Ya, Pilih',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
 
-    setState(() {
-      if (_selectedSeats.contains(label)) {
-        _selectedSeats.remove(label);
-      } else {
-        if (_selectedSeats.length < widget.passengers) {
-          _selectedSeats.add(label);
-        } else {
-          ScaffoldMessenger.of(context)
-            ..clearSnackBars()
-            ..showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(
-                      Iconsax.info_circle,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Maksimal ${widget.passengers} kursi untuk pemesanan ini',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: Colors.white,
+  Future<bool> _showConfirmDeselectDialog(String label) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: _C.white,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _C.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Iconsax.info_circle, size: 22, color: _C.error),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Batal Pilih Kursi',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: _C.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: RichText(
+          text: TextSpan(
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: _C.textSecondary,
+              height: 1.5,
+            ),
+            children: [
+              const TextSpan(text: 'Apakah Anda yakin ingin membatalkan pilihan kursi '),
+              TextSpan(
+                text: label,
+                style: GoogleFonts.jetBrainsMono(
+                  fontWeight: FontWeight.w800,
+                  color: _C.error,
+                ),
+              ),
+              const TextSpan(text: '?'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            style: TextButton.styleFrom(
+              foregroundColor: _C.textSecondary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _C.error,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Ya, Batal',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<String?> _showConfirmSwapDialog(String newLabel) async {
+    if (_selectedSeats.isEmpty) return null;
+
+    if (_selectedSeats.length == 1) {
+      final oldLabel = _selectedSeats.first;
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: _C.white,
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _C.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.swap_horiz, size: 22, color: _C.warning),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Ganti Posisi Kursi',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: _C.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: RichText(
+            text: TextSpan(
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: _C.textSecondary,
+                height: 1.5,
+              ),
+              children: [
+                const TextSpan(text: 'Apakah Anda yakin ingin memindahkan posisi kursi dari '),
+                TextSpan(
+                  text: oldLabel,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontWeight: FontWeight.w800,
+                    color: _C.primary,
+                  ),
+                ),
+                const TextSpan(text: ' ke kursi '),
+                TextSpan(
+                  text: newLabel,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontWeight: FontWeight.w800,
+                    color: _C.primary,
+                  ),
+                ),
+                const TextSpan(text: '?'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              style: TextButton.styleFrom(
+                foregroundColor: _C.textSecondary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                'Batal',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _C.warning,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                'Ya, Pindahkan',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (confirm == true) {
+        return oldLabel;
+      }
+      return null;
+    }
+
+    final selectedList = _selectedSeats.toList()
+      ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+
+    final oldLabelToReplace = await showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: _C.white,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _C.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.swap_horiz, size: 22, color: _C.warning),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Ganti Posisi Kursi',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: _C.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Anda telah mencapai batas maksimum pemilihan kursi (${widget.passengers} kursi).',
+              style: GoogleFonts.inter(
+                fontSize: 13.5,
+                color: _C.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Pilih salah satu kursi yang ingin Anda ganti dengan kursi $newLabel:',
+              style: GoogleFonts.inter(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: _C.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...selectedList.map((oldLabel) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(oldLabel),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: _C.primary.withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: RichText(
+                        text: TextSpan(
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            color: _C.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          children: [
+                            const TextSpan(text: 'Ganti Kursi '),
+                            TextSpan(
+                              text: oldLabel,
+                              style: GoogleFonts.jetBrainsMono(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ],
-                ),
-                backgroundColor: _C.warning,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.all(16),
-                duration: const Duration(seconds: 2),
+                  ),
+                )),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            style: TextButton.styleFrom(
+              foregroundColor: _C.textSecondary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
-            );
+            ),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return oldLabelToReplace;
+  }
+
+  // ─────────────────────────────────────────────────────
+  //  TOGGLE SEAT — Select / deselect (Async with popups)
+  // ─────────────────────────────────────────────────────
+  Future<void> _toggleSeat(String label, Map<String, SeatState> seatStates) async {
+    final state = seatStates[label];
+    if (state == SeatState.sold || state == SeatState.pending) return;
+
+    if (_selectedSeats.contains(label)) {
+      // Confirm deselect to prevent accidental deselect
+      final confirm = await _showConfirmDeselectDialog(label);
+      if (confirm) {
+        setState(() {
+          _selectedSeats.remove(label);
+        });
+      }
+    } else {
+      if (_selectedSeats.length < widget.passengers) {
+        // Confirm selection
+        final confirm = await _showConfirmSelectDialog(label);
+        if (confirm) {
+          setState(() {
+            _selectedSeats.add(label);
+          });
+        }
+      } else {
+        // Confirm swap/replace
+        final oldLabel = await _showConfirmSwapDialog(label);
+        if (oldLabel != null) {
+          setState(() {
+            _selectedSeats.remove(oldLabel);
+            _selectedSeats.add(label);
+          });
         }
       }
-    });
+    }
   }
 
   // ─────────────────────────────────────────────────────
@@ -610,17 +1002,17 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                       // ═══ BARIS 1: Kursi 1 + Supir ═══
                       _buildRow1Front(seatStates),
 
-                      // ═══ Row divider ═══
-                      _buildRowDivider(),
+                      // ═══ BARIS 2: Kursi 2, 3, 4 (Tampil jika total kursi >= 2) ═══
+                      if (widget.totalSeats >= 2) ...[
+                        _buildRowDivider(),
+                        _buildRow2Middle(seatStates),
+                      ],
 
-                      // ═══ BARIS 2: Kursi 2, 3, 4 ═══
-                      _buildRow2Middle(seatStates),
-
-                      // ═══ Row divider ═══
-                      _buildRowDivider(),
-
-                      // ═══ BARIS 3: Kursi 5, 6, 7 ═══
-                      _buildRow3Back(seatStates),
+                      // ═══ BARIS 3: Kursi 5, 6, 7 (Tampil jika total kursi >= 5) ═══
+                      if (widget.totalSeats >= 5) ...[
+                        _buildRowDivider(),
+                        _buildRow3Back(seatStates),
+                      ],
 
                       // ═══ "Bagian Belakang / Bagasi" Label ═══
                       _buildRearLabel(),
@@ -704,15 +1096,17 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
         children: [
           // Kursi 1 (kiri depan, di samping supir)
           Expanded(
-            child: _buildSeat('1', seatStates)
-                .animate()
-                .fadeIn(delay: 350.ms, duration: 350.ms)
-                .scale(
-                  begin: const Offset(0.85, 0.85),
-                  delay: 350.ms,
-                  duration: 350.ms,
-                  curve: Curves.easeOutBack,
-                ),
+            child: widget.totalSeats >= 1
+                ? _buildSeat('1', seatStates)
+                    .animate()
+                    .fadeIn(delay: 350.ms, duration: 350.ms)
+                    .scale(
+                      begin: const Offset(0.85, 0.85),
+                      delay: 350.ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOutBack,
+                    )
+                : const SizedBox(height: 72),
           ),
 
           // Spacer (lorong tengah)
@@ -742,39 +1136,45 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
       child: Row(
         children: [
           Expanded(
-            child: _buildSeat('2', seatStates)
-                .animate()
-                .fadeIn(delay: 450.ms, duration: 350.ms)
-                .scale(
-                  begin: const Offset(0.85, 0.85),
-                  delay: 450.ms,
-                  duration: 350.ms,
-                  curve: Curves.easeOutBack,
-                ),
+            child: widget.totalSeats >= 2
+                ? _buildSeat('2', seatStates)
+                    .animate()
+                    .fadeIn(delay: 450.ms, duration: 350.ms)
+                    .scale(
+                      begin: const Offset(0.85, 0.85),
+                      delay: 450.ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOutBack,
+                    )
+                : const SizedBox(height: 72),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: _buildSeat('3', seatStates)
-                .animate()
-                .fadeIn(delay: 480.ms, duration: 350.ms)
-                .scale(
-                  begin: const Offset(0.85, 0.85),
-                  delay: 480.ms,
-                  duration: 350.ms,
-                  curve: Curves.easeOutBack,
-                ),
+            child: widget.totalSeats >= 3
+                ? _buildSeat('3', seatStates)
+                    .animate()
+                    .fadeIn(delay: 480.ms, duration: 350.ms)
+                    .scale(
+                      begin: const Offset(0.85, 0.85),
+                      delay: 480.ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOutBack,
+                    )
+                : const SizedBox(height: 72),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: _buildSeat('4', seatStates)
-                .animate()
-                .fadeIn(delay: 510.ms, duration: 350.ms)
-                .scale(
-                  begin: const Offset(0.85, 0.85),
-                  delay: 510.ms,
-                  duration: 350.ms,
-                  curve: Curves.easeOutBack,
-                ),
+            child: widget.totalSeats >= 4
+                ? _buildSeat('4', seatStates)
+                    .animate()
+                    .fadeIn(delay: 510.ms, duration: 350.ms)
+                    .scale(
+                      begin: const Offset(0.85, 0.85),
+                      delay: 510.ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOutBack,
+                    )
+                : const SizedBox(height: 72),
           ),
         ],
       ),
@@ -788,39 +1188,45 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
       child: Row(
         children: [
           Expanded(
-            child: _buildSeat('5', seatStates)
-                .animate()
-                .fadeIn(delay: 580.ms, duration: 350.ms)
-                .scale(
-                  begin: const Offset(0.85, 0.85),
-                  delay: 580.ms,
-                  duration: 350.ms,
-                  curve: Curves.easeOutBack,
-                ),
+            child: widget.totalSeats >= 5
+                ? _buildSeat('5', seatStates)
+                    .animate()
+                    .fadeIn(delay: 580.ms, duration: 350.ms)
+                    .scale(
+                      begin: const Offset(0.85, 0.85),
+                      delay: 580.ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOutBack,
+                    )
+                : const SizedBox(height: 72),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: _buildSeat('6', seatStates)
-                .animate()
-                .fadeIn(delay: 610.ms, duration: 350.ms)
-                .scale(
-                  begin: const Offset(0.85, 0.85),
-                  delay: 610.ms,
-                  duration: 350.ms,
-                  curve: Curves.easeOutBack,
-                ),
+            child: widget.totalSeats >= 6
+                ? _buildSeat('6', seatStates)
+                    .animate()
+                    .fadeIn(delay: 610.ms, duration: 350.ms)
+                    .scale(
+                      begin: const Offset(0.85, 0.85),
+                      delay: 610.ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOutBack,
+                    )
+                : const SizedBox(height: 72),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: _buildSeat('7', seatStates)
-                .animate()
-                .fadeIn(delay: 640.ms, duration: 350.ms)
-                .scale(
-                  begin: const Offset(0.85, 0.85),
-                  delay: 640.ms,
-                  duration: 350.ms,
-                  curve: Curves.easeOutBack,
-                ),
+            child: widget.totalSeats >= 7
+                ? _buildSeat('7', seatStates)
+                    .animate()
+                    .fadeIn(delay: 640.ms, duration: 350.ms)
+                    .scale(
+                      begin: const Offset(0.85, 0.85),
+                      delay: 640.ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOutBack,
+                    )
+                : const SizedBox(height: 72),
           ),
         ],
       ),

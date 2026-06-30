@@ -400,27 +400,49 @@ class PassengerDetailPage extends StatelessWidget {
           Row(
             children: [
               // Avatar
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0F4C81), Color(0xFF1A6BB5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Center(
-                  child: Text(
-                    initial,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
+              // Avatar with profile image loading
+              StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(booking.userId)
+                    .snapshots(),
+                builder: (context, userSnap) {
+                  final userData = userSnap.data?.data() as Map<String, dynamic>?;
+                  final profileImageUrl = userData?['profileImageUrl'] as String?;
+
+                  return Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      gradient: profileImageUrl == null || profileImageUrl.isEmpty
+                          ? const LinearGradient(
+                              colors: [Color(0xFF0F4C81), Color(0xFF1A6BB5)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      borderRadius: BorderRadius.circular(14),
+                      image: profileImageUrl != null && profileImageUrl.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(profileImageUrl),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                     ),
-                  ),
-                ),
+                    child: profileImageUrl == null || profileImageUrl.isEmpty
+                        ? Center(
+                            child: Text(
+                              initial,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+                        : null,
+                  );
+                },
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -970,17 +992,23 @@ class PassengerDetailPage extends StatelessWidget {
       return;
     }
 
-    final Uri url;
-    if (lat != null && lng != null) {
-      url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
-    } else {
-      url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(addr!)}');
-    }
-
     try {
-      final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
-      if (!launched && context.mounted) {
-        await launchUrl(url, mode: LaunchMode.platformDefault);
+      if (lat != null && lng != null) {
+        // ── Direct Google Maps App Navigation scheme (Turn-by-turn) ──
+        final nativeUrl = Uri.parse('google.navigation:q=$lat,$lng');
+        final webUrl = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
+
+        bool launched = false;
+        try {
+          launched = await launchUrl(nativeUrl, mode: LaunchMode.externalNonBrowserApplication);
+        } catch (_) {}
+
+        if (!launched) {
+          await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+        }
+      } else if (addr != null && addr.isNotEmpty) {
+        final webSearchUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(addr)}');
+        await launchUrl(webSearchUrl, mode: LaunchMode.externalApplication);
       }
     } catch (e) {
       if (context.mounted) {

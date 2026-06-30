@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,7 +7,6 @@ import 'package:intl/intl.dart';
 
 
 import '../../../core/services/firestore_dijkstra_service.dart';
-import '../../edit_profile/presentation/edit_profile_page.dart';
 import '../../booking_history/presentation/booking_history_page.dart';
 import '../../search_result/presentation/search_result_page.dart';
 import 'popular_routes_page.dart';
@@ -33,7 +30,6 @@ class _C {
   static const Color success = Color(0xFF059669);
   static const Color danger = Color(0xFFDC2626);
   static const Color orange = Color(0xFFF97316);
-  static const Color amber = Color(0xFFF59E0B);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -104,18 +100,6 @@ class _HomeSearchPageState extends State<HomeSearchPage>
     super.dispose();
   }
 
-  // ── Get user initial from FirebaseAuth ─────────
-  String get _userInitial {
-    final name = FirebaseAuth.instance.currentUser?.displayName;
-    if (name != null && name.trim().isNotEmpty) {
-      return name.trim().substring(0, 1).toUpperCase();
-    }
-    final email = FirebaseAuth.instance.currentUser?.email;
-    if (email != null && email.isNotEmpty) {
-      return email.substring(0, 1).toUpperCase();
-    }
-    return 'U';
-  }
 
   // ── Greeting based on time ────────────────────
   String get _greeting {
@@ -384,79 +368,6 @@ class _HomeSearchPageState extends State<HomeSearchPage>
             ),
           ),
 
-          const SizedBox(width: 8),
-
-          // Profile avatar — tappable
-          StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .doc(FirebaseAuth.instance.currentUser?.uid)
-                .snapshots(),
-            builder: (context, snapshot) {
-              final userData = snapshot.data?.data() as Map<String, dynamic>? ?? {};
-              final name = userData['namaLengkap'] as String? ?? '';
-              final profileUrl = userData['profileImageUrl'] as String?;
-              final initials = name.isNotEmpty
-                  ? name.trim().substring(0, 1).toUpperCase()
-                  : _userInitial;
-
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (_, __, ___) => const EditProfilePage(),
-                      transitionsBuilder: (_, anim, __, child) {
-                        return FadeTransition(
-                          opacity: CurvedAnimation(
-                              parent: anim, curve: Curves.easeOut),
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0.04, 0),
-                              end: Offset.zero,
-                            ).animate(CurvedAnimation(
-                                parent: anim, curve: Curves.easeOutCubic)),
-                            child: child,
-                          ),
-                        );
-                      },
-                      transitionDuration: const Duration(milliseconds: 300),
-                    ),
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: _C.border, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _C.primary.withValues(alpha: 0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: _C.primary.withValues(alpha: 0.1),
-                    backgroundImage: profileUrl != null && profileUrl.isNotEmpty
-                        ? NetworkImage(profileUrl)
-                        : null,
-                    child: profileUrl == null || profileUrl.isEmpty
-                        ? Text(
-                            initials,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: _C.primary,
-                            ),
-                          )
-                        : null,
-                  ),
-                ),
-              );
-            },
-          ),
         ],
       ),
     )
@@ -710,7 +621,8 @@ class _HomeSearchPageState extends State<HomeSearchPage>
     return GestureDetector(
       onTap: _pickDate,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: _C.white,
           borderRadius: BorderRadius.circular(14),
@@ -730,11 +642,12 @@ class _HomeSearchPageState extends State<HomeSearchPage>
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     'Tanggal',
                     style: GoogleFonts.inter(
-                      fontSize: 10, fontWeight: FontWeight.w500,
+                      fontSize: 9.5, fontWeight: FontWeight.w500,
                       color: _C.textTertiary,
                     ),
                   ),
@@ -742,7 +655,7 @@ class _HomeSearchPageState extends State<HomeSearchPage>
                   Text(
                     formatted,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13, fontWeight: FontWeight.w700,
+                      fontSize: 12.5, fontWeight: FontWeight.w700,
                       color: _C.textPrimary,
                     ),
                     maxLines: 1,
@@ -760,61 +673,55 @@ class _HomeSearchPageState extends State<HomeSearchPage>
   // ── Passenger Chip ───────────────────────────────
   Widget _buildPassengerChip() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: _C.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _C.borderLight),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 28, height: 28,
-                decoration: BoxDecoration(
-                  color: _C.amber.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Penumpang',
+                  style: GoogleFonts.inter(
+                    fontSize: 9.5, fontWeight: FontWeight.w500,
+                    color: _C.textTertiary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: Icon(Iconsax.people, size: 14, color: _C.amber.withValues(alpha: 0.85)),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Penumpang',
-                    style: GoogleFonts.inter(
-                      fontSize: 10, fontWeight: FontWeight.w500,
-                      color: _C.textTertiary,
-                    ),
+                const SizedBox(height: 2),
+                Text(
+                  '$_passengers Orang',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.5, fontWeight: FontWeight.w700,
+                    color: _C.textPrimary,
                   ),
-                  Text(
-                    '$_passengers Orang',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13, fontWeight: FontWeight.w700,
-                      color: _C.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 6),
-          // Counter buttons
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               _miniBtn(Icons.remove_rounded, _passengers > 1,
                   () { if (_passengers > 1) setState(() => _passengers--); }
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 5),
                 child: Text(
                   '$_passengers',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13, fontWeight: FontWeight.w800,
+                    fontSize: 12.5, fontWeight: FontWeight.w800,
                     color: _C.textPrimary,
                   ),
                 ),

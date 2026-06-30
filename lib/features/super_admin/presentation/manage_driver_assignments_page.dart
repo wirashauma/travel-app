@@ -1,14 +1,10 @@
-// ignore_for_file: unused_field
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:flutter/material.dart';
-
 import 'package:flutter_animate/flutter_animate.dart';
-
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
+import 'surat_jalan_preview_page.dart';
 
 // ─────────────────────────────────────────────────────────
 
@@ -1081,6 +1077,59 @@ class _FleetAssignmentCard extends StatelessWidget {
                 ),
 
               ),
+
+              if (hasDriver) ...[
+                Container(height: 1, color: _C.borderLight),
+                InkWell(
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                  onTap: () {
+                    final depTime = index % 4 == 0
+                        ? '08:00 WIB'
+                        : index % 4 == 1
+                            ? '10:00 WIB'
+                            : index % 4 == 2
+                                ? '13:00 WIB'
+                                : '16:00 WIB';
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SuratJalanPreviewPage(
+                          driverName: driverName,
+                          licensePlate: name,
+                          vehicleType: vehicleType,
+                          origin: origin.isNotEmpty ? origin : 'Padang',
+                          destination: destination.isNotEmpty ? destination : 'Bukittinggi',
+                          departureTime: depTime,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: const BoxDecoration(
+                      color: _C.white,
+                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Iconsax.document_text, size: 16, color: _C.teal),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Generate Surat Jalan untuk $driverName',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                            color: _C.teal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
 
             ],
 

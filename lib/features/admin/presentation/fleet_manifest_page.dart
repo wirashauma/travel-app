@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -20,6 +19,7 @@ import '../../../core/services/driver_tracking_service.dart';
 import 'ticket_scanner_page.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
 import 'passenger_detail_page.dart';
+import '../../super_admin/presentation/surat_jalan_preview_page.dart';
 
 // ─────────────────────────────────────────────────────────
 //  COLOR PALETTE
@@ -146,13 +146,7 @@ class _FleetManifestPageState extends State<FleetManifestPage>
                     ),
                   ),
 
-                  // ── SURAT JALAN ──
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                      child: _buildSuratJalanCard(context, bookings),
-                    ),
-                  ),
+
 
                   // ── DETAIL KENDARAAN ──
                   SliverToBoxAdapter(
@@ -460,144 +454,7 @@ class _FleetManifestPageState extends State<FleetManifestPage>
     ).animate().fadeIn(delay: 150.ms, duration: 400.ms).slideY(begin: 0.06, delay: 150.ms);
   }
 
-  // ─────────────────────────────────────────────────────
-  //  SURAT JALAN CARD
-  // ─────────────────────────────────────────────────────
-  Widget _buildSuratJalanCard(
-    BuildContext context,
-    List<BookingModel> bookings,
-  ) {
-    final todayStr  = DateFormat('dd MMMM yyyy', 'id').format(DateTime.now());
-    final dayOfWeek = DateFormat('EEEE', 'id').format(DateTime.now());
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('fleets')
-          .doc(widget.fleetId)
-          .snapshots(),
-      builder: (context, fleetSnap) {
-        final fleetData  = fleetSnap.data?.data() as Map<String, dynamic>?;
-        final tripStatus = fleetData?['tripStatus'] as String? ?? 'menunggu';
-
-        Color statusColor;
-        IconData statusIcon;
-        String statusLabel;
-        Color statusBg;
-
-        switch (tripStatus) {
-          case 'berjalan':
-            statusColor = _C.success;
-            statusIcon  = Iconsax.routing_2;
-            statusLabel = 'Sedang Berjalan';
-            statusBg    = _C.successBg;
-            break;
-          case 'selesai':
-            statusColor = _C.textTertiary;
-            statusIcon  = Iconsax.tick_circle;
-            statusLabel = 'Selesai';
-            statusBg    = const Color(0xFFF1F5F9);
-            break;
-          default:
-            statusColor = _C.warning;
-            statusIcon  = Iconsax.clock;
-            statusLabel = 'Menunggu';
-            statusBg    = _C.warningBg;
-        }
-
-        return _ManifestSectionCard(
-          title: 'Surat Jalan',
-          icon: Iconsax.document_text,
-          delay: 200,
-          child: Column(
-            children: [
-              // Status baris atas
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: statusBg,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.2)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(statusIcon, size: 13, color: statusColor),
-                        const SizedBox(width: 5),
-                        Text(
-                          statusLabel,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: statusColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    'Hari ini',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: _C.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              const Divider(color: Color(0xFFF1F5F9), height: 1),
-              const SizedBox(height: 14),
-
-              // Info rows
-              _JalanInfoRow(
-                icon: Iconsax.calendar_1,
-                iconColor: _C.warning,
-                label: 'Tanggal Keberangkatan',
-                value: '$dayOfWeek, $todayStr',
-              ),
-              const SizedBox(height: 12),
-              _JalanInfoRow(
-                icon: Iconsax.clock,
-                iconColor: _C.info,
-                label: 'Jam Keberangkatan',
-                value: widget.departureTime?.isNotEmpty == true
-                    ? widget.departureTime!
-                    : '-',
-              ),
-              const SizedBox(height: 12),
-              _JalanInfoRow(
-                icon: Iconsax.routing_2,
-                iconColor: _C.primary,
-                label: 'Rute Perjalanan',
-                value: '${widget.origin} → ${widget.destination}',
-              ),
-              const SizedBox(height: 12),
-              _JalanInfoRow(
-                icon: Iconsax.people,
-                iconColor: _C.teal,
-                label: 'Total Penumpang',
-                value: '${bookings.length} orang',
-              ),
-
-              // Driver name if available
-              if (fleetData?['driverName'] != null &&
-                  (fleetData!['driverName'] as String).isNotEmpty) ...[
-                const SizedBox(height: 12),
-                _JalanInfoRow(
-                  icon: Iconsax.driving,
-                  iconColor: _C.primary,
-                  label: 'Pengemudi',
-                  value: fleetData['driverName'] as String,
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   // ─────────────────────────────────────────────────────
   //  DETAIL KENDARAAN CARD
@@ -615,10 +472,47 @@ class _FleetManifestPageState extends State<FleetManifestPage>
         final availSeats  = (data?['availableSeats'] as num?)?.toInt() ?? 0;
         final bookedSeats = totalSeats - availSeats;
 
+        final driverName = data?['driverName'] as String? ?? '';
+        final licensePlate = data?['name'] as String? ?? '';
+        final vehicleType = data?['vehicleType'] as String? ?? '';
+
         return _ManifestSectionCard(
           title: 'Detail Kendaraan',
           icon: Iconsax.car,
           delay: 300,
+          trailing: driverName.isNotEmpty
+              ? TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SuratJalanPreviewPage(
+                          driverName: driverName,
+                          licensePlate: licensePlate,
+                          vehicleType: vehicleType.isNotEmpty ? vehicleType : 'Minibus',
+                          origin: widget.origin,
+                          destination: widget.destination,
+                          departureTime: widget.departureTime ?? '10:00 WIB',
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Iconsax.document_text, size: 14, color: _C.teal),
+                  label: Text(
+                    'Surat Jalan',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: _C.teal,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: const ui.Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                )
+              : null,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -876,6 +770,63 @@ class _FleetManifestPageState extends State<FleetManifestPage>
     }
   }
 
+  Future<void> _resetTrip(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Mulai Perjalanan Baru?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF0F172A))),
+        content: Text('Status armada ini akan diatur ulang ke \'Menunggu\' untuk perjalanan selanjutnya.', style: GoogleFonts.inter(fontSize: 13.5)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Batal', style: GoogleFonts.inter(color: _C.textTertiary))),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: _C.teal, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            child: Text('Atur Ulang', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    if (_tripProcessing) return;
+    setState(() => _tripProcessing = true);
+    try {
+      final fleetSnap = await FirebaseFirestore.instance.collection('fleets').doc(widget.fleetId).get();
+      final totalSeats = (fleetSnap.data()?['totalSeats'] as num?)?.toInt() ?? 7;
+
+      await FirebaseFirestore.instance.collection('fleets').doc(widget.fleetId).update({
+        'tripStatus': 'menunggu',
+        'availableSeats': totalSeats,
+        'tripStartedAt': null,
+      });
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Armada siap untuk perjalanan baru.', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            backgroundColor: _C.teal,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengatur ulang: $e'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _tripProcessing = false);
+    }
+  }
+
   // ─────────────────────────────────────────────────────
   //  PASSENGER SECTION HEADER
   // ─────────────────────────────────────────────────────
@@ -994,10 +945,10 @@ class _FleetManifestPageState extends State<FleetManifestPage>
           btnLabel = _tripProcessing ? 'Memproses...' : 'Akhiri Perjalanan';
           btnAction = _tripProcessing ? null : () => _endTrip(context);
         } else {
-          btnColor = const Color(0xFF94A3B8);
-          btnIcon  = Iconsax.tick_circle;
-          btnLabel = 'Perjalanan Selesai';
-          btnAction = null;
+          btnColor = _C.teal;
+          btnIcon  = Iconsax.refresh_2;
+          btnLabel = _tripProcessing ? 'Memproses...' : 'Mulai Perjalanan Baru';
+          btnAction = _tripProcessing ? null : () => _resetTrip(context);
         }
 
         return Container(
@@ -1689,31 +1640,50 @@ class _CompactPassengerCard extends StatelessWidget {
         child: Row(
           children: [
             // ── Avatar ──
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isUsed
-                    ? _C.success.withValues(alpha: 0.12)
-                    : isValidated
-                        ? _C.info.withValues(alpha: 0.12)
-                        : _C.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: isUsed
-                    ? const Icon(Iconsax.tick_circle, size: 18, color: _C.success)
-                    : isValidated
-                        ? const Icon(Iconsax.shield_tick, size: 18, color: _C.info)
-                        : Text(
-                            initial,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: _C.primary,
-                            ),
-                          ),
-              ),
+            StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(booking.userId)
+                  .snapshots(),
+              builder: (context, userSnap) {
+                final userData = userSnap.data?.data() as Map<String, dynamic>?;
+                final profileImageUrl = userData?['profileImageUrl'] as String?;
+
+                return Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isUsed
+                        ? _C.success.withValues(alpha: 0.12)
+                        : isValidated
+                            ? _C.info.withValues(alpha: 0.12)
+                            : _C.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    image: profileImageUrl != null && profileImageUrl.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(profileImageUrl),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: profileImageUrl == null || profileImageUrl.isEmpty
+                      ? Center(
+                          child: isUsed
+                              ? const Icon(Iconsax.tick_circle, size: 18, color: _C.success)
+                              : isValidated
+                                  ? const Icon(Iconsax.shield_tick, size: 18, color: _C.info)
+                                  : Text(
+                                      initial,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        color: _C.primary,
+                                      ),
+                                    ),
+                        )
+                      : null,
+                );
+              },
             ),
             const SizedBox(width: 12),
 
@@ -1874,63 +1844,7 @@ class _ManifestSectionCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────
-//  SURAT JALAN INFO ROW
-// ─────────────────────────────────────────────────────
-class _JalanInfoRow extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String value;
 
-  const _JalanInfoRow({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 13, color: iconColor),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  color: _C.textTertiary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: _C.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 // ─────────────────────────────────────────────────────
 //  SEAT CAPACITY BAR
