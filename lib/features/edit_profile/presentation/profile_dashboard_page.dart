@@ -10,13 +10,9 @@ import '../../../core/utils/logout_dialog.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
 import 'edit_profile_page.dart';
 import 'sesi_login_page.dart';
-import 'notifikasi_settings_page.dart';
-import 'bahasa_settings_page.dart';
-import 'bantuan_cs_page.dart';
 import 'syarat_ketentuan_page.dart';
 import 'kebijakan_privasi_page.dart';
 import 'tentang_aplikasi_page.dart';
-import 'daftar_driver_page.dart';
 
 class _C {
   static const Color primary = Color(0xFF0F4C81);
@@ -548,60 +544,30 @@ class _ProfileDashboardPageState extends State<ProfileDashboardPage> {
                       ]),
 
                       // Section 2: Preferensi
-                      _buildSectionHeader('Preferensi'),
-                      _buildMenuCard([
-                        _buildMenuItem(
-                          icon: Iconsax.notification,
-                          title: 'Notifikasi',
-                          subtitle: 'Atur pemberitahuan',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const NotifikasiSettingsPage(),
+                      // Hanya tampil untuk penumpang (Bahasa)
+                      if (!isDriver) ...[
+                        _buildSectionHeader('Preferensi'),
+                        _buildMenuCard([
+                          _buildMenuItem(
+                            icon: Iconsax.global,
+                            title: 'Bahasa',
+                            subtitle: 'Indonesia',
+                            trailing: Text(
+                              'ID',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: _C.primary,
                               ),
-                            );
-                          },
-                        ),
-                        _buildMenuItem(
-                          icon: Iconsax.global,
-                          title: 'Bahasa',
-                          subtitle: 'Indonesia',
-                          trailing: Text(
-                            'ID',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: _C.primary,
                             ),
+                            onTap: () {},
                           ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const BahasaSettingsPage(),
-                              ),
-                            );
-                          },
-                        ),
-                      ]),
+                        ]),
+                      ],
 
                       // Section 3: Bantuan & Info
                       _buildSectionHeader('Bantuan & Info'),
                       _buildMenuCard([
-                        _buildMenuItem(
-                          icon: Iconsax.message_question,
-                          title: 'Bantuan & CS',
-                          subtitle: 'FAQ dan hubungi kami',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const BantuanCsPage(),
-                              ),
-                            );
-                          },
-                        ),
                         _buildMenuItem(
                           icon: Iconsax.document_text,
                           title: 'Syarat & Ketentuan',
@@ -641,21 +607,6 @@ class _ProfileDashboardPageState extends State<ProfileDashboardPage> {
                             );
                           },
                         ),
-                        // Only show for passenger role
-                        if (!isDriver)
-                          _buildMenuItem(
-                            icon: Iconsax.truck_fast,
-                            title: 'Daftar Jadi Driver',
-                            subtitle: 'Bergabung sebagai mitra driver',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const DaftarDriverPage(),
-                                ),
-                              );
-                            },
-                          ),
                       ]),
 
                       const SizedBox(height: 36),

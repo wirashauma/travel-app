@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -81,11 +80,6 @@ class PassengerHomeScreen extends StatelessWidget {
                   _buildHeader(context, name, profileImageUrl),
 
                   const SizedBox(height: 72),
-
-                  // ── PROMOTIONS CAROUSEL ──
-                  _buildPromotions(context),
-
-                  const SizedBox(height: 28),
 
                   // ── POPULAR RUTES ──
                   _buildPopularRoutes(context),
@@ -193,7 +187,6 @@ class PassengerHomeScreen extends StatelessWidget {
       ('Pesan Tiket', Iconsax.ticket, 2),
       ('Kirim Paket', Iconsax.box_2, 1),
       ('Riwayat', Iconsax.receipt_2, 3),
-      ('Bantuan CS', Iconsax.message_question, -1),
     ];
 
     return Container(
@@ -220,17 +213,6 @@ class PassengerHomeScreen extends StatelessWidget {
               onTap: () {
                 if (tabIdx >= 0) {
                   _navigateToTab(context, tabIdx);
-                } else {
-                  // Navigate to Bantuan / CS
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Layanan Pelanggan WhatsApp: +62 812-3456-7890',
-                          style: GoogleFonts.inter(fontSize: 13)),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      margin: const EdgeInsets.all(16),
-                    ),
-                  );
                 }
               },
               child: Column(
@@ -505,10 +487,6 @@ class PassengerHomeScreen extends StatelessWidget {
         ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
       },
     );
-  }
-
-  Widget _buildPromotions(BuildContext context) {
-    return const _PromotionsCarousel();
   }
 
   Widget _buildPopularRoutes(BuildContext context) {
@@ -1100,140 +1078,5 @@ class DriverHomeScreen extends StatelessWidget {
         ).animate().fadeIn(delay: 250.ms, duration: 400.ms);
       },
     );
-  }
-}
-
-class _PromotionsCarousel extends StatefulWidget {
-  const _PromotionsCarousel();
-
-  @override
-  State<_PromotionsCarousel> createState() => _PromotionsCarouselState();
-}
-
-class _PromotionsCarouselState extends State<_PromotionsCarousel> {
-  late final PageController _pageController;
-  late final Timer _timer;
-  int _currentPage = 1000;
-
-  final List<(String, String, String, List<Color>)> _promos = [
-    ('Promo Lebaran', 'Diskon Mudik 20% ke semua rute Minang Travel', 'Diskon 20%', [Color(0xFF0F4C81), Color(0xFF1E88E5)]),
-    ('Kirim Paket Hemat', 'Ongkir hemat paket sedang cuma Rp 20.000', 'Hemat Ongkir', [Color(0xFF00796B), Color(0xFF00BFA5)]),
-    ('Cashback Spesial', 'Cashback Rp 10.000 untuk tiket pergi-pulang', 'Cashback 10rb', [Color(0xFFE65100), Color(0xFFFFB74D)]),
-    ('Hemat Gajian', 'Potongan Rp 15.000 khusus untuk pengguna baru', 'Diskon 15rb', [Color(0xFF7B1FA2), Color(0xFFE040FB)]),
-    ('Rute Baru Solok', 'Nikmati rute baru Padang - Solok hemat Rp 5.000', 'Rute Baru', [Color(0xFFC62828), Color(0xFFFF8A80)]),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(initialPage: _currentPage, viewportFraction: 0.85);
-    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (!mounted) return;
-      _currentPage++;
-      _pageController.animateToPage(
-        _currentPage,
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Promo Spesial Untukmu',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF0F172A),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 125,
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: (page) {
-              _currentPage = page;
-            },
-            itemBuilder: (context, index) {
-              final promoIndex = index % _promos.length;
-              final (title, desc, badge, colors) = _promos[promoIndex];
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: colors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors[0].withValues(alpha: 0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        badge,
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      title,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      desc,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    ).animate().fadeIn(delay: 250.ms, duration: 400.ms);
   }
 }

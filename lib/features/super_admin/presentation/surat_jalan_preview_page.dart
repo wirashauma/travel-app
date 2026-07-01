@@ -87,23 +87,6 @@ class SuratJalanPreviewPage extends StatelessWidget {
                             color: PdfColors.blue900,
                           ),
                         ),
-                        pw.SizedBox(height: 2),
-                        pw.Text(
-                          'Jasa Transportasi & Pengiriman Paket Sumatera Barat',
-                          style: pw.TextStyle(
-                            fontSize: 10,
-                            fontStyle: pw.FontStyle.italic,
-                            color: PdfColors.grey700,
-                          ),
-                        ),
-                        pw.Text(
-                          'Jl. Khatib Sulaiman No. 12, Padang, Sumatera Barat',
-                          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
-                        ),
-                        pw.Text(
-                          'Telp: 0812-3456-7890 | Email: admin@minangtravel.com',
-                          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
-                        ),
                       ],
                     ),
                     pw.Container(
@@ -139,14 +122,6 @@ class SuratJalanPreviewPage extends StatelessWidget {
                           fontSize: 14,
                           fontWeight: pw.FontWeight.bold,
                           color: PdfColors.black,
-                        ),
-                      ),
-                      pw.SizedBox(height: 4),
-                      pw.Text(
-                        'Nomor: STK/${DateTime.now().year}/${DateTime.now().month.toString().padLeft(2, '0')}/${DateTime.now().day.toString().padLeft(2, '0')}/${licensePlate.replaceAll(' ', '-')}',
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          color: PdfColors.grey700,
                         ),
                       ),
                     ],
