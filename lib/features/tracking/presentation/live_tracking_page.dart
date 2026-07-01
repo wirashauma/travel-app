@@ -139,6 +139,7 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
   bool _routeDrawn = false;
 
   DijkstraResult? _routeResult;
+  List<LngLat> _cityPoints = [];
   List<LngLat> _routePoints = [];
 
   LngLat? _driverPos;
@@ -214,13 +215,14 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
       try {
         roadRoute = await MapboxDirectionsService.instance.getRoute(pts);
       } catch (_) {
-        roadRoute = pts;
+        roadRoute = [];
       }
 
       if (!mounted) return;
 
       setState(() {
         _routeResult = result;
+        _cityPoints = pts;
         _routePoints = roadRoute;
       });
 
@@ -308,7 +310,7 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
   void _tryDrawRoute() {
     if (_routeDrawn) return;
     if (!_managersReady || !_styleLoaded) return;
-    if (_routePoints.isEmpty) return;
+    if (_cityPoints.isEmpty) return;
     if (_originIconBytes == null || _destIconBytes == null) return;
     _routeDrawn = true;
     _drawRoute();
@@ -326,52 +328,60 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
 
   // ── Gambar polyline + marker origin/destination ───────────
   Future<void> _drawRoute() async {
-    if (_routePoints.isEmpty) return;
     if (_polylineAnnotationManager == null || _pointAnnotationManager == null) return;
 
+    await _polylineAnnotationManager!.deleteAll();
+    await _pointAnnotationManager!.deleteAll();
+
     // Polyline
-    final coords = _routePoints.map((p) => Position(p.lng, p.lat)).toList();
-    await _polylineAnnotationManager!.create(
-      PolylineAnnotationOptions(
-        geometry: LineString(coordinates: coords),
-        lineColor: _C.primary.toARGB32(),
-        lineWidth: 5.0,
-        lineJoin: LineJoin.ROUND,
-      ),
-    );
-    await _polylineAnnotationManager!.setLineCap(LineCap.ROUND);
+    if (_routePoints.isNotEmpty) {
+      final coords = _routePoints.map((p) => Position(p.lng, p.lat)).toList();
+      await _polylineAnnotationManager!.create(
+        PolylineAnnotationOptions(
+          geometry: LineString(coordinates: coords),
+          lineColor: _C.primary.toARGB32(),
+          lineWidth: 5.0,
+          lineJoin: LineJoin.ROUND,
+        ),
+      );
+      await _polylineAnnotationManager!.setLineCap(LineCap.ROUND);
+    }
 
     // Origin marker
-    final origin = _routePoints.first;
-    await _pointAnnotationManager!.create(
-      PointAnnotationOptions(
-        geometry: Point(coordinates: Position(origin.lng, origin.lat)),
-        image: _originIconBytes,
-        iconSize: 0.5,
-        textField: widget.origin,
-        textOffset: [0.0, 2.0],
-        textSize: 11.0,
-        textColor: _C.textPrimary.toARGB32(),
-        textHaloColor: Colors.white.toARGB32(),
-        textHaloWidth: 1.5,
-      ),
-    );
+    if (_cityPoints.isNotEmpty) {
+      final origin = _cityPoints.first;
+      await _pointAnnotationManager!.create(
+        PointAnnotationOptions(
+          geometry: Point(coordinates: Position(origin.lng, origin.lat)),
+          image: _originIconBytes,
+          iconSize: 0.5,
+          textField: widget.origin,
+          textOffset: [0.0, 2.0],
+          textSize: 11.0,
+          textColor: _C.textPrimary.toARGB32(),
+          textHaloColor: Colors.white.toARGB32(),
+          textHaloWidth: 1.5,
+        ),
+      );
+    }
 
     // Destination marker
-    final dest = _routePoints.last;
-    await _pointAnnotationManager!.create(
-      PointAnnotationOptions(
-        geometry: Point(coordinates: Position(dest.lng, dest.lat)),
-        image: _destIconBytes,
-        iconSize: 0.5,
-        textField: widget.destination,
-        textOffset: [0.0, 2.0],
-        textSize: 11.0,
-        textColor: _C.textPrimary.toARGB32(),
-        textHaloColor: Colors.white.toARGB32(),
-        textHaloWidth: 1.5,
-      ),
-    );
+    if (_cityPoints.length >= 2) {
+      final dest = _cityPoints.last;
+      await _pointAnnotationManager!.create(
+        PointAnnotationOptions(
+          geometry: Point(coordinates: Position(dest.lng, dest.lat)),
+          image: _destIconBytes,
+          iconSize: 0.5,
+          textField: widget.destination,
+          textOffset: [0.0, 2.0],
+          textSize: 11.0,
+          textColor: _C.textPrimary.toARGB32(),
+          textHaloColor: Colors.white.toARGB32(),
+          textHaloWidth: 1.5,
+        ),
+      );
+    }
 
     _fitBounds();
 
@@ -440,8 +450,10 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
 
   // ── Fit camera ke semua titik ─────────────────────────────
   void _fitBounds() {
-    if (_mapboxMap == null || _routePoints.isEmpty) return;
-    final all = List<LngLat>.from(_routePoints);
+    if (_mapboxMap == null) return;
+    final pts = _routePoints.isNotEmpty ? _routePoints : _cityPoints;
+    if (pts.isEmpty) return;
+    final all = List<LngLat>.from(pts);
     if (_driverPos != null) all.add(_driverPos!);
     final center = _calcCenter(all);
     _mapboxMap!.flyTo(

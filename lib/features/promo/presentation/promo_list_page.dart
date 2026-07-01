@@ -223,6 +223,15 @@ class _PromoCard extends StatelessWidget {
         ? (data['expiryDate'] as Timestamp).toDate()
         : null;
 
+    // Quota
+    final maxUsage = (data['maxUsage'] as num?)?.toInt() ?? 0;
+    final usageCount = (data['usageCount'] as num?)?.toInt() ?? 0;
+    final isLimited = maxUsage > 0;
+    final remaining = isLimited ? maxUsage - usageCount : -1;
+    final isExhausted = isLimited && usageCount >= maxUsage;
+    final quotaProgress =
+        isLimited ? (usageCount / maxUsage).clamp(0.0, 1.0) : 0.0;
+
     final isPercentage = discountType == 'percentage';
     final discountLabel = isPercentage
         ? '${discountValue.toInt()}%'
@@ -232,175 +241,261 @@ class _PromoCard extends StatelessWidget {
     final daysLeft = expiryDate != null
         ? expiryDate.difference(DateTime.now()).inDays
         : 999;
-    final isExpiringSoon = daysLeft <= 3;
+    final isExpiringSoon = daysLeft <= 3 && daysLeft >= 0;
 
-    // Card accent colors
-    final accentColor = isPercentage ? _C.teal : _C.orange;
-    final accentBg = isPercentage ? _C.successBg : _C.orangeBg;
+    // Card accent colors — gray out if exhausted
+    final accentColor =
+        isExhausted ? _C.textTertiary : (isPercentage ? _C.teal : _C.orange);
+    final accentBg = isExhausted
+        ? const Color(0xFFF1F5F9)
+        : (isPercentage ? _C.successBg : _C.orangeBg);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: _C.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
+    return Opacity(
+      opacity: isExhausted ? 0.65 : 1.0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: _C.card,
           borderRadius: BorderRadius.circular(16),
-          onTap: () => _copyCode(context, code),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // ── Discount Badge ──
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: accentBg,
-                    borderRadius: BorderRadius.circular(14),
-                    border:
-                        Border.all(color: accentColor.withValues(alpha: 0.2)),
+          border: Border.all(
+            color: isExhausted
+                ? const Color(0xFFE2E8F0)
+                : _C.border,
+          ),
+          boxShadow: isExhausted
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: isExhausted ? null : () => _copyCode(context, code),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
                     children: [
-                      Icon(
-                        isPercentage ? Iconsax.percentage_circle : Iconsax.money_recive,
-                        color: accentColor,
-                        size: 22,
-                      ),
-                      const SizedBox(height: 4),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Text(
-                            isPercentage ? discountLabel : 'OFF',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: isPercentage ? 18 : 12,
-                              fontWeight: FontWeight.w800,
-                              color: accentColor,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 14),
-
-                // ── Details ──
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Discount description
-                      Text(
-                        isPercentage
-                            ? 'Diskon $discountLabel'
-                            : 'Potongan ${currFmt.format(discountValue)}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: _C.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Code badge
+                      // ── Discount Badge ──
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                        width: 72,
+                        height: 72,
                         decoration: BoxDecoration(
-                          color: _C.primary.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(8),
+                          color: accentBg,
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: _C.primary.withValues(alpha: 0.12),
-                          ),
+                              color: accentColor.withValues(alpha: 0.2)),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Iconsax.copy,
-                                size: 12, color: _C.primary),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                code,
-                                style: GoogleFonts.jetBrainsMono(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: _C.primary,
-                                  letterSpacing: 1.2,
+                            isExhausted
+                                ? Icon(Iconsax.ticket_expired,
+                                    color: accentColor, size: 22)
+                                : Icon(
+                                    isPercentage
+                                        ? Iconsax.percentage_circle
+                                        : Iconsax.money_recive,
+                                    color: accentColor,
+                                    size: 22,
+                                  ),
+                            const SizedBox(height: 4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4),
+                                child: Text(
+                                  isExhausted
+                                      ? 'HABIS'
+                                      : (isPercentage ? discountLabel : 'OFF'),
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: isPercentage ? 18 : 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: accentColor,
+                                  ),
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(width: 14),
 
-                      // Expiry row
-                      Row(
-                        children: [
-                          Icon(
-                            isExpiringSoon
-                                ? Iconsax.timer_1
-                                : Iconsax.calendar_1,
-                            size: 12,
-                            color: isExpiringSoon
-                                ? _C.warning
-                                : _C.textTertiary,
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              expiryDate != null
-                                  ? isExpiringSoon
-                                      ? 'Berakhir $daysLeft hari lagi!'
-                                      : 'Berlaku s.d ${DateFormat('dd MMM yyyy', 'id').format(expiryDate)}'
-                                  : 'Tanpa batas waktu',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: isExpiringSoon
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                color: isExpiringSoon
-                                    ? _C.warning
-                                    : _C.textTertiary,
+                      // ── Details ──
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Discount description
+                            Text(
+                              isPercentage
+                                  ? 'Diskon $discountLabel'
+                                  : 'Potongan ${currFmt.format(discountValue)}',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: isExhausted
+                                    ? _C.textTertiary
+                                    : _C.textPrimary,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 6),
+
+                            // Code badge
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: _C.primary.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: _C.primary.withValues(alpha: 0.12),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Iconsax.copy,
+                                      size: 12, color: _C.primary),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      code,
+                                      style: GoogleFonts.jetBrainsMono(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: _C.primary,
+                                        letterSpacing: 1.2,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            // Expiry row
+                            Row(
+                              children: [
+                                Icon(
+                                  isExpiringSoon
+                                      ? Iconsax.timer_1
+                                      : Iconsax.calendar_1,
+                                  size: 12,
+                                  color: isExpiringSoon
+                                      ? _C.warning
+                                      : _C.textTertiary,
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    expiryDate != null
+                                        ? isExpiringSoon
+                                            ? 'Berakhir $daysLeft hari lagi!'
+                                            : 'Berlaku s.d ${DateFormat('dd MMM yyyy', 'id').format(expiryDate)}'
+                                        : 'Tanpa batas waktu',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      fontWeight: isExpiringSoon
+                                          ? FontWeight.w600
+                                          : FontWeight.w500,
+                                      color: isExpiringSoon
+                                          ? _C.warning
+                                          : _C.textTertiary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // ── Copy / Exhausted indicator ──
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isExhausted
+                              ? const Color(0xFFFEF2F2)
+                              : _C.borderLight,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          isExhausted
+                              ? Iconsax.close_circle
+                              : Iconsax.copy,
+                          size: 16,
+                          color: isExhausted
+                              ? const Color(0xFFDC2626)
+                              : _C.textTertiary,
+                        ),
                       ),
                     ],
                   ),
-                ),
 
-                // ── Copy indicator ──
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _C.borderLight,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Iconsax.copy, size: 16, color: _C.textTertiary),
-                ),
-              ],
+                  // ── Quota progress bar (only if limited) ──
+                  if (isLimited) ...[
+                    const SizedBox(height: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              isExhausted
+                                  ? '🚫 Kupon sudah habis'
+                                  : '🎟 Sisa $remaining kupon tersedia',
+                              style: GoogleFonts.inter(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: isExhausted
+                                    ? const Color(0xFFDC2626)
+                                    : _C.textTertiary,
+                              ),
+                            ),
+                            Text(
+                              '$usageCount/$maxUsage digunakan',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                color: _C.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: quotaProgress,
+                            minHeight: 5,
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              isExhausted
+                                  ? const Color(0xFFDC2626)
+                                  : quotaProgress > 0.8
+                                      ? _C.warning
+                                      : _C.teal,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ),

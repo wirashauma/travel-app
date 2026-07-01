@@ -219,23 +219,45 @@ class CityCoordinatesSeeder {
     return (cities: cities, routes: routes);
   }
 
-  /// Fetch coordinates for a city name from the local map.
+  /// Fetch coordinates for a city name from the local map (case-insensitive).
   /// Returns null if city not found.
   static Map<String, double>? getCoordinates(String cityName) {
-    return _coordinates[cityName];
+    final lowerName = cityName.trim().toLowerCase();
+    // Try exact first
+    if (_coordinates.containsKey(cityName)) {
+      return _coordinates[cityName];
+    }
+    // Try case-insensitive search
+    for (final entry in _coordinates.entries) {
+      if (entry.key.toLowerCase() == lowerName) {
+        return entry.value;
+      }
+    }
+    return null;
   }
 
-  /// Fetch coordinates from Firestore `city_coordinates` collection.
+  /// Fetch coordinates from Firestore `city_coordinates` collection (case-insensitive).
   /// Useful if new cities were added via Super Admin.
   static Future<Map<String, double>?> fetchCoordinatesFromFirestore(
       String cityName) async {
-    final snap = await _db
-        .collection('city_coordinates')
-        .where('name', isEqualTo: cityName)
-        .limit(1)
-        .get();
-    if (snap.docs.isEmpty) return null;
-    final d = snap.docs.first.data();
+    final docId = cityName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
+    final snap = await _db.collection('city_coordinates').doc(docId).get();
+    if (!snap.exists) {
+      // Fallback query case-insensitive search on 'name' if docId doesn't exist
+      final querySnap = await _db
+          .collection('city_coordinates')
+          .where('name', isEqualTo: cityName)
+          .limit(1)
+          .get();
+      if (querySnap.docs.isEmpty) return null;
+      final d = querySnap.docs.first.data();
+      return {
+        'lat': (d['lat'] as num?)?.toDouble() ?? 0,
+        'lng': (d['lng'] as num?)?.toDouble() ?? 0,
+      };
+    }
+    final d = snap.data();
+    if (d == null) return null;
     return {
       'lat': (d['lat'] as num?)?.toDouble() ?? 0,
       'lng': (d['lng'] as num?)?.toDouble() ?? 0,

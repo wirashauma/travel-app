@@ -77,7 +77,8 @@ class _IconCache {
 //  CustomRouteMap — Map widget untuk menampilkan rute
 // ═══════════════════════════════════════════════════════
 class CustomRouteMap extends StatefulWidget {
-  final List<LngLat> routePoints;
+  final List<LngLat> cityPoints;
+  final List<LngLat>? roadPoints;
   final String originName;
   final String destinationName;
   final double height;
@@ -85,7 +86,8 @@ class CustomRouteMap extends StatefulWidget {
 
   const CustomRouteMap({
     super.key,
-    required this.routePoints,
+    required this.cityPoints,
+    this.roadPoints,
     required this.originName,
     required this.destinationName,
     this.height = 250,
@@ -105,22 +107,32 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
   bool _styleLoaded = false;
   bool _annotationsDrawn = false;
 
+  // ── Build a unique key from route names ──
+  static String _routeKey(String origin, String dest) {
+    return '$origin>$dest';
+  }
+
   @override
   void initState() {
     super.initState();
     _IconCache.ensure().then((_) {
-      if (mounted) {
-        _tryDraw();
-      }
+      if (mounted) _tryDraw();
     });
   }
 
   @override
   void didUpdateWidget(covariant CustomRouteMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.routePoints != widget.routePoints ||
-        oldWidget.originName != widget.originName ||
-        oldWidget.destinationName != widget.destinationName) {
+    
+    final oldKey = _routeKey(oldWidget.originName, oldWidget.destinationName);
+    final newKey = _routeKey(widget.originName, widget.destinationName);
+    
+    if (oldKey != newKey) {
+      // Re-trigger draw if route cities change
+      _annotationsDrawn = false;
+      _tryDraw();
+    } else if (oldWidget.roadPoints != widget.roadPoints || oldWidget.cityPoints != widget.cityPoints) {
+      // Trigger redraw instantly without map recreation if coordinates update
       _annotationsDrawn = false;
       _tryDraw();
     }
@@ -128,8 +140,6 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
 
   Future<void> _onMapCreated(MapboxMap map) async {
     _mapboxMap = map;
-    _pointManager = await map.annotations.createPointAnnotationManager();
-    _polylineManager = await map.annotations.createPolylineAnnotationManager();
     _managersReady = true;
     _tryDraw();
   }
@@ -140,36 +150,62 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
     _tryDraw();
   }
 
-  void _tryDraw() {
+  Future<void> _tryDraw({int attempt = 1}) async {
     if (_annotationsDrawn) return;
     if (!_managersReady || !_styleLoaded) return;
-    if (widget.routePoints.isEmpty) return;
+    if (widget.cityPoints.isEmpty) return;
     if (_IconCache.origin == null || _IconCache.dest == null || _IconCache.dot == null) return;
+    if (_mapboxMap == null) return;
+
     _annotationsDrawn = true;
-    _rebuildAnnotations();
-    _fitBounds();
+
+    try {
+      // Create managers AFTER style is fully loaded to prevent layer/source eviction by Mapbox
+      _pointManager ??= await _mapboxMap!.annotations.createPointAnnotationManager();
+      _polylineManager ??= await _mapboxMap!.annotations.createPolylineAnnotationManager();
+      
+      await _rebuildAnnotations();
+      await _fitBounds();
+    } catch (e) {
+      debugPrint('CustomRouteMap: tryDraw failed on attempt $attempt: $e');
+      _annotationsDrawn = false; // Reset to allow retry
+
+      // Retry up to 8 times with exponential backoff if initialization fails
+      if (attempt < 8) {
+        await Future.delayed(Duration(milliseconds: 100 * attempt));
+        if (mounted) {
+          _tryDraw(attempt: attempt + 1);
+        }
+      }
+    }
   }
 
   Future<void> _rebuildAnnotations() async {
-    if (widget.routePoints.isEmpty) return;
-    await _polylineManager?.deleteAll();
-    await _pointManager?.deleteAll();
+    if (widget.cityPoints.isEmpty) return;
+    if (_polylineManager == null || _pointManager == null) {
+      throw Exception('Polyline or Point Annotation Manager is not initialized.');
+    }
 
-    final coords =
-        widget.routePoints.map((p) => Position(p.lng, p.lat)).toList();
+    await _polylineManager!.deleteAll();
+    await _pointManager!.deleteAll();
 
     // Polyline
-    await _polylineManager?.create(PolylineAnnotationOptions(
-      geometry: LineString(coordinates: coords),
-      lineColor: _C.primary.toARGB32(),
-      lineWidth: 4.5,
-      lineJoin: LineJoin.ROUND,
-    ));
-    await _polylineManager?.setLineCap(LineCap.ROUND);
+    if (widget.roadPoints != null && widget.roadPoints!.isNotEmpty) {
+      final coords =
+          widget.roadPoints!.map((p) => Position(p.lng, p.lat)).toList();
+
+      await _polylineManager!.create(PolylineAnnotationOptions(
+        geometry: LineString(coordinates: coords),
+        lineColor: _C.primary.toARGB32(),
+        lineWidth: 4.5,
+        lineJoin: LineJoin.ROUND,
+      ));
+      await _polylineManager!.setLineCap(LineCap.ROUND);
+    }
 
     // Origin marker
-    final origin = widget.routePoints.first;
-    await _pointManager?.create(PointAnnotationOptions(
+    final origin = widget.cityPoints.first;
+    await _pointManager!.create(PointAnnotationOptions(
       geometry: Point(coordinates: Position(origin.lng, origin.lat)),
       image: _IconCache.origin,
       iconSize: 0.45,
@@ -182,8 +218,8 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
     ));
 
     // Destination marker
-    final dest = widget.routePoints.last;
-    await _pointManager?.create(PointAnnotationOptions(
+    final dest = widget.cityPoints.last;
+    await _pointManager!.create(PointAnnotationOptions(
       geometry: Point(coordinates: Position(dest.lng, dest.lat)),
       image: _IconCache.dest,
       iconSize: 0.45,
@@ -196,10 +232,10 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
     ));
 
     // Waypoint transit (titik tengah)
-    if (widget.routePoints.length > 2) {
-      for (int i = 1; i < widget.routePoints.length - 1; i++) {
-        final p = widget.routePoints[i];
-        await _pointManager?.create(PointAnnotationOptions(
+    if (widget.cityPoints.length > 2) {
+      for (int i = 1; i < widget.cityPoints.length - 1; i++) {
+        final p = widget.cityPoints[i];
+        await _pointManager!.create(PointAnnotationOptions(
           geometry: Point(coordinates: Position(p.lng, p.lat)),
           image: _IconCache.dot,
           iconSize: 0.4,
@@ -211,11 +247,11 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
   }
 
   // ── Calc helpers ──────────────────────────────────────
-  LngLat _calcCenter() {
-    if (widget.routePoints.isEmpty) return const LngLat(117.0, -2.5);
-    double s = widget.routePoints.first.lat, n = widget.routePoints.first.lat;
-    double w = widget.routePoints.first.lng, e = widget.routePoints.first.lng;
-    for (final p in widget.routePoints) {
+  LngLat _calcCenter(List<LngLat> points) {
+    if (points.isEmpty) return const LngLat(117.0, -2.5);
+    double s = points.first.lat, n = points.first.lat;
+    double w = points.first.lng, e = points.first.lng;
+    for (final p in points) {
       if (p.lat < s) s = p.lat;
       if (p.lat > n) n = p.lat;
       if (p.lng < w) w = p.lng;
@@ -224,33 +260,42 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
     return LngLat((w + e) / 2, (s + n) / 2);
   }
 
-  double _calcZoom() {
-    if (widget.routePoints.length < 2) return 5.0;
-    double s = widget.routePoints.first.lat, n = widget.routePoints.first.lat;
-    double w = widget.routePoints.first.lng, e = widget.routePoints.first.lng;
-    for (final p in widget.routePoints) {
+  double _calcZoom(List<LngLat> points) {
+    if (points.length < 2) return 5.0;
+    double s = points.first.lat, n = points.first.lat;
+    double w = points.first.lng, e = points.first.lng;
+    for (final p in points) {
       if (p.lat < s) s = p.lat;
       if (p.lat > n) n = p.lat;
       if (p.lng < w) w = p.lng;
       if (p.lng > e) e = p.lng;
     }
     final maxDiff = (n - s) > (e - w) ? (n - s) : (e - w);
-    if (maxDiff <= 0) return 10.0;
-    return (12.0 - maxDiff * 1.5).clamp(4.0, 12.0);
+    if (maxDiff <= 0) return 11.0;
+    // Mathematically calibrated formula to fit route bounds based on geographic distance
+    return (12.2 - maxDiff * 5.0).clamp(4.0, 13.0);
   }
 
   Future<void> _fitBounds() async {
-    if (widget.routePoints.isEmpty || _mapboxMap == null) return;
+    final pointsToFit = (widget.roadPoints != null && widget.roadPoints!.isNotEmpty)
+        ? widget.roadPoints!
+        : widget.cityPoints;
+
+    if (pointsToFit.isEmpty || _mapboxMap == null) return;
+    
+    // Allow Flutter layout tree a brief moment to calculate actual widget sizes
+    await Future.delayed(const Duration(milliseconds: 150));
+    if (!mounted) return;
     
     try {
-      final points = widget.routePoints
+      final points = pointsToFit
           .map((p) => Point(coordinates: Position(p.lng, p.lat)))
           .toList();
 
       final cameraOptions = await _mapboxMap!.cameraForCoordinatesPadding(
         points,
         CameraOptions(),
-        MbxEdgeInsets(top: 40.0, left: 40.0, bottom: 40.0, right: 40.0),
+        MbxEdgeInsets(top: 55.0, left: 55.0, bottom: 55.0, right: 55.0),
         null,
         null,
       );
@@ -259,13 +304,13 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
         cameraOptions,
         MapAnimationOptions(duration: 800),
       );
-    } catch (_) {
-      // Fallback if native method fails
-      final center = _calcCenter();
+    } catch (e) {
+      debugPrint('CustomRouteMap: cameraForCoordinatesPadding failed, falling back to math: $e');
+      final center = _calcCenter(pointsToFit);
       await _mapboxMap!.flyTo(
         CameraOptions(
           center: Point(coordinates: Position(center.lng, center.lat)),
-          zoom: _calcZoom(),
+          zoom: _calcZoom(pointsToFit),
         ),
         MapAnimationOptions(duration: 500),
       );
@@ -274,11 +319,14 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.routePoints.isEmpty) {
+    if (widget.cityPoints.isEmpty) {
       return _buildEmptyMap();
     }
 
-    final center = _calcCenter();
+    final pointsToFit = (widget.roadPoints != null && widget.roadPoints!.isNotEmpty)
+        ? widget.roadPoints!
+        : widget.cityPoints;
+    final center = _calcCenter(pointsToFit);
 
     return Container(
       height: widget.height,
@@ -297,9 +345,10 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
         borderRadius: BorderRadius.circular(widget.borderRadius),
         child: Stack(
           children: [
-            // ── Map tampil langsung, tanpa loading overlay ──
             MapWidget(
-              key: const ValueKey('route_map'),
+              key: ValueKey(
+                _routeKey(widget.originName, widget.destinationName),
+              ),
               mapOptions: MapOptions(
                 pixelRatio: MediaQuery.of(context).devicePixelRatio,
                 constrainMode: ConstrainMode.HEIGHT_ONLY,
@@ -308,7 +357,7 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
               viewport: CameraViewportState(
                 center: Point(
                     coordinates: Position(center.lng, center.lat)),
-                zoom: _calcZoom(),
+                zoom: _calcZoom(pointsToFit),
               ),
               styleUri: 'mapbox://styles/mapbox/streets-v12',
               onMapCreated: _onMapCreated,
@@ -375,7 +424,7 @@ class _CustomRouteMapState extends State<CustomRouteMap> {
                     _legendDot(const Color(0xFF059669), 'Asal'),
                     const SizedBox(width: 10),
                     _legendDot(const Color(0xFFDC2626), 'Tujuan'),
-                    if (widget.routePoints.length > 2) ...[
+                    if (widget.cityPoints.length > 2) ...[
                       const SizedBox(width: 10),
                       _legendDot(const Color(0xFFF59E0B), 'Transit'),
                     ],

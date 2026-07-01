@@ -185,12 +185,18 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
     final valueCtrl = TextEditingController(
       text: data?['discountValue']?.toString() ?? '',
     );
+    final maxUsageCtrl = TextEditingController(
+      text: data?['maxUsage'] != null && data!['maxUsage'] != 0
+          ? data['maxUsage'].toString()
+          : '',
+    );
     String discountType = data?['discountType'] ?? 'percentage';
     DateTime expiryDate = data != null && data['expiryDate'] != null
         ? (data['expiryDate'] as Timestamp).toDate()
-        : DateTime.now().add(const Duration(days: 30));
+        : DateTime.now().add(const Duration(days: 14));
     bool isActive = data?['isActive'] ?? true;
     bool isSaving = false;
+    int selectedDurationDays = 0; // 0 = custom / manual
 
     final formKey = GlobalKey<FormState>();
 
@@ -227,6 +233,7 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
 
             final code = codeCtrl.text.trim().toUpperCase();
             final value = num.tryParse(valueCtrl.text.trim()) ?? 0;
+            final maxUsageRaw = int.tryParse(maxUsageCtrl.text.trim()) ?? 0;
 
             // Validate percentage range
             if (discountType == 'percentage' && (value <= 0 || value > 100)) {
@@ -260,12 +267,14 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                 'discountValue': value,
                 'expiryDate': Timestamp.fromDate(expiryDate),
                 'isActive': isActive,
+                'maxUsage': maxUsageRaw,
               };
 
               if (isEdit) {
                 await _promoRef.doc(doc.id).update(payload);
               } else {
                 payload['createdAt'] = FieldValue.serverTimestamp();
+                payload['usageCount'] = 0;
                 await _promoRef.add(payload);
               }
 
@@ -438,44 +447,134 @@ class _ManagePromoPageState extends State<ManagePromoPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // ── Expiry Date ──
-                      _SheetLabel('Tanggal Kedaluwarsa'),
-                      const SizedBox(height: 6),
-                      GestureDetector(
-                        onTap: pickDate,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 14,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _C.bg,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: _C.border),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Iconsax.calendar_1,
-                                size: 18,
-                                color: _C.textTertiary,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                DateFormat(
-                                  'dd MMMM yyyy',
-                                  'id_ID',
-                                ).format(expiryDate),
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: _C.textPrimary,
+                      // ── Duration Preset Picker ──
+                      _SheetLabel('Durasi Berlaku'),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ...([
+                            (7, '1 Minggu'),
+                            (14, '2 Minggu'),
+                            (30, '1 Bulan'),
+                            (60, '2 Bulan'),
+                            (90, '3 Bulan'),
+                            (0, 'Pilih Tanggal'),
+                          ].map((entry) {
+                            final days = entry.$1;
+                            final label = entry.$2;
+                            final isCustom = days == 0;
+                            final isSelected = isCustom
+                                ? selectedDurationDays == 0
+                                : selectedDurationDays == days;
+                            return GestureDetector(
+                              onTap: () {
+                                setSheetState(() {
+                                  selectedDurationDays = days;
+                                  if (!isCustom) {
+                                    expiryDate = DateTime.now()
+                                        .add(Duration(days: days));
+                                  }
+                                });
+                                if (isCustom) pickDate();
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? _C.teal.withValues(alpha: 0.1)
+                                      : _C.bg,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color:
+                                        isSelected ? _C.teal : _C.border,
+                                    width: isSelected ? 1.5 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isCustom
+                                          ? Iconsax.calendar_edit
+                                          : Iconsax.timer_1,
+                                      size: 13,
+                                      color: isSelected
+                                          ? _C.teal
+                                          : _C.textTertiary,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      label,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                        color: isSelected
+                                            ? _C.teal
+                                            : _C.textTertiary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
+                            );
+                          })),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // Show selected date
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _C.bg,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: _C.border),
                         ),
+                        child: Row(
+                          children: [
+                            Icon(Iconsax.calendar_tick,
+                                size: 16, color: _C.teal),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Berlaku s/d: ${DateFormat('dd MMMM yyyy', 'id_ID').format(expiryDate)}',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: _C.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── Kuota (maxUsage) ──
+                      _SheetLabel('Batas Penggunaan Kupon'),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Kosongkan atau isi 0 untuk tidak membatasi penggunaan',
+                        style: GoogleFonts.inter(
+                            fontSize: 11, color: _C.textTertiary),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: maxUsageCtrl,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: _C.textPrimary,
+                        ),
+                        decoration: _inputDeco('Misal: 100 (kosong = tak terbatas)'),
                       ),
                       const SizedBox(height: 16),
 
@@ -971,32 +1070,108 @@ class _PromoCard extends StatelessWidget {
               const SizedBox(height: 14),
 
               // ── Details row ──
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _C.bg,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
+              Builder(builder: (_) {
+                final maxUsage = (data['maxUsage'] as num?)?.toInt() ?? 0;
+                final usageCount = (data['usageCount'] as num?)?.toInt() ?? 0;
+                final isLimited = maxUsage > 0;
+                final isExhausted = isLimited && usageCount >= maxUsage;
+                final progress = isLimited
+                    ? (usageCount / maxUsage).clamp(0.0, 1.0)
+                    : 0.0;
+
+                return Column(
                   children: [
-                    Expanded(
-                      child: _DetailCol(
-                        label: 'Potongan',
-                        value: discountText,
-                        color: _C.primary,
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _C.bg,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _DetailCol(
+                              label: 'Potongan',
+                              value: discountText,
+                              color: _C.primary,
+                            ),
+                          ),
+                          Container(width: 1, height: 30, color: _C.border),
+                          Expanded(
+                            child: _DetailCol(
+                              label: 'Berlaku s/d',
+                              value: expiry != null ? fmtDate(expiry) : '-',
+                              color: expired ? _C.warning : _C.textPrimary,
+                            ),
+                          ),
+                          Container(width: 1, height: 30, color: _C.border),
+                          Expanded(
+                            child: _DetailCol(
+                              label: isLimited ? 'Terpakai' : 'Penggunaan',
+                              value: isLimited
+                                  ? '$usageCount / $maxUsage'
+                                  : '$usageCount×',
+                              color: isExhausted
+                                  ? _C.error
+                                  : isLimited
+                                      ? _C.info
+                                      : _C.textPrimary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Container(width: 1, height: 30, color: _C.border),
-                    Expanded(
-                      child: _DetailCol(
-                        label: 'Berlaku s/d',
-                        value: expiry != null ? fmtDate(expiry) : '-',
-                        color: expired ? _C.warning : _C.textPrimary,
+                    // Progress bar for quota
+                    if (isLimited) ...[
+                      const SizedBox(height: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                isExhausted
+                                    ? 'Kupon Habis'
+                                    : 'Sisa ${maxUsage - usageCount} kupon',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: isExhausted ? _C.error : _C.textSecondary,
+                                ),
+                              ),
+                              Text(
+                                '${(progress * 100).toInt()}%',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: isExhausted ? _C.error : _C.info,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 6,
+                              backgroundColor: _C.borderLight,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                isExhausted
+                                    ? _C.error
+                                    : progress > 0.8
+                                        ? _C.warning
+                                        : _C.info,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                    ],
                   ],
-                ),
-              ),
+                );
+              }),
               const SizedBox(height: 12),
 
               // ── Actions ──

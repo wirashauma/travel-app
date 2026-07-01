@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/models/booking_model.dart';
 import '../../../core/services/booking_service.dart';
+import '../../promo/presentation/promo_list_page.dart';
 
 class TabSwitchNotification extends Notification {
   final int tabIndex;
@@ -80,6 +82,11 @@ class PassengerHomeScreen extends StatelessWidget {
                   _buildHeader(context, name, profileImageUrl),
 
                   const SizedBox(height: 72),
+
+                  // ── LIVE PROMOS FROM FIRESTORE ──
+                  _buildActivePromos(context),
+
+                  const SizedBox(height: 28),
 
                   // ── POPULAR RUTES ──
                   _buildPopularRoutes(context),
@@ -579,6 +586,271 @@ class PassengerHomeScreen extends StatelessWidget {
         ),
       ],
     ).animate().fadeIn(delay: 300.ms, duration: 400.ms);
+  }
+
+  // ── Dynamic promo section — Firestore real-time stream ──
+  Widget _buildActivePromos(BuildContext context) {
+    return const _FirestorePromosCarousel();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FIRESTORE PROMOS CAROUSEL
+//  Menampilkan promo aktif dari Firestore `promo_codes`
+//  secara real-time. Auto-scroll dengan PageController.
+// ═══════════════════════════════════════════════════════════
+class _FirestorePromosCarousel extends StatefulWidget {
+  const _FirestorePromosCarousel();
+
+  @override
+  State<_FirestorePromosCarousel> createState() =>
+      _FirestorePromosCarouselState();
+}
+
+class _FirestorePromosCarouselState
+    extends State<_FirestorePromosCarousel> {
+  // ── Firestore stream: only active promos ──
+  static final _promoStream = FirebaseFirestore.instance
+      .collection('promo_codes')
+      .where('isActive', isEqualTo: true)
+      .snapshots();
+
+  late final PageController _pageController;
+  Timer? _autoTimer;
+  int _currentPage = 0;
+
+  // Palette untuk tiap kartu promo (loop)
+  static const _palettes = [
+    [Color(0xFF0F4C81), Color(0xFF1E88E5)],
+    [Color(0xFF00796B), Color(0xFF00BFA5)],
+    [Color(0xFFE65100), Color(0xFFFFB74D)],
+    [Color(0xFF7B1FA2), Color(0xFFCE93D8)],
+    [Color(0xFFC62828), Color(0xFFEF9A9A)],
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(viewportFraction: 0.88);
+  }
+
+  void _startTimer(int itemCount) {
+    _autoTimer?.cancel();
+    if (itemCount <= 1) return;
+    _autoTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted) return;
+      _currentPage = (_currentPage + 1) % itemCount;
+      _pageController.animateToPage(
+        _currentPage,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _promoStream,
+      builder: (context, snapshot) {
+        // Filter expired client-side
+        final now = DateTime.now();
+        final docs = (snapshot.data?.docs ?? []).where((doc) {
+          final d = doc.data() as Map<String, dynamic>;
+          final exp = d['expiryDate'];
+          if (exp == null) return true;
+          return (exp as Timestamp).toDate().isAfter(now);
+        }).toList()
+          ..sort((a, b) {
+            final at = (a.data() as Map)['createdAt'];
+            final bt = (b.data() as Map)['createdAt'];
+            if (at == null && bt == null) return 0;
+            if (at == null) return 1;
+            if (bt == null) return -1;
+            return (bt as Timestamp).compareTo(at as Timestamp);
+          });
+
+        // ── Jika tidak ada promo aktif: sembunyikan section ──
+        if (docs.isEmpty) return const SizedBox.shrink();
+
+        // Start / restart auto-scroll timer setiap kali data berubah
+        WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _startTimer(docs.length));
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Promo Untukmu 🎁',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: _C.textPrimary,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const PromoListPage()),
+                    ),
+                    child: Text(
+                      'Lihat Semua',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _C.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Carousel
+            SizedBox(
+              height: 125,
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: docs.length,
+                onPageChanged: (p) => _currentPage = p,
+                itemBuilder: (context, index) {
+                  final data =
+                      docs[index].data() as Map<String, dynamic>;
+                  final code = data['code'] as String? ?? '';
+                  final discountType =
+                      data['discountType'] as String? ?? 'percentage';
+                  final discountValue =
+                      (data['discountValue'] as num?)?.toDouble() ?? 0;
+                  final title = (data['title'] as String?) ?? code;
+                  final descRaw = data['description'];
+                  final desc = (descRaw is String && descRaw.isNotEmpty)
+                      ? descRaw
+                      : (discountType == 'percentage'
+                          ? 'Hemat ${discountValue.toInt()}% untuk perjalanan Anda'
+                          : 'Hemat Rp ${NumberFormat("#,###", "id_ID").format(discountValue)} untuk perjalanan Anda');
+                  final badge = discountType == 'percentage'
+                      ? 'Diskon ${discountValue.toInt()}%'
+                      : 'Hemat Rp ${NumberFormat("#,###", "id_ID").format(discountValue)}';
+                  final colors = _palettes[index % _palettes.length];
+
+                  return GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const PromoListPage()),
+                    ),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 4),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: colors,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors[0].withValues(alpha: 0.22),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Badge + kode
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white24,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  badge,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const Spacer(),
+                              // Kode promo chip
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                      color: Colors.white30, width: 1),
+                                ),
+                                child: Text(
+                                  code,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            title,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            desc,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color:
+                                  Colors.white.withValues(alpha: 0.85),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
+      },
+    );
   }
 }
 

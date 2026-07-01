@@ -86,6 +86,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _promoController = TextEditingController();
   int _discountAmount = 0;
   String? _appliedCode;
+  String? _appliedPromoDocId;
   bool _isApplyingPromo = false;
 
   @override
@@ -111,6 +112,97 @@ class _CheckoutPageState extends State<CheckoutPage> {
   int get _subtotal => widget.routePrice * widget.passengers;
   int get _totalPrice => (_subtotal - _discountAmount).clamp(0, _subtotal);
 
+  // ── Promo Dialog — profesional popup notifikasi ──
+  Future<void> _showPromoErrorDialog({
+    required String title,
+    required String message,
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding:
+            const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 34, color: iconColor),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                title,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: _C.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: GoogleFonts.inter(
+                  fontSize: 13.5,
+                  color: _C.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: iconColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Mengerti',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ── Apply Promo Code (Firestore) ──
   Future<void> _applyPromo() async {
     final code = _promoController.text.trim().toUpperCase();
@@ -118,7 +210,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     // Prevent duplicate apply
     if (_appliedCode != null) {
-      _showSnack('Diskon sudah diterapkan. Hapus dulu untuk ganti kode.', isError: true);
+      _showSnack('Diskon sudah diterapkan. Hapus dulu untuk ganti kode.',
+          isError: true);
       return;
     }
     if (_isApplyingPromo) return;
@@ -140,7 +233,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
         return;
       }
 
-      final data = snapshot.docs.first.data();
+      final docSnap = snapshot.docs.first;
+      final data = docSnap.data();
+      final docId = docSnap.id;
 
       // Validation 2: Not active
       if (data['isActive'] != true) {
@@ -148,16 +243,44 @@ class _CheckoutPageState extends State<CheckoutPage> {
         return;
       }
 
-      // Validation 3: Expired
+      // Validation 3: Expired — show dialog
       final expiryDate = data['expiryDate'] as Timestamp?;
-      if (expiryDate != null && expiryDate.toDate().isBefore(DateTime.now())) {
-        _showSnack('Kode Promo sudah kedaluwarsa', isError: true);
+      if (expiryDate != null &&
+          expiryDate.toDate().isBefore(DateTime.now())) {
+        if (mounted) {
+          await _showPromoErrorDialog(
+            title: 'Kupon Kadaluarsa',
+            message:
+                'Kupon "$code" sudah melewati tanggal berlakunya.\n\nSilakan gunakan kupon lain yang masih aktif.',
+            icon: Iconsax.timer_pause,
+            iconColor: const Color(0xFFD97706),
+            iconBg: const Color(0xFFFFF7ED),
+          );
+        }
+        return;
+      }
+
+      // Validation 4: Quota exhausted — show dialog
+      final maxUsage = (data['maxUsage'] as num?)?.toInt() ?? 0;
+      final usageCount = (data['usageCount'] as num?)?.toInt() ?? 0;
+      if (maxUsage > 0 && usageCount >= maxUsage) {
+        if (mounted) {
+          await _showPromoErrorDialog(
+            title: 'Kupon Sudah Habis',
+            message:
+                'Maaf, kupon "$code" sudah digunakan oleh $usageCount pemesan dan telah mencapai batas maksimalnya.\n\nCoba kode promo lain yang masih tersedia.',
+            icon: Iconsax.ticket_expired,
+            iconColor: const Color(0xFFDC2626),
+            iconBg: const Color(0xFFFEF2F2),
+          );
+        }
         return;
       }
 
       // ── Calculate discount ──
       final discountType = data['discountType'] ?? 'percentage';
-      final discountValue = (data['discountValue'] as num?)?.toDouble() ?? 0;
+      final discountValue =
+          (data['discountValue'] as num?)?.toDouble() ?? 0;
       int discount = 0;
 
       if (discountType == 'percentage') {
@@ -167,9 +290,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
         if (discount > _subtotal) discount = _subtotal;
       }
 
+      // ── Atomically increment usageCount ──
+      await FirebaseFirestore.instance
+          .collection('promo_codes')
+          .doc(docId)
+          .update({'usageCount': FieldValue.increment(1)});
+
+      if (!mounted) return;
+
       setState(() {
         _discountAmount = discount;
         _appliedCode = code;
+        _appliedPromoDocId = docId;
       });
       _showSnack('Kupon Berhasil Diterapkan! Hemat ${_fmtPrice(discount)}');
       FocusScope.of(context).unfocus();
@@ -183,9 +315,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   void _removePromo() {
+    // Decrement usageCount if a promo was applied
+    if (_appliedPromoDocId != null) {
+      FirebaseFirestore.instance
+          .collection('promo_codes')
+          .doc(_appliedPromoDocId)
+          .update({'usageCount': FieldValue.increment(-1)})
+          .catchError((_) {}); // Silent — best effort
+    }
     setState(() {
       _discountAmount = 0;
       _appliedCode = null;
+      _appliedPromoDocId = null;
       _promoController.clear();
     });
   }

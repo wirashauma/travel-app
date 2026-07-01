@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/lng_lat.dart';
 import '../../../core/services/firestore_dijkstra_service.dart';
 import '../../../core/services/city_coordinates_seeder.dart';
+import '../../../core/services/mapbox_directions_service.dart';
 import '../../../core/widgets/custom_route_map.dart';
 import '../../seat_selection/presentation/seat_selection_page.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
@@ -78,6 +79,8 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
   bool _isLoading = false;
   Map<String, LngLat> _dynamicCityCoordinates = {};
   bool _hasSearched = false;
+  List<LngLat> _cityLatLngs = [];
+  List<LngLat> _routeLatLngs = [];
 
   // ── Cities list ───────────────────────────────
   List<String> _cities = [];
@@ -190,6 +193,8 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
       _isLoading = true;
       _hasSearched = true;
       _routeResult = null;
+      _cityLatLngs = [];
+      _routeLatLngs = [];
     });
 
     try {
@@ -198,11 +203,63 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
         _destinationCity!,
       );
 
-      if (mounted) {
-        setState(() {
-          _routeResult = result;
-          _isLoading = false;
-        });
+      if (result != null) {
+        final latLngs = <LngLat>[];
+        for (final city in result.path) {
+          final lower = city.trim().toLowerCase();
+          LngLat? coord;
+
+          // 1. Cek di dynamic city coordinates
+          for (final entry in _dynamicCityCoordinates.entries) {
+            if (entry.key.trim().toLowerCase() == lower) {
+              coord = entry.value;
+              break;
+            }
+          }
+
+          // 2. Fallback ke static city coordinates
+          if (coord == null) {
+            for (final entry in _cityCoordinates.entries) {
+              if (entry.key.trim().toLowerCase() == lower) {
+                coord = entry.value;
+                break;
+              }
+            }
+          }
+
+          if (coord != null) {
+            latLngs.add(coord);
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _routeResult = result;
+            _cityLatLngs = latLngs;
+            _isLoading = false;
+          });
+        }
+
+        // Fetch road route asynchronously
+        if (latLngs.length >= 2) {
+          try {
+            final roadRoute =
+                await MapboxDirectionsService.instance.getRoute(latLngs);
+            if (mounted && roadRoute.isNotEmpty) {
+              setState(() {
+                _routeLatLngs = roadRoute;
+              });
+            }
+          } catch (e) {
+            debugPrint('SearchTicketPage: failed to fetch road route: $e');
+          }
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -759,20 +816,14 @@ class _SearchTicketPageState extends State<SearchTicketPage> {
 
   // ── Dijkstra Mapbox Map Widget ──
   Widget _buildDijkstraMap(DijkstraResult result) {
-    // Map city names in the Dijkstra path to LngLat coordinates
-    final routePoints = <LngLat>[];
-    for (final city in result.path) {
-      final coord = _dynamicCityCoordinates[city] ?? _cityCoordinates[city];
-      if (coord != null) routePoints.add(coord);
-    }
-
-    if (routePoints.length < 2) return const SizedBox.shrink();
+    if (_cityLatLngs.length < 2) return const SizedBox.shrink();
 
     return CustomRouteMap(
-      routePoints: routePoints,
+      cityPoints: _cityLatLngs,
+      roadPoints: _routeLatLngs,
       originName: result.path.first,
       destinationName: result.path.last,
-      height: 220,
+      height: 280,
       borderRadius: 16,
     );
   }

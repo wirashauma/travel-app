@@ -62,6 +62,8 @@ class _DriverTripPageState extends State<DriverTripPage> {
   // Map
   PointAnnotationManager? _pointManager;
   PolylineAnnotationManager? _polylineManager;
+  LngLat? _originPoint;
+  LngLat? _destPoint;
   List<LngLat> _routePoints = [];
   bool _mapReady = false;
 
@@ -176,12 +178,18 @@ class _DriverTripPageState extends State<DriverTripPage> {
       final destCoords =
           CityCoordinatesSeeder.getCoordinates(widget.destination);
       if (originCoords == null || destCoords == null) return;
-      final pts = [
-        LngLat(originCoords['lng']!, originCoords['lat']!),
-        LngLat(destCoords['lng']!, destCoords['lat']!),
-      ];
+      final originPoint = LngLat(originCoords['lng']!, originCoords['lat']!);
+      final destPoint = LngLat(destCoords['lng']!, destCoords['lat']!);
+      setState(() {
+        _originPoint = originPoint;
+        _destPoint = destPoint;
+      });
+
+      final pts = [originPoint, destPoint];
       final road = await MapboxDirectionsService.instance.getRoute(pts);
-      if (mounted) setState(() => _routePoints = road.isNotEmpty ? road : pts);
+      if (mounted && road.isNotEmpty) {
+        setState(() => _routePoints = road);
+      }
     } catch (_) {}
   }
 
@@ -555,8 +563,8 @@ class _DriverTripPageState extends State<DriverTripPage> {
   }
 
   Widget _buildMap(bool isActive) {
+    if (_originPoint == null || _destPoint == null) return const SizedBox.shrink();
     final pts = _routePoints;
-    if (pts.isEmpty) return const SizedBox.shrink();
     final c = _calcCenter();
     return Container(
       height: 200,
@@ -623,30 +631,37 @@ class _DriverTripPageState extends State<DriverTripPage> {
         _originIconBytes == null ||
         _destIconBytes == null) return;
 
-    // Route line
-    await _polylineManager!.create(PolylineAnnotationOptions(
-      lineColor: _C.primary.toARGB32(),
-      lineWidth: 3,
-      geometry: LineString(
-        coordinates: pts.map((p) => Position(p.lng, p.lat)).toList(),
-      ),
-    ));
+    await _polylineManager!.deleteAll();
+    await _pointManager!.deleteAll();
+
+    // Route line (only draw if pts is not empty)
+    if (pts.isNotEmpty) {
+      await _polylineManager!.create(PolylineAnnotationOptions(
+        lineColor: _C.primary.toARGB32(),
+        lineWidth: 3,
+        geometry: LineString(
+          coordinates: pts.map((p) => Position(p.lng, p.lat)).toList(),
+        ),
+      ));
+    }
 
     // Origin
-    final origin = pts.first;
-    await _pointManager!.create(PointAnnotationOptions(
-      geometry: Point(coordinates: Position(origin.lng, origin.lat)),
-      image: _originIconBytes,
-      iconSize: 0.35,
-    ));
+    if (_originPoint != null) {
+      await _pointManager!.create(PointAnnotationOptions(
+        geometry: Point(coordinates: Position(_originPoint!.lng, _originPoint!.lat)),
+        image: _originIconBytes,
+        iconSize: 0.35,
+      ));
+    }
 
     // Destination
-    final dest = pts.last;
-    await _pointManager!.create(PointAnnotationOptions(
-      geometry: Point(coordinates: Position(dest.lng, dest.lat)),
-      image: _destIconBytes,
-      iconSize: 0.35,
-    ));
+    if (_destPoint != null) {
+      await _pointManager!.create(PointAnnotationOptions(
+        geometry: Point(coordinates: Position(_destPoint!.lng, _destPoint!.lat)),
+        image: _destIconBytes,
+        iconSize: 0.35,
+      ));
+    }
 
     // Driver marker if position exists
     if (_driverPos != null) {

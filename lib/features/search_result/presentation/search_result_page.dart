@@ -55,6 +55,7 @@ class SearchResultPage extends StatefulWidget {
 class _SearchResultPageState extends State<SearchResultPage> {
   // ── State ──────────────────────────────────────
   DijkstraResult? _result;
+  List<LngLat> _cityLatLngs = [];
   List<LngLat> _routeLatLngs = [];
   bool _isLoading = true;
   bool _hasError = false;
@@ -78,50 +79,71 @@ class _SearchResultPageState extends State<SearchResultPage> {
         widget.origin,
         widget.destination,
       );
-      // Convert city names → LngLat for the map
+
+      if (!mounted) return;
+
+      // ── Step 1: Resolve koordinat lokal TERLEBIH DAHULU ──
+      // Data lokal mencakup semua kota di Sumatera sehingga selalu tersedia.
       List<LngLat> latLngs = [];
       if (result != null) {
-        try {
-          // 1) Ambil koordinat dari Firestore (dinamis - prioritas utama)
-          final coordsMap = await CityCoordinatesSeeder.fetchAllCoordinates();
-          for (final cityName in result.path) {
-            final fc = coordsMap[cityName];
-            if (fc != null) {
-              latLngs.add(LngLat(fc['lng']!, fc['lat']!));
-            } else {
-              // 2) Fallback ke data lokal jika tidak ada di Firestore
-              final localCoords =
-                  CityCoordinatesSeeder.getCoordinates(cityName);
-              if (localCoords != null) {
-                latLngs.add(LngLat(localCoords['lng']!, localCoords['lat']!));
-              }
-            }
-          }
-        } catch (_) {
-          // 3) Jika Firestore gagal, gunakan semua dari lokal
-          for (final cityName in result.path) {
-            final localCoords =
-                CityCoordinatesSeeder.getCoordinates(cityName);
-            if (localCoords != null) {
-              latLngs.add(LngLat(localCoords['lng']!, localCoords['lat']!));
-            }
+        for (final cityName in result.path) {
+          final localCoords = CityCoordinatesSeeder.getCoordinates(cityName);
+          if (localCoords != null) {
+            latLngs.add(LngLat(localCoords['lng']!, localCoords['lat']!));
           }
         }
       }
 
-      if (!mounted) return;
-
-      // 3) Tampilkan rute lurus DULU, upgrade ke road route async
+      // ── Step 2: Tampilkan rute kota (marker saja, tanpa garis lurus) ──
       setState(() {
         _result = result;
-        _routeLatLngs = latLngs;
+        _cityLatLngs = latLngs;
+        _routeLatLngs = [];
         _isLoading = false;
       });
 
-      // 4) Upgrade ke road-following route di background
+      if (result == null || latLngs.length < 2) return;
+
+      // ── Step 3 (async): Enrichment dari Firestore jika ada koordinat tambahan ──
       try {
-        final roadRoute = await MapboxDirectionsService.instance.getRoute(latLngs);
-        if (mounted) setState(() => _routeLatLngs = roadRoute);
+        final coordsMap = await CityCoordinatesSeeder.fetchAllCoordinates();
+        final enriched = <LngLat>[];
+        bool changed = false;
+        for (final cityName in result.path) {
+          final lowerName = cityName.trim().toLowerCase();
+          Map<String, double>? fc;
+          for (final entry in coordsMap.entries) {
+            if (entry.key.trim().toLowerCase() == lowerName) {
+              fc = entry.value;
+              break;
+            }
+          }
+          
+          if (fc != null && (fc['lat'] != 0 || fc['lng'] != 0)) {
+            enriched.add(LngLat(fc['lng']!, fc['lat']!));
+            changed = true;
+          } else {
+            final localCoords = CityCoordinatesSeeder.getCoordinates(cityName);
+            if (localCoords != null) {
+              enriched.add(LngLat(localCoords['lng']!, localCoords['lat']!));
+            }
+          }
+        }
+        if (changed && enriched.length >= 2 && mounted) {
+          setState(() => _cityLatLngs = enriched);
+          latLngs = enriched;
+        }
+      } catch (_) {
+        // Gunakan data lokal yang sudah ada
+      }
+
+      // ── Step 4 (async): Upgrade ke road-following route ──
+      try {
+        final roadRoute =
+            await MapboxDirectionsService.instance.getRoute(latLngs);
+        if (mounted && roadRoute.length >= 2) {
+          setState(() => _routeLatLngs = roadRoute);
+        }
       } catch (_) {}
     } catch (e) {
       if (!mounted) return;
@@ -277,18 +299,19 @@ class _SearchResultPageState extends State<SearchResultPage> {
           const SizedBox(height: 16),
 
           // ── Google Maps — Dijkstra Route Visualization ──
-          if (_routeLatLngs.length >= 2)
+          if (_cityLatLngs.length >= 2)
             CustomRouteMap(
-                  routePoints: _routeLatLngs,
+                  cityPoints: _cityLatLngs,
+                  roadPoints: _routeLatLngs,
                   originName: widget.origin,
                   destinationName: widget.destination,
-                  height: 250,
+                  height: 280,
                 )
                 .animate()
                 .fadeIn(delay: 120.ms, duration: 450.ms)
                 .slideY(begin: 0.05, delay: 120.ms, duration: 450.ms),
 
-          if (_routeLatLngs.length >= 2) const SizedBox(height: 16),
+          if (_cityLatLngs.length >= 2) const SizedBox(height: 16),
 
           // ── Route Path Visualization ──
           _buildRoutePathCard(result)

@@ -1062,6 +1062,8 @@ class _EmbeddedRouteMapState extends State<_EmbeddedRouteMap> {
   PolylineAnnotationManager? _polyMgr;
 
   // Route state
+  LngLat? _originPoint;
+  LngLat? _destPoint;
   List<LngLat> _routePoints = [];
   bool _routeLoaded = false;
   bool _routeError  = false;
@@ -1094,14 +1096,18 @@ class _EmbeddedRouteMapState extends State<_EmbeddedRouteMap> {
         if (mounted) setState(() => _routeError = true);
         return;
       }
-      final waypoints = [
-        LngLat(oCoords['lng']!, oCoords['lat']!),
-        LngLat(dCoords['lng']!, dCoords['lat']!),
-      ];
+      final originPoint = LngLat(oCoords['lng']!, oCoords['lat']!);
+      final destPoint = LngLat(dCoords['lng']!, dCoords['lat']!);
+      setState(() {
+        _originPoint = originPoint;
+        _destPoint = destPoint;
+      });
+
+      final waypoints = [originPoint, destPoint];
       final route = await MapboxDirectionsService.instance.getRoute(waypoints);
       if (!mounted) return;
       setState(() {
-        _routePoints = route.isNotEmpty ? route : waypoints;
+        _routePoints = route;
         _routeLoaded = true;
       });
       if (_mapReady) _drawRoute();
@@ -1186,7 +1192,7 @@ class _EmbeddedRouteMapState extends State<_EmbeddedRouteMap> {
   // ── Listen to driver location from Firestore ──
   void _listenDriverLocation() {
     FirebaseFirestore.instance
-        .collection('driver_locations')
+         .collection('driver_locations')
         .doc(widget.fleetId)
         .snapshots()
         .listen((doc) {
@@ -1226,46 +1232,52 @@ class _EmbeddedRouteMapState extends State<_EmbeddedRouteMap> {
   // ── Draw route polyline + pins ──
   Future<void> _drawRoute() async {
     if (_polyMgr == null || _pointMgr == null) return;
-    if (_routePoints.isEmpty) return;
     if (_originIconBytes == null || _destIconBytes == null) return;
 
-    // Casing outline (drawn first = behind)
-    await _polyMgr!.create(PolylineAnnotationOptions(
-      lineColor: const Color(0xFF1A6BB5).withOpacity(0.25).toARGB32(),
-      lineWidth: 9.0,
-      geometry: LineString(
-        coordinates: _routePoints
-            .map((p) => Position(p.lng, p.lat))
-            .toList(),
-      ),
-    ));
+    await _polyMgr!.deleteAll();
+    await _pointMgr!.deleteAll();
 
     // Main blue route polyline
-    await _polyMgr!.create(PolylineAnnotationOptions(
-      lineColor: const Color(0xFF0F4C81).toARGB32(),
-      lineWidth: 4.5,
-      geometry: LineString(
-        coordinates: _routePoints
-            .map((p) => Position(p.lng, p.lat))
-            .toList(),
-      ),
-    ));
+    if (_routePoints.isNotEmpty) {
+      // Casing outline (drawn first = behind)
+      await _polyMgr!.create(PolylineAnnotationOptions(
+        lineColor: const Color(0xFF1A6BB5).withOpacity(0.25).toARGB32(),
+        lineWidth: 9.0,
+        geometry: LineString(
+          coordinates: _routePoints
+              .map((p) => Position(p.lng, p.lat))
+              .toList(),
+        ),
+      ));
+
+      await _polyMgr!.create(PolylineAnnotationOptions(
+        lineColor: const Color(0xFF0F4C81).toARGB32(),
+        lineWidth: 4.5,
+        geometry: LineString(
+          coordinates: _routePoints
+              .map((p) => Position(p.lng, p.lat))
+              .toList(),
+        ),
+      ));
+    }
 
     // Origin marker (green pin)
-    final origin = _routePoints.first;
-    await _pointMgr!.create(PointAnnotationOptions(
-      geometry: Point(coordinates: Position(origin.lng, origin.lat)),
-      image: _originIconBytes,
-      iconSize: 0.45,
-    ));
+    if (_originPoint != null) {
+      await _pointMgr!.create(PointAnnotationOptions(
+        geometry: Point(coordinates: Position(_originPoint!.lng, _originPoint!.lat)),
+        image: _originIconBytes,
+        iconSize: 0.45,
+      ));
+    }
 
     // Destination marker (red pin)
-    final dest = _routePoints.last;
-    await _pointMgr!.create(PointAnnotationOptions(
-      geometry: Point(coordinates: Position(dest.lng, dest.lat)),
-      image: _destIconBytes,
-      iconSize: 0.45,
-    ));
+    if (_destPoint != null) {
+      await _pointMgr!.create(PointAnnotationOptions(
+        geometry: Point(coordinates: Position(_destPoint!.lng, _destPoint!.lat)),
+        image: _destIconBytes,
+        iconSize: 0.45,
+      ));
+    }
 
     // Driver marker
     if (_driverPos != null && _driverIconBytes != null) {
@@ -1282,15 +1294,21 @@ class _EmbeddedRouteMapState extends State<_EmbeddedRouteMap> {
 
   // ── Camera fit — guarantees both pins are visible with padding ──
   Future<void> _fitCameraToBounds() async {
-    if (_mapboxMap == null || _routePoints.isEmpty) return;
+    if (_mapboxMap == null) return;
+    
+    final pts = _routePoints.isNotEmpty
+        ? _routePoints
+        : (_originPoint != null && _destPoint != null ? [_originPoint!, _destPoint!] : <LngLat>[]);
+
+    if (pts.isEmpty) return;
 
     // Compute bounding box from ALL route points
-    double minLng = _routePoints.first.lng;
-    double maxLng = _routePoints.first.lng;
-    double minLat = _routePoints.first.lat;
-    double maxLat = _routePoints.first.lat;
+    double minLng = pts.first.lng;
+    double maxLng = pts.first.lng;
+    double minLat = pts.first.lat;
+    double maxLat = pts.first.lat;
 
-    for (final p in _routePoints) {
+    for (final p in pts) {
       if (p.lng < minLng) minLng = p.lng;
       if (p.lng > maxLng) maxLng = p.lng;
       if (p.lat < minLat) minLat = p.lat;

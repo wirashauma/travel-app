@@ -102,6 +102,7 @@ class _RouteViewPageState extends State<RouteViewPage> {
   Uint8List? _dotBytes;
 
   DijkstraResult? _routeResult;
+  List<LngLat> _cityPoints = [];
   List<LngLat> _routePoints = [];
 
   @override
@@ -158,11 +159,12 @@ class _RouteViewPageState extends State<RouteViewPage> {
       try {
         roadRoute = await MapboxDirectionsService.instance.getRoute(pts);
       } catch (_) {
-        roadRoute = pts;
+        roadRoute = [];
       }
 
       setState(() {
         _routeResult = result;
+        _cityPoints = pts;
         _routePoints = roadRoute;
         _isLoading = false;
       });
@@ -181,7 +183,7 @@ class _RouteViewPageState extends State<RouteViewPage> {
   void _tryDraw() {
     if (_elementsDrawn) return;
     if (!_managersReady || !_styleLoaded) return;
-    if (_routePoints.isEmpty) return;
+    if (_cityPoints.isEmpty) return;
     if (_originBytes == null || _destBytes == null || _dotBytes == null) return;
     _elementsDrawn = true;
     _buildMapElements();
@@ -197,21 +199,26 @@ class _RouteViewPageState extends State<RouteViewPage> {
   }
 
   Future<void> _buildMapElements() async {
-    if (_routePoints.isEmpty) return;
+    if (_cityPoints.isEmpty) return;
 
-    final coords = _routePoints
-        .map((p) => Position(p.lng, p.lat))
-        .toList();
+    await _polylineManager?.deleteAll();
+    await _pointManager?.deleteAll();
 
-    await _polylineManager?.create(PolylineAnnotationOptions(
-      geometry: LineString(coordinates: coords),
-      lineColor: _C.primary.toARGB32(),
-      lineWidth: 4.0,
-      lineJoin: LineJoin.ROUND,
-    ));
-    await _polylineManager?.setLineCap(LineCap.ROUND);
+    if (_routePoints.isNotEmpty) {
+      final coords = _routePoints
+          .map((p) => Position(p.lng, p.lat))
+          .toList();
 
-    final origin = _routePoints.first;
+      await _polylineManager?.create(PolylineAnnotationOptions(
+        geometry: LineString(coordinates: coords),
+        lineColor: _C.primary.toARGB32(),
+        lineWidth: 4.0,
+        lineJoin: LineJoin.ROUND,
+      ));
+      await _polylineManager?.setLineCap(LineCap.ROUND);
+    }
+
+    final origin = _cityPoints.first;
     await _pointManager?.create(PointAnnotationOptions(
       geometry: Point(coordinates: Position(origin.lng, origin.lat)),
       image: _originBytes,
@@ -224,7 +231,7 @@ class _RouteViewPageState extends State<RouteViewPage> {
       textHaloWidth: 1.5,
     ));
 
-    final dest = _routePoints.last;
+    final dest = _cityPoints.last;
     await _pointManager?.create(PointAnnotationOptions(
       geometry: Point(coordinates: Position(dest.lng, dest.lat)),
       image: _destBytes,
@@ -237,8 +244,8 @@ class _RouteViewPageState extends State<RouteViewPage> {
       textHaloWidth: 1.5,
     ));
 
-    for (int i = 1; i < _routePoints.length - 1; i++) {
-      final p = _routePoints[i];
+    for (int i = 1; i < _cityPoints.length - 1; i++) {
+      final p = _cityPoints[i];
       await _pointManager?.create(PointAnnotationOptions(
         geometry: Point(coordinates: Position(p.lng, p.lat)),
         image: _dotBytes,
@@ -248,10 +255,11 @@ class _RouteViewPageState extends State<RouteViewPage> {
   }
 
   LngLat _calcCenter() {
-    if (_routePoints.isEmpty) return const LngLat(101.5, -0.5);
-    double s = _routePoints.first.lat, n = _routePoints.first.lat;
-    double w = _routePoints.first.lng, e = _routePoints.first.lng;
-    for (final p in _routePoints) {
+    final pts = _routePoints.isNotEmpty ? _routePoints : _cityPoints;
+    if (pts.isEmpty) return const LngLat(101.5, -0.5);
+    double s = pts.first.lat, n = pts.first.lat;
+    double w = pts.first.lng, e = pts.first.lng;
+    for (final p in pts) {
       if (p.lat < s) s = p.lat;
       if (p.lat > n) n = p.lat;
       if (p.lng < w) w = p.lng;
@@ -261,10 +269,11 @@ class _RouteViewPageState extends State<RouteViewPage> {
   }
 
   double _calcZoom() {
-    if (_routePoints.length < 2) return 5.0;
-    double s = _routePoints.first.lat, n = _routePoints.first.lat;
-    double w = _routePoints.first.lng, e = _routePoints.first.lng;
-    for (final p in _routePoints) {
+    final pts = _routePoints.isNotEmpty ? _routePoints : _cityPoints;
+    if (pts.length < 2) return 5.0;
+    double s = pts.first.lat, n = pts.first.lat;
+    double w = pts.first.lng, e = pts.first.lng;
+    for (final p in pts) {
       if (p.lat < s) s = p.lat;
       if (p.lat > n) n = p.lat;
       if (p.lng < w) w = p.lng;
@@ -278,7 +287,8 @@ class _RouteViewPageState extends State<RouteViewPage> {
   }
 
   void _fitBounds() {
-    if (_routePoints.isEmpty || _mapboxMap == null) return;
+    final pts = _routePoints.isNotEmpty ? _routePoints : _cityPoints;
+    if (pts.isEmpty || _mapboxMap == null) return;
     final center = _calcCenter();
     _mapboxMap!.flyTo(
       CameraOptions(

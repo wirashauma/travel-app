@@ -669,6 +669,10 @@ class ManageRoutesPage extends StatelessWidget {
                                       'price': price,
                                       'duration': duration,
                                       'updatedAt': FieldValue.serverTimestamp(),
+                                      'fromLat': CityCoordinatesSeeder.getCoordinates(from)?['lat'],
+                                      'fromLng': CityCoordinatesSeeder.getCoordinates(from)?['lng'],
+                                      'toLat': CityCoordinatesSeeder.getCoordinates(to)?['lat'],
+                                      'toLng': CityCoordinatesSeeder.getCoordinates(to)?['lng'],
                                     };
 
                                     if (isEdit) {
